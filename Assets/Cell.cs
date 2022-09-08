@@ -17,6 +17,9 @@ public class Cell : MonoBehaviour
 
     [SerializeField] private TMP_Text _columnSum;
     [SerializeField] private TMP_Text _rowSum;
+    [SerializeField] private TMP_Text _crossSum;
+    [SerializeField] private TMP_Text _NWtoSESum;
+    [SerializeField] private TMP_Text _SWtoNESum;
 
     public void SetDigit(int digit)
     {
@@ -35,5 +38,26 @@ public class Cell : MonoBehaviour
         _rowSum.gameObject.SetActive(true);
         _rowSum.gameObject.transform.parent.gameObject.SetActive(true);
         _rowSum.text = rowSum.ToString();
+    }
+
+    public void SetCrossSum(int crossSum)
+    {
+        _crossSum.gameObject.SetActive(true);
+        _crossSum.gameObject.transform.parent.gameObject.SetActive(true);
+        _crossSum.text = crossSum.ToString();
+    }
+
+    public void SetNWtoSESum(int NWtoSESum)
+    {
+        _NWtoSESum.gameObject.SetActive(true);
+        _NWtoSESum.gameObject.transform.parent.gameObject.SetActive(true);
+        _NWtoSESum.text = NWtoSESum.ToString();
+    }
+
+    public void SetSWtoNESum(int SWtoNESum)
+    {
+        _SWtoNESum.gameObject.SetActive(true);
+        _SWtoNESum.gameObject.transform.parent.gameObject.SetActive(true);
+        _SWtoNESum.text = SWtoNESum.ToString();
     }
 }

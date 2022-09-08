@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,6 +6,12 @@ using UnityEngine.UI;
 
 public class SudokuGridView : MonoBehaviour
 {
+    // Column & Row = 6 up to 24
+    // Cross = 15 up to 35
+    // Diagonal (1) = 1 up to 9
+    // Diagonal (2) = 3 up to 17
+    // Diagonal (3) = 6 up to 24
+
     /// <summary>
     /// Cell prefab.
     /// </summary>
@@ -54,6 +61,28 @@ public class SudokuGridView : MonoBehaviour
         {
             FillGrid(_sudokuResults.GetPreviousSolution());
         }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            int[,] data = SudokuData.GetPossiblePermutations(new int[] { 1, 2, 3 });
+
+            for (int i = 0; i < data.GetLength(0); i++)
+            {
+                Debug.Log(i);
+                Debug.Log($"Index: {data[i, 0]}, {data[i, 1]}, {data[i, 2]}");
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.V))
+        {
+            int[,] data = SudokuData.GetPossiblePermutations(new int[] { 1, 2, 3, 4, 5, 6 });
+
+            for (int i = 0; i < data.GetLength(0); i++)
+            {
+                Debug.Log(i);
+                Debug.Log($"Index: {data[i, 0]}, {data[i, 1]}, {data[i, 2]}");
+            }
+        }
+
     }
 
     public void SpawnCellGrid()
@@ -138,9 +167,50 @@ public class SudokuGridView : MonoBehaviour
             }
 
             // Cross sum in one box (15 to 35)
-            int plusSum = _grid[x + 1, y].Digit + _grid[x + 1, y + 1].Digit + _grid[x + 1, y + 2].Digit
+            int crossSum = _grid[x + 1, y].Digit + _grid[x + 1, y + 1].Digit + _grid[x + 1, y + 2].Digit
                 + _grid[x, y + 1].Digit + _grid[x + 2, y + 1].Digit;
-            _grid[x + 1, y + 1].SetColumnSum(plusSum);
+            _grid[x + 1, y + 1].SetCrossSum(crossSum);
+
+            // 5 L - (0,0) - (1,0) - (2,0) - (0,1) - (0,2)
+            _grid[y, x].SetNWtoSESum(_grid[y,x].Digit + _grid[y + 1, x + 1].Digit + _grid[y + 2, x + 2].Digit);
+            _grid[y, x + 1].SetNWtoSESum(_grid[y, x + 1].Digit + _grid[y + 1, x + 2].Digit);
+            _grid[y, x + 2].SetNWtoSESum(_grid[y, x + 2].Digit);
+            _grid[y + 1, x].SetNWtoSESum(_grid[y + 1, x].Digit + _grid[y + 2, x + 1].Digit);
+            _grid[y + 2, x].SetNWtoSESum(_grid[y + 2, x].Digit);
+
+            //// 5 R - (0,0) - (0,1) - (0,2) - (1,2) - (2,2)
+            _grid[y, x].SetSWtoNESum(_grid[y, x].Digit);
+            _grid[y + 1, x].SetSWtoNESum(_grid[y + 1, x].Digit + _grid[y, x + 1].Digit);
+            _grid[y + 2, x].SetSWtoNESum(_grid[y + 2, x].Digit + _grid[y + 1, x + 1].Digit + _grid[y, x + 2].Digit);
+            _grid[y + 2, x + 1].SetSWtoNESum(_grid[y + 2, x + 1].Digit + _grid[y + 1, x + 2].Digit);
+            _grid[y + 2, x + 2].SetSWtoNESum(_grid[y + 2, x + 2].Digit);
         }
+    }
+
+    private void GetPermutations(int[] range)
+    {
+        int permutations = 0;
+        for(int x = 0; x < range.Length; x++)
+        {
+            for(int y = 0; y < range.Length; y++)
+            {
+                for(int z = 0; z < range.Length; z++)
+                {
+                    if (x == y)
+                        break;
+                    else if (x == z)
+                        continue;
+                    else if (y == z)
+                        continue;
+                    else
+                    {
+                        permutations++;
+                        Debug.Log($"{x + 1}, {y + 1}, {z + 1}");
+                    }
+                }
+            }
+        }
+
+        Debug.Log($"{permutations} permutations.");
     }
 }
