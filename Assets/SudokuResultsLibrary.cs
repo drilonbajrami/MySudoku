@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-public class SudokuResults : MonoBehaviour
+public class SudokuResultsLibrary : MonoBehaviour
 {
     // 100 000 solutions per file - 1 solution per 1 line.
     const int FIRST_LINE = 0;

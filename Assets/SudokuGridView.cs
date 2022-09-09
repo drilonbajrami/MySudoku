@@ -35,57 +35,75 @@ public class SudokuGridView : MonoBehaviour
     /// </summary>
     private Cell[,] _grid;
 
-    [SerializeField] private SudokuResults _sudokuResults;
+    public Cell this[int x, int y] => _grid[y, x];
+
+    [SerializeField] private SudokuResultsLibrary _sudokuResults;
+
+    [SerializeField] private PermutationTableView _tableView;
 
     private void Start()
     {
-        SpawnCellGrid();
+        DrawSudoku();
         FillGrid(_sudokuResults.GetCurrentSolution());
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            _sudokuResults.LoadNextFile();
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            _sudokuResults.LoadPreviousFile();
-        }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            FillGrid(_sudokuResults.GetNextSolution());
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            FillGrid(_sudokuResults.GetPreviousSolution());
-        }
+        //CycleSudokuSolutions();
 
-        if (Input.GetKeyDown(KeyCode.C))
+        if(Input.GetKeyDown(KeyCode.H))
         {
-            int[,] data = SudokuData.GetPossiblePermutations(new int[] { 1, 2, 3 });
-
-            for (int i = 0; i < data.GetLength(0); i++)
-            {
-                Debug.Log(i);
-                Debug.Log($"Index: {data[i, 0]}, {data[i, 1]}, {data[i, 2]}");
-            }
+                for (int i = 0; i < 1000; i++)
+                {
+                    FillGrid(_sudokuResults.GetNextSolution());
+                    _tableView.UncheckPermutations();
+                    CheckHorizontalPermutations();
+                    CheckVerticalPermutations();
+                }
+                //    _tableView.UncheckPermutations();
+                //CheckHorizontalPermutations();
+                //CheckVerticalPermutations();
         }
-        else if (Input.GetKeyDown(KeyCode.V))
-        {
-            int[,] data = SudokuData.GetPossiblePermutations(new int[] { 1, 2, 3, 4, 5, 6 });
-
-            for (int i = 0; i < data.GetLength(0); i++)
-            {
-                Debug.Log(i);
-                Debug.Log($"Index: {data[i, 0]}, {data[i, 1]}, {data[i, 2]}");
-            }
-        }
-
     }
 
-    public void SpawnCellGrid()
+    private void CheckHorizontalPermutations()
+    {
+        int[] permutation = new int[3];
+
+        for(int box = 0; box < 9; box++) { 
+            int x = box % 3 * 3;
+            int y = box / 3 * 3;
+
+            for(int j = 0; j < 3; j++) {
+                permutation[0] = this[x, y + j].Digit;
+                permutation[1] = this[x + 1, y + j].Digit;
+                permutation[2] = this[x + 2, y + j].Digit;
+                _tableView.CheckPermutation(permutation);
+            }   
+        }
+    }
+
+    private void CheckVerticalPermutations()
+    {
+        int[] permutation = new int[3];
+
+        for (int box = 0; box < 9; box++) {
+            int x = box % 3 * 3;
+            int y = box / 3 * 3;
+
+            for (int j = 0; j < 3; j++) {
+                permutation[0] = this[x + j, y].Digit;
+                permutation[1] = this[x + j, y + 1].Digit;
+                permutation[2] = this[x + j, y + 2].Digit;
+                _tableView.CheckPermutation(permutation);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Draws the sudoku grid.
+    /// </summary>
+    public void DrawSudoku()
     {
         ClearGrid();
         _grid = new Cell[9, 9];
@@ -123,6 +141,9 @@ public class SudokuGridView : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Clears the grid of all cells game objects.
+    /// </summary>
     private void ClearGrid()
     {
         if (_grid == null) return;
@@ -136,19 +157,22 @@ public class SudokuGridView : MonoBehaviour
             }
     }
 
+    /// <summary>
+    /// Fills the sudoku grid with the given numbers/solution.
+    /// </summary>
+    /// <param name="digits">The sudoku solution.</param>
     public void FillGrid(List<int> digits)
     {
         for (int y = 0; y < 9; y++)
-        {
             for (int x = 0; x < 9; x++)
-            {
                 _grid[y, x].SetDigit(digits[y * 9 + x]);
-            }
-        }
 
-        CalculateSums();
+        //CalculateSums();
     }
 
+    /// <summary>
+    /// Calculates different sums of the solution numbers within the grid.
+    /// </summary>
     private void CalculateSums()
     {
         for (int box = 0; box < 9; box++)
@@ -171,14 +195,14 @@ public class SudokuGridView : MonoBehaviour
                 + _grid[x, y + 1].Digit + _grid[x + 2, y + 1].Digit;
             _grid[x + 1, y + 1].SetCrossSum(crossSum);
 
-            // 5 L - (0,0) - (1,0) - (2,0) - (0,1) - (0,2)
+            // Diagonal sums from top left to bottom right
             _grid[y, x].SetNWtoSESum(_grid[y,x].Digit + _grid[y + 1, x + 1].Digit + _grid[y + 2, x + 2].Digit);
             _grid[y, x + 1].SetNWtoSESum(_grid[y, x + 1].Digit + _grid[y + 1, x + 2].Digit);
             _grid[y, x + 2].SetNWtoSESum(_grid[y, x + 2].Digit);
             _grid[y + 1, x].SetNWtoSESum(_grid[y + 1, x].Digit + _grid[y + 2, x + 1].Digit);
             _grid[y + 2, x].SetNWtoSESum(_grid[y + 2, x].Digit);
 
-            //// 5 R - (0,0) - (0,1) - (0,2) - (1,2) - (2,2)
+            // Diagonal sums from bottom left to top right
             _grid[y, x].SetSWtoNESum(_grid[y, x].Digit);
             _grid[y + 1, x].SetSWtoNESum(_grid[y + 1, x].Digit + _grid[y, x + 1].Digit);
             _grid[y + 2, x].SetSWtoNESum(_grid[y + 2, x].Digit + _grid[y + 1, x + 1].Digit + _grid[y, x + 2].Digit);
@@ -187,30 +211,40 @@ public class SudokuGridView : MonoBehaviour
         }
     }
 
-    private void GetPermutations(int[] range)
+    /// <summary>
+    /// Cycles through the sudoku solution files and singe solution through key presses.
+    /// </summary>
+    private void CycleSudokuSolutions()
     {
-        int permutations = 0;
-        for(int x = 0; x < range.Length; x++)
-        {
-            for(int y = 0; y < range.Length; y++)
-            {
-                for(int z = 0; z < range.Length; z++)
-                {
-                    if (x == y)
-                        break;
-                    else if (x == z)
-                        continue;
-                    else if (y == z)
-                        continue;
-                    else
-                    {
-                        permutations++;
-                        Debug.Log($"{x + 1}, {y + 1}, {z + 1}");
-                    }
-                }
-            }
-        }
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+            _sudokuResults.LoadNextFile();
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+            _sudokuResults.LoadPreviousFile();
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+            FillGrid(_sudokuResults.GetNextSolution());
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+            FillGrid(_sudokuResults.GetPreviousSolution());
+    }
 
-        Debug.Log($"{permutations} permutations.");
+    private void CycleSudokuSolutionsFast()
+    {
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+            _sudokuResults.LoadNextFile();
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+            _sudokuResults.LoadPreviousFile();
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            FillGrid(_sudokuResults.GetNextSolution());
+            _tableView.UncheckPermutations();
+            CheckHorizontalPermutations();
+            CheckVerticalPermutations();
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            FillGrid(_sudokuResults.GetPreviousSolution());
+            _tableView.UncheckPermutations();
+            CheckHorizontalPermutations();
+            CheckVerticalPermutations();
+        }
     }
 }

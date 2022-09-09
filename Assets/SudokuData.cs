@@ -1,3 +1,4 @@
+using UnityEngine;
 /// <summary>
 /// Data class for sudoku number combinations and permutations.
 /// </summary>
@@ -380,7 +381,7 @@ public static class SudokuData
 
         for (int x = 0; x < 9; x++) {
             // Check if x is the same with any of the given permutation's numbers.
-            for(int i = 0; i < permutation.Length; i++) {
+            for (int i = 0; i < permutation.Length; i++) {
                 scanGroup = x != permutation[i] - 1;
                 if (!scanGroup) break;
             }
@@ -400,7 +401,7 @@ public static class SudokuData
                         // Check if z is the same with any of the given permutation's numbers.
                         for (int z = 0; z < 7; z++) {
                             digit = Permutations[x, y, z, 2];
-                            for(int i = 0; i < permutation.Length; i++) {
+                            for (int i = 0; i < permutation.Length; i++) {
                                 scanGroup = digit != permutation[i];
                                 if (!scanGroup) break;
                             }
@@ -418,6 +419,32 @@ public static class SudokuData
         }
 
         return permutationIndices;
+    }
+
+    /// <summary>
+    /// Finds the permutation index in the <see cref="Permutations"/> array.
+    /// </summary>
+    /// <param name="permutation">The permutation to find the index for.</param>
+    /// <returns>The index of the given permutation within the <see cref="Permutations"/> array.</returns>
+    public static int[] FindPermutationIndex(int[] permutation)
+    {
+        int[] index = new int[3];
+
+        index[0] = permutation[0] - 1;
+
+        for (int y = Mathf.Clamp(permutation[1] - 2, 0, 7); y < 8; y++)
+            if (Permutations[index[0], y, 0, 1] == permutation[1]) {
+                index[1] = y;
+                break;
+            }
+
+        for (int z = Mathf.Clamp(permutation[2] - 3, 0, 6); z < 7; z++)
+            if (Permutations[index[0], index[1], z, 2] == permutation[2]) {
+                index[2] = z;
+                break;
+            }
+
+        return index;
     }
 
     public static int[,] GetPossiblePermutationsOld(int[] permutation)
@@ -452,6 +479,6 @@ public static class SudokuData
 
         return permutationIndices;
     }
-
+    
     public static string SudokuCombinations = "6,670,903,752,021,072,936,960";
 }

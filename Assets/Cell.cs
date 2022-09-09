@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class Cell : MonoBehaviour
@@ -21,11 +22,14 @@ public class Cell : MonoBehaviour
     [SerializeField] private TMP_Text _NWtoSESum;
     [SerializeField] private TMP_Text _SWtoNESum;
 
+    [SerializeField] private Image _background;
     public void SetDigit(int digit)
     {
         _digit = digit;
         _digitText.text = digit == 0 ? "" : digit.ToString();
     }
+
+    public void Use() => _background.color = Color.red;
 
     public void SetColumnSum(int sum)
     {
