@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
+/// <summary>
+/// Cycles through the sudoku solutions library files or through the files.
+/// </summary>
 public class SudokuResultsLibrary : MonoBehaviour
 {
     // 100 000 solutions per file - 1 solution per 1 line.
@@ -32,6 +35,9 @@ public class SudokuResultsLibrary : MonoBehaviour
         Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
     }
 
+    /// <summary>
+    /// Loads the next sudoku solution file.
+    /// </summary>
     public void LoadNextFile()
     {
         _currentFile++;
@@ -42,6 +48,9 @@ public class SudokuResultsLibrary : MonoBehaviour
         _currentLine = FIRST_LINE;
     }
 
+    /// <summary>
+    /// Loads the perivous sudoku solution file.
+    /// </summary>
     public void LoadPreviousFile()
     {
         _currentFile--;
@@ -51,8 +60,14 @@ public class SudokuResultsLibrary : MonoBehaviour
         _currentLine = FIRST_LINE;
     }
 
+    /// <summary>
+    /// Returns the current stored solutions from the sudoku solutions library.
+    /// </summary>
     public List<int> GetCurrentSolution() => GetSolution(_solutions[_currentLine]);
 
+    /// <summary>
+    /// Returns the next solution within the current file of sudoku solutions library.
+    /// </summary>
     public List<int> GetNextSolution()
     {
         _currentLine++;
@@ -61,6 +76,9 @@ public class SudokuResultsLibrary : MonoBehaviour
         return GetSolution(_solutions[_currentLine]);
     }
 
+    /// <summary>
+    /// Returns the previous solution within the current file of sudoku solutions library.
+    /// </summary>
     public List<int> GetPreviousSolution()
     {
         _currentLine--;
@@ -69,6 +87,11 @@ public class SudokuResultsLibrary : MonoBehaviour
         return GetSolution(_solutions[_currentLine]);
     }
 
+    /// <summary>
+    /// Converts the sudoku solution from string form to a list of integers.
+    /// </summary>
+    /// <param name="solution">The sudoku solution in a string format.</param>
+    /// <returns>The sudoku solution in a list of integers format.</returns>
     private List<int> GetSolution(string solution)
     {
         List<int> digits = new List<int>();

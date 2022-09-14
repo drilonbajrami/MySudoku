@@ -12,6 +12,15 @@ public class SudokuGridView : MonoBehaviour
     // Diagonal (2) = 3 up to 17
     // Diagonal (3) = 6 up to 24
 
+    // 6 permutations per group (all permutations starting with number x are considered a group in itself)
+    // out of 6 permutations per group, 3 permutations are in horizontal direction, and 3 are in vertical direction
+    // A same permutation in a group can be present up to 3 times max. with (1-2) or (2-1) - horizontal to vertical ratio directions.
+    // The sums of horizontal and diagonal permutations (triplets) per box are little to no use since there are many combinations with it
+    // that there might not be a way to rely on them for generating a sudoku puzzle 
+    
+    // Useful is the index repetition of permutations in groups. Mabye use this within a rule if generating through human based and recursive backtracking algorithm.
+
+
     /// <summary>
     /// Cell prefab.
     /// </summary>
@@ -41,29 +50,39 @@ public class SudokuGridView : MonoBehaviour
 
     [SerializeField] private PermutationTableView _tableView;
 
+    [SerializeField] private IndexRepetition _indexRepetition;
+
     private void Start()
     {
         DrawSudoku();
         FillGrid(_sudokuResults.GetCurrentSolution());
+
+        //StartCoroutine(CheckPermutationsCoroutine());
     }
 
     private void Update()
     {
-        //CycleSudokuSolutions();
+        CycleSudokuSolutions();
 
-        if(Input.GetKeyDown(KeyCode.H))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-                for (int i = 0; i < 1000; i++)
-                {
-                    FillGrid(_sudokuResults.GetNextSolution());
-                    _tableView.UncheckPermutations();
-                    CheckHorizontalPermutations();
-                    CheckVerticalPermutations();
-                }
-                //    _tableView.UncheckPermutations();
-                //CheckHorizontalPermutations();
-                //CheckVerticalPermutations();
+            // Simplest sudoku to create with 2 permutation repeated 3 times per group
+            FillGrid(new List<int> { 1,2,3,4,5,6,7,8,9,
+                                     4,5,6,7,8,9,1,2,3,
+                                     7,8,9,1,2,3,4,5,6,
+                                     2,3,4,5,6,7,8,9,1,
+                                     5,6,7,8,9,1,2,3,4,
+                                     8,9,1,2,3,4,5,6,7,
+                                     3,4,5,6,7,8,9,1,2,
+                                     6,7,8,9,1,2,3,4,5,
+                                     9,1,2,3,4,5,6,7,8
+                                     });
         }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+            c = StartCoroutine(CheckPermutationsCoroutine());
+        else if (Input.GetKeyDown(KeyCode.P))
+            StopCoroutine(c);        
     }
 
     private void CheckHorizontalPermutations()
@@ -78,10 +97,14 @@ public class SudokuGridView : MonoBehaviour
                 permutation[0] = this[x, y + j].Digit;
                 permutation[1] = this[x + 1, y + j].Digit;
                 permutation[2] = this[x + 2, y + j].Digit;
-                _tableView.CheckPermutation(permutation);
+                stop = _tableView.CheckPermutation(permutation, true, box + 1);
+                //_indexRepetition.RegisterIndex(SudokuData.FindPermutationIndex(permutation));
             }   
         }
     }
+
+    bool stop = false;
+    Coroutine c;
 
     private void CheckVerticalPermutations()
     {
@@ -95,8 +118,28 @@ public class SudokuGridView : MonoBehaviour
                 permutation[0] = this[x + j, y].Digit;
                 permutation[1] = this[x + j, y + 1].Digit;
                 permutation[2] = this[x + j, y + 2].Digit;
-                _tableView.CheckPermutation(permutation);
+                stop = _tableView.CheckPermutation(permutation, false, box + 1);
+                //_indexRepetition.RegisterIndex(SudokuData.FindPermutationIndex(permutation));
             }
+        }
+    }
+
+    private void CheckPermutations()
+    {
+        //_indexRepetition.ClearRegister();
+        _tableView.UncheckPermutations();
+        CheckHorizontalPermutations();
+        CheckVerticalPermutations();
+        //_indexRepetition.UpdateRegisterTable();
+    }
+
+    private IEnumerator CheckPermutationsCoroutine()
+    {
+        for (int i = 0; i < 100000; i++)
+        {
+            FillGrid(_sudokuResults.GetNextSolution());
+            if (stop) StopCoroutine(c);
+            yield return new WaitForEndOfFrame();
         }
     }
 
@@ -165,9 +208,10 @@ public class SudokuGridView : MonoBehaviour
     {
         for (int y = 0; y < 9; y++)
             for (int x = 0; x < 9; x++)
-                _grid[y, x].SetDigit(digits[y * 9 + x]);
+                this[x, y].SetDigit(digits[y * 9 + x]);
 
-        //CalculateSums();
+        CalculateSums();
+        CheckPermutations();
     }
 
     /// <summary>
@@ -224,27 +268,5 @@ public class SudokuGridView : MonoBehaviour
             FillGrid(_sudokuResults.GetNextSolution());
         else if (Input.GetKeyDown(KeyCode.LeftArrow))
             FillGrid(_sudokuResults.GetPreviousSolution());
-    }
-
-    private void CycleSudokuSolutionsFast()
-    {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-            _sudokuResults.LoadNextFile();
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-            _sudokuResults.LoadPreviousFile();
-        else if (Input.GetKey(KeyCode.RightArrow))
-        {
-            FillGrid(_sudokuResults.GetNextSolution());
-            _tableView.UncheckPermutations();
-            CheckHorizontalPermutations();
-            CheckVerticalPermutations();
-        }
-        else if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            FillGrid(_sudokuResults.GetPreviousSolution());
-            _tableView.UncheckPermutations();
-            CheckHorizontalPermutations();
-            CheckVerticalPermutations();
-        }
     }
 }
