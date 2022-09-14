@@ -1,18 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class IndexRepetition : MonoBehaviour
 {
+    // Index repetitions for each component of a permutation.
     private int[] _xRepetitions = new int[9];
     private int[] _yRepetitions = new int[8];
     private int[] _zRepetitions = new int[7];
 
+    // Index repetitions in text format.
     private TextValue[] _xValues = new TextValue[9];
     private TextValue[] _yValues = new TextValue[9];
     private TextValue[] _zValues = new TextValue[9];
 
+    /// <summary>
+    /// Caches the text components in children game objects.
+    /// </summary>
     private void Awake()
     {
         for(int x = 1; x < 10; x++)
@@ -22,6 +24,11 @@ public class IndexRepetition : MonoBehaviour
             _zValues[x - 1] = transform.GetChild(x).transform.GetChild(3).GetComponent<TextValue>();
         }
     }
+
+    /// <summary>
+    /// Registers repetitions of indexes based on the given permutation index.
+    /// </summary>
+    /// <param name="permutationIndex"></param>
     public void RegisterIndex(int[] permutationIndex)
     {
         _xRepetitions[permutationIndex[0]]++;
@@ -29,6 +36,9 @@ public class IndexRepetition : MonoBehaviour
         _zRepetitions[permutationIndex[2]]++;
     }
 
+    /// <summary>
+    /// Updates the text components.
+    /// </summary>
     public void UpdateRegisterTable()
     {
         for (int x = 0; x < 9; x++)
@@ -41,6 +51,9 @@ public class IndexRepetition : MonoBehaviour
             _zValues[z].Text = _zRepetitions[z].ToString();
     }
 
+    /// <summary>
+    /// Clears the index repetition registry.
+    /// </summary>
     public void ClearRegister()
     {
         for (int x = 0; x < 9; x++)

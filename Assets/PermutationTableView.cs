@@ -1,18 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Visualizes all the possible three number permutations of range from 1 to 9, in a readable table format.
+/// </summary>
 public class PermutationTableView : MonoBehaviour
 {
     [SerializeField] private Permutation _permutationPrefab;
-
     private Permutation[,,] _permutations = new Permutation[9, 8, 7];
 
-    private void Awake()
-    {
-        SpawnPermutations();
-    }
-
+    /// <summary>
+    /// Spawns the permutation's table.
+    /// </summary>
+    private void Awake() => SpawnPermutations();
+    
+    /// <summary>
+    /// Spawns the permutations in table format.
+    /// </summary>
     private void SpawnPermutations()
     {
         float l = _permutationPrefab.RectTransform.sizeDelta.x + 3;
@@ -34,12 +37,22 @@ public class PermutationTableView : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Checks/marks the given permutation.
+    /// </summary>
+    /// <param name="permutation">The permutation.</param>
+    /// <param name="horizontal">Whether the permutation is of horizontal or vertical direction.</param>
+    /// <param name="box">The sudoku box/region in which the permutation is in.</param>
+    /// <returns>Whether this permutation has appeared on both directions or not.</returns>
     public bool CheckPermutation(int[] permutation, bool horizontal, int box)
     {
         int[] pIndex = SudokuData.FindPermutationIndex(permutation);
         return _permutations[pIndex[0], pIndex[1], pIndex[2]].Check(horizontal, box);
     }
 
+    /// <summary>
+    /// Unchecks/unmarks all permutations.
+    /// </summary>
     public void UncheckPermutations()
     {
         for(int x = 0; x < 9; x++)

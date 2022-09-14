@@ -5,6 +5,11 @@ using UnityEngine;
 public static class SudokuData
 {
     /// <summary>
+    /// The number of unique sudoku puzzles.
+    /// </summary>
+    public static string SudokuPuzzlesCount = "6,670,903,752,021,072,936,960";
+
+    /// <summary>
     /// All possible three number combinations from 1 to 9.
     /// </summary>
     public static int[,] Combinations = new int[84, 3] {
@@ -67,7 +72,7 @@ public static class SudokuData
     };
 
     /// <summary>
-    /// All possible three number permutations in range of 1 to 9.
+    /// All possible three number permutations in range of 1 to 9.<br/>
     /// 504 permutations in total.
     /// </summary>
     public static int[,] PermutationsUngrouped = new int[504, 3]
@@ -184,7 +189,7 @@ public static class SudokuData
 
     /// <summary>
     /// All possible three number permutations of the range from 1 to 9.<br/>
-    /// 504 permutations in total, split in 9 main groups for each number.<br/>
+    /// 504 permutations in total, split in 9 main groups for each starting number.<br/>
     /// Each main group contains 8 subgroups where each subgroup contains 7 different permutations.<br/>
     /// Indexing: [x -> Main group, y -> Subgroup, z -> Permutation (7 on each subgroup 'y')]<br/>
     /// 9 * 8 * 7 = 504.
@@ -371,7 +376,7 @@ public static class SudokuData
     /// <returns>A 2D array of possible permutation's indexes within the <see cref="Permutations"/> array.</returns>
     public static int[,] GetPossiblePermutations(int[] permutation)
     {
-        // Depending on given permutation, if it only consist of 3 numbers then there are 120 possible permutations.
+        // Depending on the given permutation, if it only consist of 3 numbers then there are 120 possible permutations.
         // If it consist of 6 numbers then there are only 6 possible permutation for whatever combination of those 6 numbers.
         int possiblePermutations = permutation.Length == 3 ? 120 : 6;
         int[,] permutationIndices = new int[possiblePermutations, 3];
@@ -382,7 +387,7 @@ public static class SudokuData
         for (int x = 0; x < 9; x++) {
             // Check if x is the same with any of the given permutation's numbers.
             for (int i = 0; i < permutation.Length; i++) {
-                scanGroup = x != permutation[i] - 1;
+                scanGroup = x != permutation[i] - 1; // Subtract 1 to convert number into index.
                 if (!scanGroup) break;
             }
 
@@ -429,7 +434,6 @@ public static class SudokuData
     public static int[] FindPermutationIndex(int[] permutation)
     {
         int[] index = new int[3];
-
         index[0] = permutation[0] - 1;
 
         for (int y = Mathf.Clamp(permutation[1] - 2, 0, 7); y < 8; y++)
@@ -479,6 +483,4 @@ public static class SudokuData
 
         return permutationIndices;
     }
-    
-    public static string SudokuCombinations = "6,670,903,752,021,072,936,960";
 }

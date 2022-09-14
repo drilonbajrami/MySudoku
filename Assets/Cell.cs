@@ -4,64 +4,44 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Represents a cell in the sudoku grid.
+/// </summary>
 public class Cell : MonoBehaviour
 {
+    /// <summary>
+    /// The number this cell contains.
+    /// </summary>
+    public int Digit => _digit;
     private int _digit = 0;
 
-    public int Digit => _digit;
-
-    [SerializeField] private RectTransform _rectTransform;
-
-    public RectTransform RectTransform => _rectTransform;
-
+    /// <summary>
+    /// Text representation of this cell's digit.
+    /// </summary>
     [SerializeField] private TMP_Text _digitText;
 
-    [SerializeField] private TMP_Text _columnSum;
-    [SerializeField] private TMP_Text _rowSum;
-    [SerializeField] private TMP_Text _crossSum;
-    [SerializeField] private TMP_Text _NWtoSESum;
-    [SerializeField] private TMP_Text _SWtoNESum;
+    /// <summary>
+    /// Rect transform of this game object.
+    /// </summary>
+    public RectTransform RectTransform => _rectTransform;
+    [SerializeField] private RectTransform _rectTransform;
 
     [SerializeField] private Image _background;
+
+    public GridSums Sums;
+
+    /// <summary>
+    /// Sets this cell's digit/number.
+    /// </summary>
+    /// <param name="digit">The digit/number to set.</param>
     public void SetDigit(int digit)
     {
         _digit = digit;
         _digitText.text = digit == 0 ? "" : digit.ToString();
     }
 
-    public void Use() => _background.color = Color.red;
-
-    public void SetColumnSum(int sum)
-    {
-        _columnSum.gameObject.SetActive(true);
-        _columnSum.gameObject.transform.parent.gameObject.SetActive(true);
-        _columnSum.text = sum.ToString();
-    }
-    public void SetRowSum(int rowSum)
-    {
-        _rowSum.gameObject.SetActive(true);
-        _rowSum.gameObject.transform.parent.gameObject.SetActive(true);
-        _rowSum.text = rowSum.ToString();
-    }
-
-    public void SetCrossSum(int crossSum)
-    {
-        _crossSum.gameObject.SetActive(true);
-        _crossSum.gameObject.transform.parent.gameObject.SetActive(true);
-        _crossSum.text = crossSum.ToString();
-    }
-
-    public void SetNWtoSESum(int NWtoSESum)
-    {
-        _NWtoSESum.gameObject.SetActive(true);
-        _NWtoSESum.gameObject.transform.parent.gameObject.SetActive(true);
-        _NWtoSESum.text = NWtoSESum.ToString();
-    }
-
-    public void SetSWtoNESum(int SWtoNESum)
-    {
-        _SWtoNESum.gameObject.SetActive(true);
-        _SWtoNESum.gameObject.transform.parent.gameObject.SetActive(true);
-        _SWtoNESum.text = SWtoNESum.ToString();
-    }
+    /// <summary>
+    /// Toggles on/off the sums.
+    /// </summary>
+    public void ToggleSums() => Sums.gameObject.SetActive(!Sums.gameObject.activeSelf);
 }
