@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class SudokuGridView : MonoBehaviour
+public class SudokuView : MonoBehaviour, IPointerClickHandler
 {
     // Column & Row = 6 up to 24
     // Cross = 15 up to 35
@@ -17,39 +18,49 @@ public class SudokuGridView : MonoBehaviour
     // A same permutation in a group can be present up to 3 times max. with (1-2) or (2-1) - horizontal to vertical ratio directions.
     // The sums of horizontal and diagonal permutations (triplets) per box are little to no use since there are many combinations with it
     // that there might not be a way to rely on them for generating a sudoku puzzle 
-    
-    // Useful is the index repetition of permutations in groups. Mabye use this within a rule if generating through human based and recursive backtracking algorithm.
 
-    /// <summary>
-    /// Cell prefab.
-    /// </summary>
-    [SerializeField] private Cell _cellPrefab;
-
-    /// <summary>
-    /// Grid border prefab.
-    /// </summary>
-    [SerializeField] private Image _borderPrefab;
-
-    /// <summary>
-    /// Grid border thickness and length.
-    /// </summary>
-    private Vector2 _horizontalThick = new Vector2(906, 6);
-    private Vector2 _horizontalSlim = new Vector2(906, 2);
-    private Vector2 _verticalThick = new Vector2(6, 906);
-    private Vector2 _verticalSlim = new Vector2(2, 906);
+    // Useful is the index repetition of permutations in groups. Mabye use this within a rule if generating through human based
+    // and recursive backtracking algorithm.
 
     /// <summary>
     /// Grid of cells.
     /// </summary>
     private Cell[,] _grid;
 
+    /// <summary>
+    /// Indexer for the grid of cells.
+    /// </summary>
+    /// <param name="x">X coordinate.</param>
+    /// <param name="y">Y coordinate.</param>
+    /// <returns>The cell at the given coordinates.</returns>
     public Cell this[int x, int y] => _grid[y, x];
+
+    private RectTransform _rectTransform;
+
+    /// <summary>
+    /// Cell prefab.
+    /// </summary>
+    [SerializeField] private Cell _cellPrefab;
+
+    private Vector2Int _selectedCellIndex = new Vector2Int(-1, -1);
+
+    /// <summary>
+    /// Grid border prefab.
+    /// </summary>
+    [SerializeField] private Image _borderPrefab;
+    [SerializeField] private float _cellSize = 100f;
+    [Range(1f, 10f)][SerializeField] private float _borderThickness = 6f;
 
     [SerializeField] private SudokuResultsLibrary _sudokuResults;
     [SerializeField] private PermutationTableView _tableView;
     [SerializeField] private IndexRepetition _indexRepetition;
 
     bool stop = false;
+
+    private void Awake()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+    }
 
     /// <summary>
     /// Draws the sudoku grid and fills it with the current solution loaded in the sudoku results library.
@@ -78,32 +89,50 @@ public class SudokuGridView : MonoBehaviour
     {
         ClearGrid();
         _grid = new Cell[9, 9];
-        float cellLength = _cellPrefab.RectTransform.sizeDelta.x;
-        float gridTopLeftPos = cellLength * 4.5f - cellLength * 0.5f;
+        float gridTopLeftPos = _cellSize * 4.5f - _cellSize * 0.5f;
 
         for(int y = 0; y < 9; y++) {
             for (int x = 0; x < 9; x++) {
-                Vector3 position = new Vector3(-gridTopLeftPos + x * cellLength, gridTopLeftPos - y * cellLength, 0);
+                Vector3 position = new Vector3(-gridTopLeftPos + x * _cellSize, gridTopLeftPos - y * _cellSize, 0);
                 _grid[y, x] = Instantiate(_cellPrefab, transform);
+                _grid[y, x].RectTransform.sizeDelta = new Vector2(_cellSize, _cellSize);
                 _grid[y, x].RectTransform.anchoredPosition = position;
             }
         }
+
+        GameObject borders = new GameObject();
+        borders.transform.SetParent(transform);
+        borders.transform.SetAsLastSibling();
+
+        float _thickBorder = _borderThickness * _cellSize / 100f;
+        float _slimBorder = _borderThickness / 4f * _cellSize / 100f;
+        float _borderLength = _cellSize * 9 + _thickBorder;
 
         // Draw Borders
         for(int i = 0; i < 10; i++) {
             Image horizontalBorder = Instantiate(_borderPrefab, transform);
             Image verticalBorder = Instantiate(_borderPrefab, transform);
-            horizontalBorder.rectTransform.anchoredPosition = new Vector2(0, -cellLength * 4.5f + i * cellLength);
-            verticalBorder.rectTransform.anchoredPosition = new Vector2(cellLength * 4.5f - i * cellLength, 0);
+            horizontalBorder.rectTransform.anchoredPosition = new Vector2(0, -_cellSize * 4.5f + i * _cellSize);
+            verticalBorder.rectTransform.anchoredPosition = new Vector2(_cellSize * 4.5f - i * _cellSize, 0);
 
             if (i % 3 == 0) {
-                horizontalBorder.rectTransform.sizeDelta = _horizontalThick;
-                verticalBorder.rectTransform.sizeDelta = _verticalThick;
+                horizontalBorder.rectTransform.sizeDelta = new Vector2(_borderLength, _thickBorder);
+                verticalBorder.rectTransform.sizeDelta = new Vector2(_thickBorder, _borderLength);
+                horizontalBorder.rectTransform.SetParent(borders.transform);
+                verticalBorder.rectTransform.SetParent(borders.transform);
             } else {
-                horizontalBorder.rectTransform.sizeDelta = _horizontalSlim;
-                verticalBorder.rectTransform.sizeDelta = _verticalSlim;
+                horizontalBorder.rectTransform.sizeDelta = new Vector2(_borderLength, _slimBorder);
+                verticalBorder.rectTransform.sizeDelta = new Vector2(_slimBorder, _borderLength);
+                horizontalBorder.color = new Color(200 / 255f, 200 / 255f, 200 / 255f);
+                verticalBorder.color = new Color(200 / 255f, 200 / 255f, 200 / 255f);
+                horizontalBorder.rectTransform.SetParent(borders.transform);
+                verticalBorder.rectTransform.SetParent(borders.transform);
+                horizontalBorder.gameObject.transform.SetAsFirstSibling();
+                verticalBorder.gameObject.transform.SetAsFirstSibling();
             }
         }
+;
+        _rectTransform.sizeDelta = new Vector2(_borderLength, _borderLength);
     }
 
     /// <summary>
@@ -118,17 +147,6 @@ public class SudokuGridView : MonoBehaviour
 
         CalculateSums();
         CheckPermutationsAndIndexes();
-    }
-
-    /// <summary>
-    /// Fills the sudoku grid with the simplest number order
-    /// </summary>
-    public void FillGridSimple()
-    {
-        // Simplest sudoku to create with 2 permutation repeated 3 times per group
-        FillGrid(new List<int> { 1,2,3,4,5,6,7,8,9,4,5,6,7,8,9,1,2,3,7,8,9,1,2,3,4,5,6,
-                                 2,3,4,5,6,7,8,9,1,5,6,7,8,9,1,2,3,4,8,9,1,2,3,4,5,6,7,
-                                 3,4,5,6,7,8,9,1,2,6,7,8,9,1,2,3,4,5,9,1,2,3,4,5,6,7,8 });
     }
 
     /// <summary>
@@ -162,6 +180,17 @@ public class SudokuGridView : MonoBehaviour
             FillGrid(_sudokuResults.GetPreviousSolution());
     }
     #endregion
+
+    /// <summary>
+    /// Fills the sudoku grid with the simplest number order
+    /// </summary>
+    public void FillGridSimple()
+    {
+        // Simplest sudoku to create with 2 permutation repeated 3 times per group
+        FillGrid(new List<int> { 1,2,3,4,5,6,7,8,9,4,5,6,7,8,9,1,2,3,7,8,9,1,2,3,4,5,6,
+                                 2,3,4,5,6,7,8,9,1,5,6,7,8,9,1,2,3,4,8,9,1,2,3,4,5,6,7,
+                                 3,4,5,6,7,8,9,1,2,6,7,8,9,1,2,3,4,5,9,1,2,3,4,5,6,7,8 });
+    }
 
     /// <summary>
     /// Calculates different sums of the solution numbers within the grid.
@@ -264,5 +293,72 @@ public class SudokuGridView : MonoBehaviour
             if (stop) StopAllCoroutines();
             yield return new WaitForEndOfFrame();
         }
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        Vector2 sudokuPosition = new Vector2(eventData.pressPosition.x - Screen.width / 2f - _rectTransform.localPosition.x, 
+                                             eventData.pressPosition.y - Screen.height / 2f - _rectTransform.localPosition.y);
+
+        Vector2 sudokuLocalPosition = new Vector2(sudokuPosition.x + _cellSize * 4.5f, -sudokuPosition.y + _cellSize * 4.5f);
+        int x = (int)(sudokuLocalPosition.x / _cellSize);
+        int y = (int)(sudokuLocalPosition.y / _cellSize);
+
+        if (0 <= x && x <= 8 && 0 <= y && y <= 8)
+        {
+            if(_selectedCellIndex.x == -1 && _selectedCellIndex.y == -1) 
+            { 
+                _selectedCellIndex = new Vector2Int(x, y);
+                this[x, y].Select();
+                HighlightSelectedCellsNeighbours(x, y, true);
+            } 
+            else if(_selectedCellIndex.x == x && _selectedCellIndex.y == y) 
+            {
+                this[x, y].Deselect();
+                HighlightSelectedCellsNeighbours(x, y, false);
+                _selectedCellIndex = new Vector2Int(-1, -1);
+            } 
+            else 
+            {
+                Debug.Log(_selectedCellIndex);
+                this[_selectedCellIndex.x, _selectedCellIndex.y].Deselect();
+                HighlightSelectedCellsNeighbours(_selectedCellIndex.x, _selectedCellIndex.y, false);
+                _selectedCellIndex = new Vector2Int(x, y);
+                this[x, y].Select();
+                HighlightSelectedCellsNeighbours(x, y, true);
+            }
+        }
+    }
+
+    private void HighlightSelectedCellsNeighbours(int selectedX, int selectedY, bool highlight)
+    {
+        int box = Mathf.FloorToInt(selectedX / 3f) + 3 * Mathf.FloorToInt(selectedY / 3f);
+        int x = box % 3 * 3;
+        int y = box / 3 * 3;
+
+        for (int j = 0; j < 9; j++)
+            if (j != selectedY)
+                this[selectedX, j].Highlight(highlight);
+
+        for (int i = 0; i < 9; i++)
+            if (i != selectedX)
+                this[i, selectedY].Highlight(highlight);
+
+        for (int j = 0; j < 3; j++)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (x + i != selectedX && y + j != selectedY)
+                    this[x + i, y + j].Highlight(highlight);
+            }
+        }
+
+        for (int j = 0; j < 9; j++)
+            for (int i = 0; i < 9; i++)
+            {
+                if (this[selectedX, selectedY].Digit == this[i, j].Digit && selectedX != i && selectedY != j)
+                    if (highlight) this[i, j].Select();
+                    else this[i, j].Deselect();
+            }
     }
 }

@@ -44,4 +44,10 @@ public class Cell : MonoBehaviour
     /// Toggles on/off the sums.
     /// </summary>
     public void ToggleSums() => Sums.gameObject.SetActive(!Sums.gameObject.activeSelf);
+
+    public void Select() => _background.color = new Color(193/255f, 210/255f, 1f);
+    public void Deselect() => _background.color = Color.white;
+
+    public void Highlight(bool condition)
+        => _background.color = condition ? new Color(220 / 255f, 220 / 255f, 220 / 255f) : Color.white;
 }

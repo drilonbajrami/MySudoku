@@ -8,6 +8,8 @@ public class PermutationTableView : MonoBehaviour
     [SerializeField] private Permutation _permutationPrefab;
     private Permutation[,,] _permutations = new Permutation[9, 8, 7];
 
+    //private Permutation[,]
+
     /// <summary>
     /// Spawns the permutation's table.
     /// </summary>
@@ -47,7 +49,9 @@ public class PermutationTableView : MonoBehaviour
     public bool CheckPermutation(int[] permutation, bool horizontal, int box)
     {
         int[] pIndex = SudokuData.FindPermutationIndex(permutation);
-        return _permutations[pIndex[0], pIndex[1], pIndex[2]].Check(horizontal, box);
+        //int[] rIndex = SudokuData.FindPermutationIndex(new int[] { permutation[2], permutation[1], permutation[0] });
+        //_permutations[rIndex[0], rIndex[1], rIndex[2]].Check(horizontal, box, false);
+        return _permutations[pIndex[0], pIndex[1], pIndex[2]].Check(horizontal, box, true);
     }
 
     /// <summary>

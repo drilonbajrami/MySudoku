@@ -228,11 +228,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e01c04b1a9d7d9c4b8cf652a079b16a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _rectTransform: {fileID: 726738157539401572}
   _digitsText: {fileID: 726738155712941286}
   _background: {fileID: 726738157539401571}
   _h: {fileID: 7369374868474336033}
   _v: {fileID: 3691154956960581362}
-  _rectTransform: {fileID: 726738157539401572}
   _data: {fileID: 6771800148650034693}
   _box: {fileID: 8099353116762031979}
 --- !u!1 &1241817195654386874
