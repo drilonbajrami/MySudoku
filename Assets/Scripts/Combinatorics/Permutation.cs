@@ -77,7 +77,7 @@ public class Permutation : MonoBehaviour, IPointerClickHandler
     /// <param name="horizontal">Whether the permutation is of horizontal or vertical direction.</param>
     /// <param name="box">The region or box in the sudoku grid, where this permutation is found.</param>
     /// <returns></returns>
-    public bool Check(bool horizontal, int box, bool forward)
+    public bool Check(bool horizontal, int box)
     {
         // Color the permutation based on the number of its repetitions.
         _repetitions++;
@@ -92,17 +92,17 @@ public class Permutation : MonoBehaviour, IPointerClickHandler
         if (string.IsNullOrEmpty(_box.text))
         {
             _box.text = box.ToString();
-            if (forward)
-                _box.text = box.ToString();
-            else
-                _box.text = "<color=#FF0000>" + box.ToString() + "</color>";
+            //if (forward)
+            //    _box.text = box.ToString();
+            //else
+            //    _box.text = "<color=#FF0000>" + box.ToString() + "</color>";
         }
         else
         {
-            if (forward)
+            //if (forward)
                 _box.text += ", " + box.ToString();
-            else
-                _box.text += ", " + "<color=#FF0000>" + box.ToString() + "</color>";
+            //else
+            //    _box.text += ", " + "<color=#FF0000>" + box.ToString() + "</color>";
         }
 
         _data.SetActive(true);

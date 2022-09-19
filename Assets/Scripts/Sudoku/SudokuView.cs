@@ -22,6 +22,8 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
     // Useful is the index repetition of permutations in groups. Mabye use this within a rule if generating through human based
     // and recursive backtracking algorithm.
 
+    // A combination of 3 numbers {x, y, z} can appear only 4 times max in a sudoku puzzle
+
     /// <summary>
     /// Grid of cells.
     /// </summary>
@@ -53,7 +55,6 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
 
     [SerializeField] private SudokuResultsLibrary _sudokuResults;
     [SerializeField] private PermutationTableView _tableView;
-    [SerializeField] private IndexRepetition _indexRepetition;
 
     bool stop = false;
 
@@ -145,7 +146,7 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
             for (int x = 0; x < 9; x++)
                 this[x, y].SetDigit(digits[y * 9 + x]);
 
-        CalculateSums();
+        //CalculateSums();
         CheckPermutationsAndIndexes();
     }
 
@@ -204,31 +205,46 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
 
             for (int i = 0; i < 3; i++)
             {
-                int colSum = _grid[x + i, y].Digit + _grid[x + i, y + 1].Digit + _grid[x + i, y + 2].Digit;
-                _grid[x + i, y].Sums.SetColumnSum(colSum);
+                int colSum = this[x + i, y].Digit + 
+                             this[x + i, y + 1].Digit + 
+                             this[x + i, y + 2].Digit;
+                this[x + i, y].Sums.SetColumnSum(colSum);
 
-                int rowSum = _grid[x, y + i].Digit + _grid[x + 1, y + i].Digit + _grid[x + 2, y + i].Digit;
-                _grid[x, y + i].Sums.SetRowSum(rowSum);
+                int rowSum = this[x, y + i].Digit + 
+                             this[x + 1, y + i].Digit + 
+                             this[x + 2, y + i].Digit;
+                this[x, y + i].Sums.SetRowSum(rowSum);
             }
 
             // Cross sum in one box (15 to 35)
-            int crossSum = _grid[x + 1, y].Digit + _grid[x + 1, y + 1].Digit + _grid[x + 1, y + 2].Digit
-                + _grid[x, y + 1].Digit + _grid[x + 2, y + 1].Digit;
-            _grid[x + 1, y + 1].Sums.SetCrossSum(crossSum);
+            int crossSum = this[x + 1, y].Digit + 
+                           this[x + 1, y + 1].Digit + 
+                           this[x + 1, y + 2].Digit + 
+                           this[x, y + 1].Digit + 
+                           this[x + 2, y + 1].Digit;
+            this[x + 1, y + 1].Sums.SetCrossSum(crossSum);
 
             // Diagonal sums from top left to bottom right
-            _grid[y, x].Sums.SetTLBRSum(_grid[y, x].Digit + _grid[y + 1, x + 1].Digit + _grid[y + 2, x + 2].Digit);
-            _grid[y, x + 1].Sums.SetTLBRSum(_grid[y, x + 1].Digit + _grid[y + 1, x + 2].Digit);
-            _grid[y, x + 2].Sums.SetTLBRSum(_grid[y, x + 2].Digit);
-            _grid[y + 1, x].Sums.SetTLBRSum(_grid[y + 1, x].Digit + _grid[y + 2, x + 1].Digit);
-            _grid[y + 2, x].Sums.SetTLBRSum(_grid[y + 2, x].Digit);
+            this[x, y].Sums.SetTLBRSum(this[x, y].Digit + 
+                                       this[x + 1, y + 1].Digit + 
+                                       this[x + 2, y + 2].Digit);
+            this[x + 1, y].Sums.SetTLBRSum(this[x + 1, y].Digit + 
+                                           this[x + 2, y + 1].Digit);
+            this[x + 2, y].Sums.SetTLBRSum(this[x + 2, y].Digit);
+            this[x, y + 1].Sums.SetTLBRSum(this[x, y + 1].Digit + 
+                                           this[x + 1, y + 2].Digit);
+            this[x, y + 2].Sums.SetTLBRSum(this[x, y + 2].Digit);
 
             // Diagonal sums from bottom left to top right
-            _grid[y, x].Sums.SetBLTRSum(_grid[y, x].Digit);
-            _grid[y + 1, x].Sums.SetBLTRSum(_grid[y + 1, x].Digit + _grid[y, x + 1].Digit);
-            _grid[y + 2, x].Sums.SetBLTRSum(_grid[y + 2, x].Digit + _grid[y + 1, x + 1].Digit + _grid[y, x + 2].Digit);
-            _grid[y + 2, x + 1].Sums.SetBLTRSum(_grid[y + 2, x + 1].Digit + _grid[y + 1, x + 2].Digit);
-            _grid[y + 2, x + 2].Sums.SetBLTRSum(_grid[y + 2, x + 2].Digit);
+            this[x, y].Sums.SetBLTRSum(this[x, y].Digit);
+            this[x, y + 1].Sums.SetBLTRSum(this[x, y + 1].Digit + 
+                                           this[x + 1, y].Digit);
+            this[x, y + 2].Sums.SetBLTRSum(this[x, y + 2].Digit + 
+                                           this[x + 1, y + 1].Digit + 
+                                           this[x + 2, y].Digit);
+            this[x + 1, y + 2].Sums.SetBLTRSum(this[x + 1, y + 2].Digit + 
+                                               this[x + 2, y + 1].Digit);
+            this[x + 2, y + 2].Sums.SetBLTRSum(this[x + 2, y + 2].Digit);
         }
     }
 
@@ -239,13 +255,11 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
     {
         int[] permutation = new int[3];
 
-        for (int box = 0; box < 9; box++)
-        {
+        for (int box = 0; box < 9; box++) {
             int x = box % 3 * 3;
             int y = box / 3 * 3;
 
-            for (int j = 0; j < 3; j++)
-            {
+            for (int j = 0; j < 3; j++) {
                 // Horizontal direction
                 permutation[0] = this[x, y + j].Digit;
                 permutation[1] = this[x + 1, y + j].Digit;
@@ -257,12 +271,6 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
                 permutation[1] = this[x + j, y + 1].Digit;
                 permutation[2] = this[x + j, y + 2].Digit;
                 stop = _tableView.CheckPermutation(permutation, false, box + 1);
-
-                if (_indexRepetition != null)
-                {
-                    _indexRepetition.RegisterIndex(SudokuData.FindPermutationIndex(permutation));
-                    _indexRepetition.RegisterIndex(SudokuData.FindPermutationIndex(permutation));
-                }
             }
         }
     }
@@ -272,14 +280,8 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
     /// </summary>
     private void CheckPermutationsAndIndexes()
     {
-        if (_indexRepetition != null && _indexRepetition.gameObject.activeSelf)
-            _indexRepetition.ClearRegister();
-
         _tableView.UncheckPermutations();
         CheckPermutations();
-
-        if (_indexRepetition != null && _indexRepetition.gameObject.activeSelf)
-            _indexRepetition.UpdateRegisterTable();
     }
 
     /// <summary>
@@ -320,7 +322,6 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
             } 
             else 
             {
-                Debug.Log(_selectedCellIndex);
                 this[_selectedCellIndex.x, _selectedCellIndex.y].Deselect();
                 HighlightSelectedCellsNeighbours(_selectedCellIndex.x, _selectedCellIndex.y, false);
                 _selectedCellIndex = new Vector2Int(x, y);
@@ -345,20 +346,14 @@ public class SudokuView : MonoBehaviour, IPointerClickHandler
                 this[i, selectedY].Highlight(highlight);
 
         for (int j = 0; j < 3; j++)
-        {
             for (int i = 0; i < 3; i++)
-            {
                 if (x + i != selectedX && y + j != selectedY)
                     this[x + i, y + j].Highlight(highlight);
-            }
-        }
 
         for (int j = 0; j < 9; j++)
             for (int i = 0; i < 9; i++)
-            {
                 if (this[selectedX, selectedY].Digit == this[i, j].Digit && selectedX != i && selectedY != j)
                     if (highlight) this[i, j].Select();
                     else this[i, j].Deselect();
-            }
     }
 }

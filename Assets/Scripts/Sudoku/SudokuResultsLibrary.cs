@@ -28,11 +28,13 @@ public class SudokuResultsLibrary : MonoBehaviour
 
     private string[] _solutions;
 
+    [SerializeField] private bool _printSolutions = true;
+
     // Load the first file on start.
     private void Awake()
     {
         _solutions = File.ReadAllLines(_folderPath + _fileName + _currentFile.ToString() + _fileExtension);
-        Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
+        if(_printSolutions) Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
     }
 
     /// <summary>
@@ -43,8 +45,7 @@ public class SudokuResultsLibrary : MonoBehaviour
         _currentFile++;
         if (_currentFile > LAST_FILE) _currentFile = FIRST_FILE;
         _solutions = File.ReadAllLines(_folderPath + _fileName + _currentFile.ToString() + _fileExtension);
-        Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
-        Debug.Log(_solutions.Length);
+        if (_printSolutions) Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
         _currentLine = FIRST_LINE;
     }
 
@@ -56,7 +57,7 @@ public class SudokuResultsLibrary : MonoBehaviour
         _currentFile--;
         if (_currentFile < FIRST_FILE) _currentFile = LAST_FILE;
         _solutions = File.ReadAllLines(_folderPath + _fileName + _currentFile.ToString() + _fileExtension);
-        Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
+        if (_printSolutions) Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
         _currentLine = FIRST_LINE;
     }
 
@@ -72,7 +73,7 @@ public class SudokuResultsLibrary : MonoBehaviour
     {
         _currentLine++;
         if (_currentLine > LAST_LINE) _currentLine = FIRST_LINE;
-        Debug.Log($"Solution {_currentLine}");
+        if (_printSolutions) Debug.Log($"Solution {_currentLine}");
         return GetSolution(_solutions[_currentLine]);
     }
 
@@ -83,7 +84,7 @@ public class SudokuResultsLibrary : MonoBehaviour
     {
         _currentLine--;
         if (_currentLine < FIRST_LINE) _currentLine = LAST_LINE;
-        Debug.Log($"Solution {_currentLine}");
+        if (_printSolutions) Debug.Log($"Solution {_currentLine}");
         return GetSolution(_solutions[_currentLine]);
     }
 
