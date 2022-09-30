@@ -34,7 +34,7 @@ public class SudokuResultsLibrary : MonoBehaviour
     private void Awake()
     {
         _solutions = File.ReadAllLines(_folderPath + _fileName + _currentFile.ToString() + _fileExtension);
-        if(_printSolutions) Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
+        if (_printSolutions) Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ public class SudokuResultsLibrary : MonoBehaviour
     /// <returns>The sudoku solution in a list of integers format.</returns>
     private List<int> GetSolution(string solution)
     {
-        List<int> digits = new List<int>();
+        List<int> digits = new();
         for (int i = 0; i < solution.Length; i++)
             digits.Add(int.Parse(solution[i].ToString()));
 

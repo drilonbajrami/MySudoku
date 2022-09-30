@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 /// <summary>
 /// Represents a cell in the sudoku grid.
@@ -45,9 +46,19 @@ public class Cell : MonoBehaviour
     /// </summary>
     public void ToggleSums() => Sums.gameObject.SetActive(!Sums.gameObject.activeSelf);
 
-    public void Select() => _background.color = new Color(193/255f, 210/255f, 1f);
-    public void Deselect() => _background.color = Color.white;
+    public void Select(Action<bool> highlightNeighbors)
+    {
+        _background.color = new Color(193 / 255f, 210 / 255f, 1f);
+        highlightNeighbors?.Invoke(true);
+    }
+    public void Deselect(Action<bool> highlightNeighbors)
+    {
+        _background.color = Color.white;
+        highlightNeighbors?.Invoke(false);
+    }
 
-    public void Highlight(bool condition)
+    public void Focus(bool condition)
         => _background.color = condition ? new Color(220 / 255f, 220 / 255f, 220 / 255f) : Color.white;
+
+    public void Focus(bool condition, Color color) => _background.color = condition ? color : Color.white;
 }
