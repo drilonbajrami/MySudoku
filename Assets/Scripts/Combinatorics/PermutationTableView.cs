@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using MySudoku;
+using System.Collections.Generic;
 
 namespace SudokuTesting
 {
@@ -13,12 +14,44 @@ namespace SudokuTesting
         private Permutation[,,] _permutations = new Permutation[9, 8, 7];
         private Permutation[] _combinations = new Permutation[84];
 
+        private Stack<Permutation> _checkedPermutations = new();
+
         [SerializeField] private SudokuView _sudokuView;
 
         public void SpawnTables()
         {
             SpawnPermutations();
             SpawnCombinations();
+        }
+
+        public bool CheckPermutations(Cell[,] grid)
+        {
+            UncheckPermutations();
+            bool stop = false;
+            int[] permutation = new int[3];
+            for (int box = 0; box < 9; box++) {
+                int row = box / 3 * 3;
+                int col = box % 3 * 3;
+
+                for (int i = 0; i < 3; i++) {
+                    // Horizontal direction
+                    permutation[0] = grid[row + i, col].Number;
+                    permutation[1] = grid[row + i, col + 1].Number;
+                    permutation[2] = grid[row + i, col + 2].Number;
+
+                    if (permutation[0] != 0 && permutation[1] != 0 && permutation[2] != 0)
+                        stop = CheckPermutation(permutation, true, box + 1, i == 0);
+
+                    // Vertical direction
+                    permutation[0] = grid[row, col + i].Number;
+                    permutation[1] = grid[row + 1, col + i].Number;
+                    permutation[2] = grid[row + 2, col + i].Number;
+
+                    if (permutation[0] != 0 && permutation[1] != 0 && permutation[2] != 0)
+                        stop = CheckPermutation(permutation, false, box + 1, i == 0);
+                }
+            }
+            return stop;
         }
 
         private void Update()
@@ -86,6 +119,7 @@ namespace SudokuTesting
             // This means that a permutations with starting indexes (row - row % 3, col - col % 3) are present twice
             // in a permutation group.
             if (corner) _permutations[pIndex[0], pIndex[1], pIndex[2]].Corner();
+            _checkedPermutations.Push(_permutations[pIndex[0], pIndex[1], pIndex[2]]);
             return _permutations[pIndex[0], pIndex[1], pIndex[2]].Check(horizontal, box);
         }
 
@@ -95,7 +129,9 @@ namespace SudokuTesting
             int[] comb = new int[3];
             permutation.CopyTo(comb, 0);
             Array.Sort(comb);
-            for (int i = SudokuData.CombinationGroups[comb[0] - 1, 0]; i < SudokuData.CombinationGroups[comb[0] - 1, 1] + 1; i++)
+            int startIndex = SudokuData.CombinationGroups[comb[0] - 1, 0];
+            int endIndex = SudokuData.CombinationGroups[comb[0] - 1, 1] + 1;
+            for (int i = startIndex; i < endIndex; i++)
                 if (comb[1] == SudokuData.Combinations[i, 1] && comb[2] == SudokuData.Combinations[i, 2])
                     _combinations[i].Check(horizontal, box);
         }
@@ -103,12 +139,10 @@ namespace SudokuTesting
         /// <summary>
         /// Unchecks/unmarks all permutations.
         /// </summary>
-        public void UncheckPermutations()
+        private void UncheckPermutations()
         {
-            for (int x = 0; x < 9; x++)
-                for (int y = 0; y < 8; y++)
-                    for (int z = 0; z < 7; z++)
-                        _permutations[x, y, z].Uncheck();
+            while (_checkedPermutations.Count > 0)
+                _checkedPermutations.Pop().Uncheck();
         }
 
         private void UncheckCombinations()
@@ -120,7 +154,7 @@ namespace SudokuTesting
         /// <summary>
         /// Marks all the permutation for the given numbers based on input from the keypad numbers 1 to 9.
         /// </summary>
-        private void CycleThroughNumberPermutations()
+        private void MarkPermutationsOnNumberKeyDown()
         {
             if (Input.GetKeyDown(KeyCode.Keypad1))
                 MarkPermutationsFor(1);

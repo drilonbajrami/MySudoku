@@ -28,6 +28,11 @@ namespace MySudoku
         // A combination of 3 numbers {x, y, z} can appear only 4 times max in a sudoku puzzle
 
         /// <summary>
+        /// The sudoku to show/draw.
+        /// </summary>
+        private Sudoku _sudoku;
+
+        /// <summary>
         /// Grid of cells.
         /// </summary>
         private readonly Cell[,] _grid = new Cell[9, 9];
@@ -65,7 +70,7 @@ namespace MySudoku
         private void Start()
         {
             DrawSudoku();
-            FillGrid(_sudokuResults.GetCurrentSolution());
+            FillNumbers(_sudokuResults.GetCurrentSolution());
         }
 
         Sudoku sud;
@@ -80,8 +85,8 @@ namespace MySudoku
             if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
 
             if (Input.GetKeyDown(KeyCode.E)) sud = _generator.Generate();
-            if (Input.GetKeyDown(KeyCode.T)) FillGrid(sud.GetSolution());
-            else if (Input.GetKeyDown(KeyCode.R)) FillGrid(sud.GetPuzzle());
+            if (Input.GetKeyDown(KeyCode.T)) FillNumbers(sud.GetSolution());
+            else if (Input.GetKeyDown(KeyCode.R)) FillNumbers(sud.GetPuzzle());
         }
 
         #region Base Sudoku Grid Methods
@@ -97,7 +102,7 @@ namespace MySudoku
 
         private void SpawnCells()
         {
-            RectTransform cells = new GameObject().AddComponent<RectTransform>();
+            RectTransform cells = new GameObject("Cells").AddComponent<RectTransform>();
             cells.SetParent(transform);
             cells.anchoredPosition = Vector2.zero;
             float gridTopLeftPos = _cellSize * 4.5f - _cellSize * 0.5f;
@@ -108,13 +113,14 @@ namespace MySudoku
                     _grid[row, col] = Instantiate(_cellPrefab, cells);
                     _grid[row, col].RectTransform.sizeDelta = new Vector2(_cellSize, _cellSize);
                     _grid[row, col].RectTransform.anchoredPosition = position;
+                    _grid[row, col].Initialize();
                 }
             }
         }
 
         private void SpawnBorders()
         {
-            RectTransform borders = new GameObject().AddComponent<RectTransform>();
+            RectTransform borders = new GameObject("Borders").AddComponent<RectTransform>();
             borders.SetParent(transform);
             borders.anchoredPosition = Vector2.zero;
 
@@ -146,22 +152,35 @@ namespace MySudoku
                     verticalBorder.gameObject.transform.SetAsFirstSibling();
                 }
             }
-        ;
+
             _rectTransform.sizeDelta = new Vector2(borderLength, borderLength);
+        }
+
+        public void SetSudoku(Sudoku sudoku)
+        {
+            _sudoku = sudoku;
+            FillNumbers(sudoku.Puzzle);
+        }
+
+        public void FillNumbers(int[,] values)
+        {
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++)
+                    _grid[row, col].SetNum(values[row, col]);
         }
 
         /// <summary>
         /// Fills the sudoku grid with the given numbers/solution.
         /// </summary>
         /// <param name="digits">The sudoku solution.</param>
-        public void FillGrid(List<int> digits)
+        public void FillNumbers(List<int> digits)
         {
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
                     _grid[row, col].SetNum(digits[row * 9 + col]);
 
-            //CalculateSums();
-            //CheckPermutationsAndIndexes();
+            Sudokutils.CalculateSums(_grid);
+            stop = _tableView.CheckPermutations(_grid);
         }
 
         /// <summary>
@@ -186,9 +205,9 @@ namespace MySudoku
             else if (Input.GetKeyDown(KeyCode.DownArrow))
                 _sudokuResults.LoadPreviousFile();
             else if (Input.GetKeyDown(KeyCode.RightArrow))
-                FillGrid(_sudokuResults.GetNextSolution());
+                FillNumbers(_sudokuResults.GetNextSolution());
             else if (Input.GetKeyDown(KeyCode.LeftArrow))
-                FillGrid(_sudokuResults.GetPreviousSolution());
+                FillNumbers(_sudokuResults.GetPreviousSolution());
         }
         #endregion
 
@@ -197,101 +216,9 @@ namespace MySudoku
         /// </summary>
         public void FillGridSimple() =>
             // Simplest sudoku to create with 2 permutation repeated 3 times per group
-            FillGrid(new List<int> { 1,2,3,4,5,6,7,8,9,4,5,6,7,8,9,1,2,3,7,8,9,1,2,3,4,5,6,
+            FillNumbers(new List<int> { 1,2,3,4,5,6,7,8,9,4,5,6,7,8,9,1,2,3,7,8,9,1,2,3,4,5,6,
                                  2,3,4,5,6,7,8,9,1,5,6,7,8,9,1,2,3,4,8,9,1,2,3,4,5,6,7,
                                  3,4,5,6,7,8,9,1,2,6,7,8,9,1,2,3,4,5,9,1,2,3,4,5,6,7,8 });
-
-        /// <summary>
-        /// Calculates different sums of the solution numbers within the grid.
-        /// </summary>
-        private void CalculateSums()
-        {
-            for (int box = 0; box < 9; box++) {
-                int row = box / 3 * 3;
-                int col = box % 3 * 3;
-
-                for (int i = 0; i < 3; i++) {
-                    int colSum = _grid[row, col + i].Number +
-                                 _grid[row + 1, col + i].Number +
-                                 _grid[row + 2, col + i].Number;
-                    _grid[row, col + i].Sums.SetColumnSum(colSum);
-
-                    int rowSum = _grid[row + i, col].Number +
-                                 _grid[row + i, col + 1].Number +
-                                 _grid[row + i, col + 2].Number;
-                    _grid[row + i, col].Sums.SetRowSum(rowSum);
-                }
-
-                // Cross sum in one box (15 to 35)
-                int crossSum = _grid[row, col + 1].Number +
-                               _grid[row + 1, col + 1].Number +
-                               _grid[row + 2, col + 1].Number +
-                               _grid[row + 1, col].Number +
-                               _grid[row + 1, col + 2].Number;
-                _grid[row + 1, col + 1].Sums.SetCrossSum(crossSum);
-
-                // Diagonal sums from top left to bottom right
-                _grid[row, col].Sums.SetTLBRSum(_grid[row, col].Number +
-                                                _grid[row + 1, col + 1].Number +
-                                                _grid[row + 2, col + 2].Number);
-                _grid[row, col + 1].Sums.SetTLBRSum(_grid[row, col + 1].Number +
-                                                    _grid[row + 1, col + 2].Number);
-                _grid[row, col + 2].Sums.SetTLBRSum(_grid[row, col + 2].Number);
-                _grid[row + 1, col].Sums.SetTLBRSum(_grid[row + 1, col].Number +
-                                                    _grid[row + 2, col + 1].Number);
-                _grid[row + 2, col].Sums.SetTLBRSum(_grid[row + 2, col].Number);
-
-                // Diagonal sums from bottom left to top right
-                _grid[row, col].Sums.SetBLTRSum(_grid[row, col].Number);
-                _grid[row + 1, col].Sums.SetBLTRSum(_grid[row + 1, col].Number +
-                                                    _grid[row, col + 1].Number);
-                _grid[row + 2, col].Sums.SetBLTRSum(_grid[row + 2, col].Number +
-                                               _grid[row + 1, col + 1].Number +
-                                               _grid[row, col + 2].Number);
-                _grid[row + 2, col + 1].Sums.SetBLTRSum(_grid[row + 2, col + 1].Number +
-                                                   _grid[row + 1, col + 2].Number);
-                _grid[row + 2, col + 2].Sums.SetBLTRSum(_grid[row + 2, col + 2].Number);
-            }
-        }
-
-        /// <summary>
-        /// Checks all the permutations.
-        /// </summary>
-        private void CheckPermutations()
-        {
-            int[] permutation = new int[3];
-            for (int box = 0; box < 9; box++) {
-                int row = box / 3 * 3;
-                int col = box % 3 * 3;
-
-                for (int i = 0; i < 3; i++) {
-                    // Horizontal direction
-                    permutation[0] = _grid[row + i, col].Number;
-                    permutation[1] = _grid[row + i, col + 1].Number;
-                    permutation[2] = _grid[row + i, col + 2].Number;
-
-                    if (permutation[0] != 0 && permutation[1] != 0 && permutation[2] != 0)
-                        stop = _tableView.CheckPermutation(permutation, true, box + 1, i == 0);
-
-                    // Vertical direction
-                    permutation[0] = _grid[row, col + i].Number;
-                    permutation[1] = _grid[row + 1, col + i].Number;
-                    permutation[2] = _grid[row + 2, col + i].Number;
-
-                    if (permutation[0] != 0 && permutation[1] != 0 && permutation[2] != 0)
-                        stop = _tableView.CheckPermutation(permutation, false, box + 1, i == 0);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Checks the permutation and indexes.
-        /// </summary>
-        private void CheckPermutationsAndIndexes()
-        {
-            _tableView.UncheckPermutations();
-            CheckPermutations();
-        }
 
         /// <summary>
         /// Checks the permutation and indexes as a coroutine.
@@ -299,7 +226,8 @@ namespace MySudoku
         private IEnumerator CheckPermutationsCoroutine()
         {
             for (int i = 0; i < 100000; i++) {
-                FillGrid(_sudokuResults.GetNextSolution());
+                FillNumbers(_sudokuResults.GetNextSolution());
+
                 if (stop) StopAllCoroutines();
                 yield return new WaitForEndOfFrame();
             }

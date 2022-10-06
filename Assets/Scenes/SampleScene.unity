@@ -177,7 +177,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cellPrefab: {fileID: 2057213215059695820, guid: da8fff0c2441e034ba8ddd9b1f12d0b4, type: 3}
   _borderPrefab: {fileID: 7654005748633683150, guid: ffa419a3b7116bb4984d2bcabab3f8a1, type: 3}
-  _cellSize: 70
+  _cellSize: 100
   _borderThickness: 6
   _sudokuResults: {fileID: 487582037}
   _tableView: {fileID: 974511135}
@@ -208,7 +208,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b07142c79480984d9269d5f79d855d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _seed: 0
+  _seed: 1
   _randGenerator: {fileID: 487582039}
 --- !u!114 &487582039
 MonoBehaviour:

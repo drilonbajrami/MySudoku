@@ -30,6 +30,8 @@ public class Cell : MonoBehaviour
     /// </summary>
     private TMP_Text _numberText;
 
+    [SerializeField] private Notes _notes;
+
     public GridSums Sums;
 
     private void Awake()
@@ -37,6 +39,12 @@ public class Cell : MonoBehaviour
         RectTransform = GetComponent<RectTransform>();
         _background = GetComponent<Image>();
         _numberText = GetComponentInChildren<TMP_Text>();
+    }
+    
+    public void Initialize()
+    {
+        _notes.Setup();
+        _notes.gameObject.SetActive(Number == 0);
     }
 
     /// <summary>
@@ -46,8 +54,13 @@ public class Cell : MonoBehaviour
     public void SetNum(int num)
     {
         Number = num;
+        _notes.gameObject.SetActive(num == 0);
         _numberText.text = num == 0 ? "" : num.ToString();
     }
+
+    public void ShowNote(int number) => _notes.Show(number);
+
+    public void HideNote(int number) => _notes.Hide(number);
 
     /// <summary>
     /// Toggles on/off the sums.
