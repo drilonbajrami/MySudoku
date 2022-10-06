@@ -16,8 +16,8 @@ namespace SudokuTesting
         /// <summary>
         /// The numbers this permutation contains.
         /// </summary>
-        public int[] Digits => _digits;
-        private readonly int[] _digits = new int[3];
+        public int[] Numbers => _numbers;
+        private readonly int[] _numbers = new int[3];
 
         /// <summary>
         /// The rect transform of this game object.
@@ -28,7 +28,7 @@ namespace SudokuTesting
         /// <summary>
         /// The permutation in text format { x, y, z }.
         /// </summary>
-        [SerializeField] private TMP_Text _digitsText;
+        [SerializeField] private TMP_Text _numbersText;
 
         [SerializeField] private Image _background;
 
@@ -56,7 +56,7 @@ namespace SudokuTesting
         /// <param name="digits">The three digits/numbers.</param>
         public void SetDigits(int[] digits)
         {
-            Array.Copy(digits, _digits, digits.Length);
+            Array.Copy(digits, _numbers, digits.Length);
             UpdateDigitsText();
         }
 
@@ -68,7 +68,7 @@ namespace SudokuTesting
         public bool IsCompatibleWith(Permutation permutation)
         {
             for (int i = 0; i < 3; i++)
-                if (Digits[i] == permutation.Digits[i])
+                if (Numbers[i] == permutation.Numbers[i])
                     return false;
 
             return true;
@@ -78,7 +78,7 @@ namespace SudokuTesting
         /// Sets the permutation in string format {x, y, z} for the text component.
         /// </summary>
         private void UpdateDigitsText()
-            => _digitsText.text = _digits == null || _digits.Length == 0 ? "" : "{" + $"{_digits[0]}, {_digits[1]}, {_digits[2]}" + "}";
+            => _numbersText.text = _numbers == null || _numbers.Length == 0 ? "" : "{" + $"{_numbers[0]}, {_numbers[1]}, {_numbers[2]}" + "}";
 
         /// <summary>
         /// Marks/checks the permutation.
@@ -157,7 +157,7 @@ namespace SudokuTesting
             if (eventData.button == PointerEventData.InputButton.Left) {
                 _data.SetActive(!_data.activeSelf);
                 foreach (int i in _boxes)
-                    sudokuView.HighlightCells(Digits, i, !_data.activeSelf);
+                    sudokuView.HighlightCells(Numbers, i, !_data.activeSelf);
             }
         }
     }

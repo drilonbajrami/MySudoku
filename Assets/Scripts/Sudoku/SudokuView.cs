@@ -79,7 +79,7 @@ namespace MySudoku
             else if (Input.GetKeyDown(KeyCode.P)) StopAllCoroutines();
             if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
 
-            if (Input.GetKeyDown(KeyCode.E)) sud = _generator.GenerateSudoku();
+            if (Input.GetKeyDown(KeyCode.E)) sud = _generator.Generate();
             if (Input.GetKeyDown(KeyCode.T)) FillGrid(sud.GetSolution());
             else if (Input.GetKeyDown(KeyCode.R)) FillGrid(sud.GetPuzzle());
         }
@@ -158,7 +158,7 @@ namespace MySudoku
         {
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
-                    _grid[row, col].SetDigit(digits[row * 9 + col]);
+                    _grid[row, col].SetNum(digits[row * 9 + col]);
 
             //CalculateSums();
             //CheckPermutationsAndIndexes();
@@ -211,46 +211,46 @@ namespace MySudoku
                 int col = box % 3 * 3;
 
                 for (int i = 0; i < 3; i++) {
-                    int colSum = _grid[row, col + i].Digit +
-                                 _grid[row + 1, col + i].Digit +
-                                 _grid[row + 2, col + i].Digit;
+                    int colSum = _grid[row, col + i].Number +
+                                 _grid[row + 1, col + i].Number +
+                                 _grid[row + 2, col + i].Number;
                     _grid[row, col + i].Sums.SetColumnSum(colSum);
 
-                    int rowSum = _grid[row + i, col].Digit +
-                                 _grid[row + i, col + 1].Digit +
-                                 _grid[row + i, col + 2].Digit;
+                    int rowSum = _grid[row + i, col].Number +
+                                 _grid[row + i, col + 1].Number +
+                                 _grid[row + i, col + 2].Number;
                     _grid[row + i, col].Sums.SetRowSum(rowSum);
                 }
 
                 // Cross sum in one box (15 to 35)
-                int crossSum = _grid[row, col + 1].Digit +
-                               _grid[row + 1, col + 1].Digit +
-                               _grid[row + 2, col + 1].Digit +
-                               _grid[row + 1, col].Digit +
-                               _grid[row + 1, col + 2].Digit;
+                int crossSum = _grid[row, col + 1].Number +
+                               _grid[row + 1, col + 1].Number +
+                               _grid[row + 2, col + 1].Number +
+                               _grid[row + 1, col].Number +
+                               _grid[row + 1, col + 2].Number;
                 _grid[row + 1, col + 1].Sums.SetCrossSum(crossSum);
 
                 // Diagonal sums from top left to bottom right
-                _grid[row, col].Sums.SetTLBRSum(_grid[row, col].Digit +
-                                                _grid[row + 1, col + 1].Digit +
-                                                _grid[row + 2, col + 2].Digit);
-                _grid[row, col + 1].Sums.SetTLBRSum(_grid[row, col + 1].Digit +
-                                                    _grid[row + 1, col + 2].Digit);
-                _grid[row, col + 2].Sums.SetTLBRSum(_grid[row, col + 2].Digit);
-                _grid[row + 1, col].Sums.SetTLBRSum(_grid[row + 1, col].Digit +
-                                                    _grid[row + 2, col + 1].Digit);
-                _grid[row + 2, col].Sums.SetTLBRSum(_grid[row + 2, col].Digit);
+                _grid[row, col].Sums.SetTLBRSum(_grid[row, col].Number +
+                                                _grid[row + 1, col + 1].Number +
+                                                _grid[row + 2, col + 2].Number);
+                _grid[row, col + 1].Sums.SetTLBRSum(_grid[row, col + 1].Number +
+                                                    _grid[row + 1, col + 2].Number);
+                _grid[row, col + 2].Sums.SetTLBRSum(_grid[row, col + 2].Number);
+                _grid[row + 1, col].Sums.SetTLBRSum(_grid[row + 1, col].Number +
+                                                    _grid[row + 2, col + 1].Number);
+                _grid[row + 2, col].Sums.SetTLBRSum(_grid[row + 2, col].Number);
 
                 // Diagonal sums from bottom left to top right
-                _grid[row, col].Sums.SetBLTRSum(_grid[row, col].Digit);
-                _grid[row + 1, col].Sums.SetBLTRSum(_grid[row + 1, col].Digit +
-                                                    _grid[row, col + 1].Digit);
-                _grid[row + 2, col].Sums.SetBLTRSum(_grid[row + 2, col].Digit +
-                                               _grid[row + 1, col + 1].Digit +
-                                               _grid[row, col + 2].Digit);
-                _grid[row + 2, col + 1].Sums.SetBLTRSum(_grid[row + 2, col + 1].Digit +
-                                                   _grid[row + 1, col + 2].Digit);
-                _grid[row + 2, col + 2].Sums.SetBLTRSum(_grid[row + 2, col + 2].Digit);
+                _grid[row, col].Sums.SetBLTRSum(_grid[row, col].Number);
+                _grid[row + 1, col].Sums.SetBLTRSum(_grid[row + 1, col].Number +
+                                                    _grid[row, col + 1].Number);
+                _grid[row + 2, col].Sums.SetBLTRSum(_grid[row + 2, col].Number +
+                                               _grid[row + 1, col + 1].Number +
+                                               _grid[row, col + 2].Number);
+                _grid[row + 2, col + 1].Sums.SetBLTRSum(_grid[row + 2, col + 1].Number +
+                                                   _grid[row + 1, col + 2].Number);
+                _grid[row + 2, col + 2].Sums.SetBLTRSum(_grid[row + 2, col + 2].Number);
             }
         }
 
@@ -266,17 +266,17 @@ namespace MySudoku
 
                 for (int i = 0; i < 3; i++) {
                     // Horizontal direction
-                    permutation[0] = _grid[row + i, col].Digit;
-                    permutation[1] = _grid[row + i, col + 1].Digit;
-                    permutation[2] = _grid[row + i, col + 2].Digit;
+                    permutation[0] = _grid[row + i, col].Number;
+                    permutation[1] = _grid[row + i, col + 1].Number;
+                    permutation[2] = _grid[row + i, col + 2].Number;
 
                     if (permutation[0] != 0 && permutation[1] != 0 && permutation[2] != 0)
                         stop = _tableView.CheckPermutation(permutation, true, box + 1, i == 0);
 
                     // Vertical direction
-                    permutation[0] = _grid[row, col + i].Digit;
-                    permutation[1] = _grid[row + 1, col + i].Digit;
-                    permutation[2] = _grid[row + 2, col + i].Digit;
+                    permutation[0] = _grid[row, col + i].Number;
+                    permutation[1] = _grid[row + 1, col + i].Number;
+                    permutation[2] = _grid[row + 2, col + i].Number;
 
                     if (permutation[0] != 0 && permutation[1] != 0 && permutation[2] != 0)
                         stop = _tableView.CheckPermutation(permutation, false, box + 1, i == 0);
@@ -374,10 +374,10 @@ namespace MySudoku
                     _grid[boxRow + r, boxCol + c].Focus(on);
 
                 for (int j = 0; j < 9; j++)
-                    if (_grid[_selectedCell.row, _selectedCell.col].Digit == _grid[i, j].Digit
+                    if (_grid[_selectedCell.row, _selectedCell.col].Number == _grid[i, j].Number
                      && _selectedCell.row != i
                      && _selectedCell.col != j
-                     && _grid[_selectedCell.row, _selectedCell.col].Digit != 0)
+                     && _grid[_selectedCell.row, _selectedCell.col].Number != 0)
                         if (on) _grid[i, j].Select(null);
                         else _grid[i, j].Deselect(null);
             }
@@ -391,7 +391,7 @@ namespace MySudoku
             for (int r = 0; r < 3; r++)
                 for (int c = 0; c < 3; c++)
                     for (int p = 0; p < 3; p++)
-                        if (_grid[row + r, col + c].Digit == permutation[p])
+                        if (_grid[row + r, col + c].Number == permutation[p])
                             _grid[row + r, col + c].Focus(highlight, Color.red);
         }
     }

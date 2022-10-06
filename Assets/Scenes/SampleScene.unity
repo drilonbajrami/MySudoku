@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 487582036}
   - component: {fileID: 487582037}
   - component: {fileID: 487582038}
+  - component: {fileID: 487582039}
   m_Layer: 5
   m_Name: SudokuGridView
   m_TagString: Untagged
@@ -207,6 +208,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b07142c79480984d9269d5f79d855d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _seed: 0
+  _randGenerator: {fileID: 487582039}
+--- !u!114 &487582039
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 487582034}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8339c16879be88f44b1366d2b2ed837b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _seed: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 
 namespace MySudoku
@@ -55,6 +54,10 @@ namespace MySudoku
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
         };
 
+        /// <summary>
+        /// Returns the sudoku solution as a list of ints.
+        /// </summary>
+        /// <returns>The solution as a list of ints.</returns>
         public List<int> GetSolution() {
             List<int> solution = new List<int>();
             StringBuilder sol = new StringBuilder();
@@ -69,6 +72,10 @@ namespace MySudoku
             return solution;
         }
 
+        /// <summary>
+        /// Returns the sudoku puzzle as a list of ints, 0's represent empty cells/numbers.
+        /// </summary>
+        /// <returns>The puzzle as a list of ints.</returns>
         public List<int> GetPuzzle() {
             List<int> puzzle = new List<int>();
             StringBuilder puz = new StringBuilder();

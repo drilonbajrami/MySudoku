@@ -13,32 +13,40 @@ public class Cell : MonoBehaviour
     /// <summary>
     /// The number this cell contains.
     /// </summary>
-    public int Digit => _digit;
-    private int _digit = 0;
-
-    /// <summary>
-    /// Text representation of this cell's digit.
-    /// </summary>
-    [SerializeField] private TMP_Text _digitText;
+    public int Number { get; private set; } = 0;
 
     /// <summary>
     /// Rect transform of this game object.
     /// </summary>
-    public RectTransform RectTransform => _rectTransform;
-    [SerializeField] private RectTransform _rectTransform;
+    public RectTransform RectTransform { get; private set; }
 
-    [SerializeField] private Image _background;
+    /// <summary>
+    /// Cell background.
+    /// </summary>
+    private Image _background;
+
+    /// <summary>
+    /// Text representation of this cell's digit.
+    /// </summary>
+    private TMP_Text _numberText;
 
     public GridSums Sums;
+
+    private void Awake()
+    {
+        RectTransform = GetComponent<RectTransform>();
+        _background = GetComponent<Image>();
+        _numberText = GetComponentInChildren<TMP_Text>();
+    }
 
     /// <summary>
     /// Sets this cell's digit/number.
     /// </summary>
-    /// <param name="digit">The digit/number to set.</param>
-    public void SetDigit(int digit)
+    /// <param name="num">The digit/number to set.</param>
+    public void SetNum(int num)
     {
-        _digit = digit;
-        _digitText.text = digit == 0 ? "" : digit.ToString();
+        Number = num;
+        _numberText.text = num == 0 ? "" : num.ToString();
     }
 
     /// <summary>

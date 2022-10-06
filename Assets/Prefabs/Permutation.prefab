@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 726738155712941285}
   - component: {fileID: 726738155712941286}
   m_Layer: 5
-  m_Name: Digits
+  m_Name: Numbers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -227,7 +227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rectTransform: {fileID: 726738157539401572}
-  _digitsText: {fileID: 726738155712941286}
+  _numbersText: {fileID: 726738155712941286}
   _background: {fileID: 726738157539401571}
   _h: {fileID: 7369374868474336033}
   _v: {fileID: 3691154956960581362}

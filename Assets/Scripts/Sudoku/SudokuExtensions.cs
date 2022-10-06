@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+
 namespace MySudoku
 {
     /// <summary>

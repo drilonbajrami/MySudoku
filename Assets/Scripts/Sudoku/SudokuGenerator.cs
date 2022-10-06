@@ -1,7 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing.Text;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using TMPro.EditorUtilities;
 using UnityEngine;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 namespace MySudoku
 {
@@ -11,14 +16,30 @@ namespace MySudoku
     public class SudokuGenerator : MonoBehaviour
     {
         /// <summary>
+        /// Seed for the random generator.
+        /// </summary>
+        [SerializeField] private int _seed;
+
+        /// <summary>
+        /// Random number generator with seed.
+        /// </summary>
+        [SerializeField] RandomGenerator _randGenerator;
+
+        /// <summary>
         /// Creates a sudoku.
         /// </summary>
-        /// <returns>Sudoku with the solution and puzzle.</returns>
-        public Sudoku GenerateSudoku()
+        /// <returns>Sudoku with the solution and puzzle.< /returns>
+        public Sudoku Generate()
         {
-            Sudoku sudoku = new Sudoku();
+            if (_randGenerator == null) {
+                Debug.LogWarning("Random generator does not exist! Please add one.");
+                return null;
+            }
+
+            _randGenerator.SetSeed(_seed);
+            Sudoku sudoku = new();
             GenerateSolution(sudoku);
-            GeneratePuzzle(sudoku);
+            GeneratePuzzle(sudoku, 30);
             return sudoku;
         }
 
@@ -28,24 +49,26 @@ namespace MySudoku
         /// <param name="sudoku">The sudoku to generate the solution for.</param>
         private void GenerateSolution(Sudoku sudoku)
         {
-            // Fill the diagonal boxes first (1,5,9)
+            // Fill the diagonal boxes first (1,5,9) because these boxes
+            // do not affect each other's order of numbers.
             for (int i = 0; i < 9; i += 3)
                 FillBox(sudoku.Solution, row: i, col: i);
 
-            FillRemaining(sudoku.Solution, 0, 3);
+            // Fills the remaining cells in boxes (2,3,4,6,7,8).
+            FillRemaining(sudoku.Solution, row: 0, col: 3);
         }
 
         /// <summary>
         /// Generates the puzzle for the given sudoku.
         /// </summary>
         /// <param name="sudoku">The sudoku to generate the puzzle for.</param>
-        private void GeneratePuzzle(Sudoku sudoku)
+        private void GeneratePuzzle(Sudoku sudoku) // To be changed
         {
             Array.Copy(sudoku.Solution, sudoku.Puzzle, sudoku.Solution.Length);
             int count = 64;
             while (count != 0) {
                 // Pick random cell
-                int cellId = UnityEngine.Random.Range(0, 81);
+                int cellId = _randGenerator.Next(81);
 
                 // extract coordinates i and j
                 int row = cellId / 9;
@@ -60,6 +83,29 @@ namespace MySudoku
                 }
             }
         }
+        
+        private void GeneratePuzzle(Sudoku sudoku, int numOfClues)
+        {
+            Array.Copy(sudoku.Solution, sudoku.Puzzle, sudoku.Solution.Length);
+            //int clueCount = 81;
+
+            List<(int row, int col)> indexes = new();
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++) {
+                    indexes.Add((row, col));
+                }
+
+            for (int i = 0; i < 15; i++) {
+                int randIndex = _randGenerator.Next(0, indexes.Count);
+                (int row, int col) randomCell = indexes[randIndex];
+                indexes.RemoveAt(randIndex);
+                sudoku.Puzzle[randomCell.row, randomCell.col] = 0;
+                if (randomCell.row != 5 || randomCell.col != 5) {
+                    indexes.Remove((8 - randomCell.row, 8 - randomCell.col));
+                    sudoku.Puzzle[8 - randomCell.row, 8 - randomCell.col] = 0;
+                }
+            }
+        }
 
         /// <summary>
         /// Fills the given box of sudoku grid with randomly placed numbers, from 1 to 9.
@@ -67,19 +113,21 @@ namespace MySudoku
         /// <param name="sudoku">The sudoku solution grid.</param>
         /// <param name="row">The first row of the box.</param>
         /// <param name="col">The first column of the box.</param>
-        void FillBox(int[,] sudoku, int row, int col)
+        private void FillBox(int[,] sudoku, int row, int col)
         {
-            int num;
-            for (int r = 0; r < 3; r++) {
+            // Store the numbers from 1 to 9, so the same number does not get picked more than once, randomly.
+            List<int> numbers = new() { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            int number;
+            for (int r = 0; r < 3; r++)
                 for (int c = 0; c < 3; c++) {
-                    do {
-                        num = UnityEngine.Random.Range(1, 10);
+                    do { 
+                        int index = _randGenerator.Next(numbers.Count);
+                        number = numbers[index];
+                        numbers.RemoveAt(index);
                     }
-                    while (sudoku.HasNumberInBox(row, col, num));
-
-                    sudoku[row + r, col + c] = num;
+                    while (sudoku.HasNumberInBox(row, col, number));
+                    sudoku[row + r, col + c] = number;
                 }
-            }
         }
 
         /// <summary>
@@ -89,71 +137,29 @@ namespace MySudoku
         /// <param name="row">The row of the empty cell to fill.</param>
         /// <param name="col">The column of the empty cell to fill.</param>
         /// <returns>Whether this recursive function can go forward or backwards, continue or stop.</returns>
-        bool FillRemaining(int[,] sudoku, int row, int col)
+        private bool FillRemaining(int[,] sudoku, int row, int col)
         {
-            if (col > 8 && row < 8) { // Next row
-                row++;
-                col = 0;
-            }
+            // Got to the next row if the current row end is reached.
+            if (col > 8 && row < 8) { row++; col = 0; }
 
-            if (row < 3) { // Box 2 & 3
-                if (col < 3)
-                    col = 3;
-            }
-            else if (row < 6) { // Box 4 & 6
-                if (col == row / 3 * 3)
-                    col += 3;
-            }
-            else { // Box 6 & 7
-                if (col == 6) {
-                    row++;
-                    col = 0;
-                    if (row > 8) return true;
-                }
-            }
+            // Clamp the row and column:
+            // Box 2 & 3.
+            if (row < 3) { if (col < 3) col = 3; }
+            // Box 4 & 6.
+            else if (row < 6) { if (col == row / 3 * 3) col += 3; }
+            // Box 7 & 8.
+            else { if (col == 6) { row++; col = 0; if (row > 8) return true; } }
 
-            for (int num = 1; num <= 9; num++) {
-                if (sudoku.CanUseNumber(row, col, num)) {
-                    sudoku[row, col] = num; // assign value
-                    if (FillRemaining(sudoku, row, col + 1)) // Go next, if it returns true then stop
-                        return true;
-                    sudoku[row, col] = 0; // Reset if not available, recursive backtracking.
+            for (int number = 1; number <= 9; number++)
+                if (sudoku.CanUseNumber(row, col, number)) {
+                    sudoku[row, col] = number;
+                    // Go to the next cell, if true then go back one step recursively.
+                    if (FillRemaining(sudoku, row, col + 1)) return true;
+                    // Reset cell number to 0 (null/empty) if the current assigned number is not valid.
+                    sudoku[row, col] = 0;
                 }
-            }
+
             return false;
         }
     }
 }
-/* Solving rules & techniques 
-
-1. "Last free cell"          : last remaining number in a row, column and box (100% sure).
-
-2. "Last remaining cell"     : if adjacent boxes (2x max) have the missing number of current box on specific rows & columns
-                               then find the last possible cell within current box by eliminating rows & columns (100%).
-
-3. "Last possible number"    : Check what numbers are present in the box, column and row, place the missing one (100% only)
-
-4. "Notes" per BOX
-5. "Obvious singles"         : a note appears only once in a box. (100%)
-6. "Obvious pairs"           : two notes appear alone in pairs in two cells, remove the note occurrences in other cells.
-7. "Obvious triples"         : three notes appear only in three cells, remove the note occurrences in other cells.
-
-8. "Hidden singles"          : a note appears only once in a box despite other notes.
-9. "Hidden pairs"            : two notes appear only in two cells, remove other notes within these two cells. 
-10. "Hidden triples"         : three notes appear only in three cells (comb of 2), remove other notes within these three cells.
-
-11. "Pointing pairs"         : the same note appears twice in the same row or column, 
-                               remove all identical notes in the same row or column in adjacent boxes.
-12. "Pointing triples"       : the same note appears thrice in the same row or column, 
-                               remove all identical notes in the same row or column  in adjacent boxes.
-
-13. "X-wing"                 : on two different boxes, the same note appears on the same column and rows (diagonally), 
-                               only one direction of the X can contain these notes, so remove all occurrences of these notes in 
-                               other boxes.
-14. "Y-wing"                 : Find a cell (pivot) with only two notes, find two other cells (pincers) in the same column and row 
-                               with only two notes where at least one note is the same with one of the notes in the pivot cells.
-                               Two pincer cells should have at least one identical note that is not present in the pivot cell.
-                               Find the cross cell between two pincer cells and remove the common note from that cell.
-15. "Swordfish"              : same X-wing but with three numbers. The same note (number) appears aligned perfectly  in 3 columns
-                               or rows. 
-*/
