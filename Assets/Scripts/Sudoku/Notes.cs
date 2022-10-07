@@ -19,7 +19,7 @@ public class Notes : MonoBehaviour
     /// Resizes and rearranges the positioning of the note's numbers within the cell,
     /// based on the cell's size.
     /// </summary>
-    public void Setup()
+    public void Initialize()
     {
         float cellSize = transform.GetComponentInParent<RectTransform>().sizeDelta.x / 3;
         for(int i = 0; i < 9; i++) {

@@ -37,21 +37,35 @@ namespace MySudoku
         /// </summary>
         private readonly Cell[,] _grid = new Cell[9, 9];
 
+        /// <summary>
+        /// The rect transform of the sudoku view.
+        /// </summary>
         private RectTransform _rectTransform;
 
         /// <summary>
         /// Cell prefab.
         /// </summary>
         [SerializeField] private Cell _cellPrefab;
-
-        private (int row, int col) _selectedCell = (-1, -1);
-
         /// <summary>
         /// Grid border prefab.
         /// </summary>
         [SerializeField] private Image _borderPrefab;
+        /// <summary>
+        /// The size of for each cell in the sudoku grid view.
+        /// </summary>
         [SerializeField] private float _cellSize = 100f;
+        /// <summary>
+        /// The thickness of the borders/lines of the sudoku grid view.
+        /// </summary>
         [Range(1f, 10f)][SerializeField] private float _borderThickness = 6f;
+
+        [SerializeField] private Color _selectedCellColor;
+        [SerializeField] private Color _focusedCellColor;
+
+        /// <summary>
+        /// Cache the selected cell index in the grid.
+        /// </summary>
+        private (int row, int col) _selectedCell = (-1, -1);
 
         [SerializeField] private SudokuResultsLibrary _sudokuResults;
         [SerializeField] private PermutationTableView _tableView;
@@ -62,6 +76,9 @@ namespace MySudoku
 
         public SudokuGenerator _generator;
 
+        /// <summary>
+        /// Caches the rect transform component of this game object.
+        /// </summary>
         private void Awake() => _rectTransform = GetComponent<RectTransform>();
 
         /// <summary>
@@ -73,20 +90,20 @@ namespace MySudoku
             FillNumbers(_sudokuResults.GetCurrentSolution());
         }
 
-        Sudoku sud;
-
+        /// <summary>
+        /// Test methods...
+        /// </summary>
         private void Update()
         {
             CycleSudokuSolutions();
 
-            if (Input.GetKeyDown(KeyCode.Q)) FillGridSimple();
             if (Input.GetKeyDown(KeyCode.Space)) StartCoroutine(CheckPermutationsCoroutine());
             else if (Input.GetKeyDown(KeyCode.P)) StopAllCoroutines();
             if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
 
-            if (Input.GetKeyDown(KeyCode.E)) sud = _generator.Generate();
-            if (Input.GetKeyDown(KeyCode.T)) FillNumbers(sud.GetSolution());
-            else if (Input.GetKeyDown(KeyCode.R)) FillNumbers(sud.GetPuzzle());
+            if (Input.GetKeyDown(KeyCode.E)) _sudoku = _generator.Generate();
+            if (Input.GetKeyDown(KeyCode.T)) FillNumbers(_sudoku.GetSolution());
+            else if (Input.GetKeyDown(KeyCode.R)) FillNumbers(_sudoku.GetPuzzle());
         }
 
         #region Base Sudoku Grid Methods
@@ -96,11 +113,14 @@ namespace MySudoku
         public void DrawSudoku()
         {
             ClearGrid();
-            SpawnCells();
-            SpawnBorders();
+            DrawCells();
+            DrawBorders();
         }
 
-        private void SpawnCells()
+        /// <summary>
+        /// Draws the sudoku grid cells.
+        /// </summary>
+        private void DrawCells()
         {
             RectTransform cells = new GameObject("Cells").AddComponent<RectTransform>();
             cells.SetParent(transform);
@@ -118,7 +138,10 @@ namespace MySudoku
             }
         }
 
-        private void SpawnBorders()
+        /// <summary>
+        /// Draws the sudoku grid broders/lines.
+        /// </summary>
+        private void DrawBorders()
         {
             RectTransform borders = new GameObject("Borders").AddComponent<RectTransform>();
             borders.SetParent(transform);
@@ -156,17 +179,21 @@ namespace MySudoku
             _rectTransform.sizeDelta = new Vector2(borderLength, borderLength);
         }
 
+        /// <summary>
+        /// Sets the sudoku to draw in this view.
+        /// </summary>
+        /// <param name="sudoku"></param>
         public void SetSudoku(Sudoku sudoku)
         {
             _sudoku = sudoku;
-            FillNumbers(sudoku.Puzzle);
+            FillSudokuGrid(sudoku.Puzzle);
         }
 
-        public void FillNumbers(int[,] values)
+        public void FillSudokuGrid(int[,] puzzle)
         {
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
-                    _grid[row, col].SetNum(values[row, col]);
+                    _grid[row, col].SetNum(puzzle[row, col]);
         }
 
         /// <summary>
@@ -188,8 +215,8 @@ namespace MySudoku
         /// </summary>
         private void ClearGrid()
         {
-            for (int row = 0; row < _grid.GetLength(0); row++)
-                for (int col = 0; col < _grid.GetLength(1); col++) {
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++) {
                     if (_grid[row, col] == null) return;
                     Destroy(_grid[row, col].gameObject);
                 }
@@ -210,15 +237,6 @@ namespace MySudoku
                 FillNumbers(_sudokuResults.GetPreviousSolution());
         }
         #endregion
-
-        /// <summary>
-        /// Fills the sudoku grid with the simplest number order
-        /// </summary>
-        public void FillGridSimple() =>
-            // Simplest sudoku to create with 2 permutation repeated 3 times per group
-            FillNumbers(new List<int> { 1,2,3,4,5,6,7,8,9,4,5,6,7,8,9,1,2,3,7,8,9,1,2,3,4,5,6,
-                                 2,3,4,5,6,7,8,9,1,5,6,7,8,9,1,2,3,4,8,9,1,2,3,4,5,6,7,
-                                 3,4,5,6,7,8,9,1,2,6,7,8,9,1,2,3,4,5,9,1,2,3,4,5,6,7,8 });
 
         /// <summary>
         /// Checks the permutation and indexes as a coroutine.
@@ -268,7 +286,7 @@ namespace MySudoku
             if (0 <= row && row <= 8 && 0 <= col && col <= 8) {
                 if (_selectedCell.row == -1 && _selectedCell.col == -1) {
                     _selectedCell = (row, col);
-                    _grid[row, col].Select(HighlightNeighbors);
+                    _grid[row, col].Select(_selectedCellColor, HighlightNeighbors);
                 }
                 else if (row == _selectedCell.row && col == _selectedCell.col) {
                     _grid[row, col].Deselect(HighlightNeighbors);
@@ -277,7 +295,7 @@ namespace MySudoku
                 else {
                     _grid[_selectedCell.row, _selectedCell.col].Deselect(HighlightNeighbors);
                     _selectedCell = (row, col);
-                    _grid[row, col].Select(HighlightNeighbors);
+                    _grid[row, col].Select(_selectedCellColor, HighlightNeighbors);
                 }
             }
         }
@@ -293,20 +311,20 @@ namespace MySudoku
             int boxCol = box % 3 * 3;
 
             for (int i = 0; i < 9; i++) {
-                if (i != _selectedCell.row) _grid[i, _selectedCell.col].Focus(on);
-                if (i != _selectedCell.col) _grid[_selectedCell.row, i].Focus(on);
+                if (i != _selectedCell.row) _grid[i, _selectedCell.col].Focus(_focusedCellColor, on);
+                if (i != _selectedCell.col) _grid[_selectedCell.row, i].Focus(_focusedCellColor, on);
 
                 int r = i / 3;
                 int c = i % 3;
                 if (boxRow + r != _selectedCell.row && boxCol + c != _selectedCell.col)
-                    _grid[boxRow + r, boxCol + c].Focus(on);
+                    _grid[boxRow + r, boxCol + c].Focus(_focusedCellColor, on);
 
                 for (int j = 0; j < 9; j++)
                     if (_grid[_selectedCell.row, _selectedCell.col].Number == _grid[i, j].Number
                      && _selectedCell.row != i
                      && _selectedCell.col != j
                      && _grid[_selectedCell.row, _selectedCell.col].Number != 0)
-                        if (on) _grid[i, j].Select(null);
+                        if (on) _grid[i, j].Select(_selectedCellColor, null);
                         else _grid[i, j].Deselect(null);
             }
         }
