@@ -16,8 +16,7 @@ namespace SudokuTesting
         /// <summary>
         /// The numbers this permutation contains.
         /// </summary>
-        public int[] Numbers => _numbers;
-        private readonly int[] _numbers = new int[3];
+        public int[] Numbers { get; } = new int[3];
 
         /// <summary>
         /// The rect transform of this game object.
@@ -30,12 +29,14 @@ namespace SudokuTesting
         /// </summary>
         [SerializeField] private TMP_Text _numbersText;
 
+        /// <summary>
+        /// The background of the permutation box.
+        /// </summary>
         [SerializeField] private Image _background;
 
         // Tags for showing if this permutation is of horizontal/vertical direction.
         [SerializeField] private Image _h;
         [SerializeField] private Image _v;
-        [SerializeField] private Image _c;
 
         // Panel for showing sudoku grid boxes/regions where this permutation is found.
         [SerializeField] private GameObject _data;
@@ -46,39 +47,23 @@ namespace SudokuTesting
         /// </summary>
         private int _repetitions = 0;
 
-        private bool _used = false;
-        private List<int> _boxes = new List<int>();
-        public SudokuView sudokuView;
+        private readonly List<int> _boxes = new();
 
         /// <summary>
         /// Sets the numbers/digits for this permutation.
         /// </summary>
-        /// <param name="digits">The three digits/numbers.</param>
-        public void SetDigits(int[] digits)
+        /// <param name="numbers">The three digits/numbers.</param>
+        public void SetNumbers(int[] numbers)
         {
-            Array.Copy(digits, _numbers, digits.Length);
+            Array.Copy(numbers, Numbers, numbers.Length);
             UpdateDigitsText();
-        }
-
-        /// <summary>
-        /// Checks if this permutation is compatible with the given one.
-        /// </summary>
-        /// <param name="permutation">The given permutation</param>
-        /// <returns></returns>
-        public bool IsCompatibleWith(Permutation permutation)
-        {
-            for (int i = 0; i < 3; i++)
-                if (Numbers[i] == permutation.Numbers[i])
-                    return false;
-
-            return true;
         }
 
         /// <summary>
         /// Sets the permutation in string format {x, y, z} for the text component.
         /// </summary>
         private void UpdateDigitsText()
-            => _numbersText.text = _numbers == null || _numbers.Length == 0 ? "" : "{" + $"{_numbers[0]}, {_numbers[1]}, {_numbers[2]}" + "}";
+            => _numbersText.text = Numbers == null || Numbers.Length == 0 ? "" : "{" + $"{Numbers[0]}, {Numbers[1]}, {Numbers[2]}" + "}";
 
         /// <summary>
         /// Marks/checks the permutation.
@@ -88,7 +73,6 @@ namespace SudokuTesting
         /// <returns></returns>
         public bool Check(bool horizontal, int box)
         {
-            _used = true;
             // Color the permutation based on the number of its repetitions.
             _repetitions++;
             if (_repetitions == 1) _background.color = new Color(1f, 0.5f, 0.5f);
@@ -96,23 +80,9 @@ namespace SudokuTesting
             else if (_repetitions == 3) _background.color = new Color(0.5f, 0.5f, 1f);
 
             //// Write down the number of boxes on which this permutation is present.
-            //if (string.IsNullOrEmpty(_box.text)) _box.text = box.ToString();
-            //else _box.text += ", " + box.ToString();
-
             _boxes.Add(box);
-            if (string.IsNullOrEmpty(_box.text)) {
-                _box.text = box.ToString();
-                //if (forward)
-                //    _box.text = box.ToString();
-                //else
-                //    _box.text = "<color=#FF0000>" + box.ToString() + "</color>";
-            }
-            else {
-                //if (forward)
-                _box.text += ", " + box.ToString();
-                //else
-                //    _box.text += ", " + "<color=#FF0000>" + box.ToString() + "</color>";
-            }
+            if (string.IsNullOrEmpty(_box.text))_box.text = box.ToString();
+            else _box.text += ", " + box.ToString();
 
             _data.SetActive(true);
 
@@ -122,10 +92,7 @@ namespace SudokuTesting
 
             // Returns true if the permutation has been repeated at least three times.
             // Used for stopping the coroutine of going through sudoku solutions.
-            if (_repetitions == 3 && _h.gameObject.activeSelf && _v.gameObject.activeSelf)
-                return true;
-            else
-                return false;
+            return _repetitions == 3 && _h.gameObject.activeSelf && _v.gameObject.activeSelf;
         }
 
         /// <summary>
@@ -133,7 +100,6 @@ namespace SudokuTesting
         /// </summary>
         public void Uncheck()
         {
-            _used = false;
             _boxes.Clear();
             _background.color = Color.white;
             _repetitions = 0;
@@ -141,12 +107,6 @@ namespace SudokuTesting
             _v.gameObject.SetActive(false);
             _data.SetActive(false);
             _box.text = "";
-            _c.gameObject.SetActive(false);
-        }
-
-        public void Corner()
-        {
-            _c.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -154,11 +114,8 @@ namespace SudokuTesting
         /// </summary>
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.button == PointerEventData.InputButton.Left) {
+            if (eventData.button == PointerEventData.InputButton.Left)
                 _data.SetActive(!_data.activeSelf);
-                foreach (int i in _boxes)
-                    sudokuView.HighlightCells(Numbers, i, !_data.activeSelf);
-            }
         }
     }
 }

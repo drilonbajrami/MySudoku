@@ -36,8 +36,8 @@ namespace MySudoku
             int boxCol = col - col % 3;
             for (int r = 0; r < 3; r++)
                 for (int c = 0; c < 3; c++)
-                    if (sudoku[boxRow + r, boxCol + c] == num)
-                        return true;
+                    if (sudoku[boxRow + r, boxCol + c] == num) return true;
+
             return false;
         }
 
@@ -51,8 +51,8 @@ namespace MySudoku
         public static bool HasNumberInColumn(this int[,] sudoku, int col, int num)
         {
             for (int row = 0; row < 9; row++)
-                if (sudoku[row, col] == num)
-                    return true;
+                if (sudoku[row, col] == num) return true;
+
             return false;
         }
 
@@ -66,8 +66,8 @@ namespace MySudoku
         public static bool HasNumberInRow(this int[,] sudoku, int row, int num)
         {
             for (int col = 0; col < 9; col++)
-                if (sudoku[row, col] == num)
-                    return true;
+                if (sudoku[row, col] == num) return true;
+
             return false;
         }
     }

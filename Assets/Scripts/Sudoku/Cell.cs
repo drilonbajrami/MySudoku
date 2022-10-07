@@ -80,28 +80,32 @@ public class Cell : MonoBehaviour
     public void HideNote(int number) => _notes.Hide(number);
     
     /// <summary>
-    /// 
+    /// Selects this cell by marking it and its neighbor cells.
     /// </summary>
     /// <param name="highlightNeighbors"></param>
     public void Select(Color selectedColor, Action<bool> highlightNeighbors)
     {
-        //_background.color = new Color(193 / 255f, 210 / 255f, 1f);
         _background.color = selectedColor;
         highlightNeighbors?.Invoke(true);
     }
+
+    /// <summary>
+    /// Deselects this cell by umarking it and its neighbor cells.
+    /// </summary>
+    /// <param name="highlightNeighbors"></param>
     public void Deselect(Action<bool> highlightNeighbors)
     {
         _background.color = Color.white;
         highlightNeighbors?.Invoke(false);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="focusedColor"></param>
+    /// <param name="condition"></param>
     public void Focus(Color focusedColor, bool condition)
         => _background.color = condition ? focusedColor : Color.white;
-    //=> _background.color = condition ? new Color(220 / 255f, 220 / 255f, 220 / 255f) : Color.white;
-
-    public void Focus(bool condition, Color color) => _background.color = condition ? color : Color.white;
-
-
 
     /// <summary>
     /// Toggles on/off the sums.

@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using MySudoku;
 using UnityEngine;
 
 /// <summary>
@@ -28,6 +30,7 @@ public class SudokuResultsLibrary : MonoBehaviour
 
     private string[] _solutions;
 
+    [SerializeField] private SudokuView _sudokuView;
     [SerializeField] private bool _printSolutions = true;
 
     // Load the first file on start.
@@ -35,6 +38,23 @@ public class SudokuResultsLibrary : MonoBehaviour
     {
         _solutions = File.ReadAllLines(_folderPath + _fileName + _currentFile.ToString() + _fileExtension);
         if (_printSolutions) Debug.Log($"Loaded file... 'sudoku-{_currentFile}.csv'");
+    }
+
+    private void Update() => CycleSudokuSolutions();
+
+    /// <summary>
+    /// Cycles through the sudoku solution files and singe solution through key presses.
+    /// </summary>
+    private void CycleSudokuSolutions()
+    {
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+            LoadNextFile();
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+            LoadPreviousFile();
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+            _sudokuView.SetGridValues(GetNextSolution());
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+            _sudokuView.SetGridValues(GetPreviousSolution());
     }
 
     /// <summary>
@@ -64,12 +84,12 @@ public class SudokuResultsLibrary : MonoBehaviour
     /// <summary>
     /// Returns the current stored solutions from the sudoku solutions library.
     /// </summary>
-    public List<int> GetCurrentSolution() => GetSolution(_solutions[_currentLine]);
+    public int[,] GetCurrentSolution() => GetSolution(_solutions[_currentLine]);
 
     /// <summary>
     /// Returns the next solution within the current file of sudoku solutions library.
     /// </summary>
-    public List<int> GetNextSolution()
+    public int[,] GetNextSolution()
     {
         _currentLine++;
         if (_currentLine > LAST_LINE) _currentLine = FIRST_LINE;
@@ -80,7 +100,7 @@ public class SudokuResultsLibrary : MonoBehaviour
     /// <summary>
     /// Returns the previous solution within the current file of sudoku solutions library.
     /// </summary>
-    public List<int> GetPreviousSolution()
+    public int[,] GetPreviousSolution()
     {
         _currentLine--;
         if (_currentLine < FIRST_LINE) _currentLine = LAST_LINE;
@@ -93,12 +113,12 @@ public class SudokuResultsLibrary : MonoBehaviour
     /// </summary>
     /// <param name="solution">The sudoku solution in a string format.</param>
     /// <returns>The sudoku solution in a list of integers format.</returns>
-    private List<int> GetSolution(string solution)
+    private int[,] GetSolution(string solution)
     {
-        List<int> digits = new();
+        int[,] numbers = new int[9, 9];
         for (int i = 0; i < solution.Length; i++)
-            digits.Add(int.Parse(solution[i].ToString()));
+            numbers[i / 9, i % 9] = int.Parse(solution[i].ToString());
 
-        return digits;
+        return numbers;
     }
 }

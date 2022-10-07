@@ -42,6 +42,7 @@ namespace MySudoku
         /// </summary>
         private RectTransform _rectTransform;
 
+        [Header("Sudoku View Settings")]
         /// <summary>
         /// Cell prefab.
         /// </summary>
@@ -67,14 +68,13 @@ namespace MySudoku
         /// </summary>
         private (int row, int col) _selectedCell = (-1, -1);
 
-        [SerializeField] private SudokuResultsLibrary _sudokuResults;
+        [Space(10)]
+        [Header("Other settings")]
+        [SerializeField] private SudokuGenerator _generator;
         [SerializeField] private PermutationTableView _tableView;
 
-        bool stop = false;
-
         public bool _showPermutationGroups;
-
-        public SudokuGenerator _generator;
+        public bool _calculateSums;
 
         /// <summary>
         /// Caches the rect transform component of this game object.
@@ -84,26 +84,18 @@ namespace MySudoku
         /// <summary>
         /// Draws the sudoku grid and fills it with the current solution loaded in the sudoku results library.
         /// </summary>
-        private void Start()
-        {
-            DrawSudoku();
-            FillNumbers(_sudokuResults.GetCurrentSolution());
-        }
+        private void Start() => DrawSudoku();
 
         /// <summary>
         /// Test methods...
         /// </summary>
         private void Update()
         {
-            CycleSudokuSolutions();
-
-            if (Input.GetKeyDown(KeyCode.Space)) StartCoroutine(CheckPermutationsCoroutine());
-            else if (Input.GetKeyDown(KeyCode.P)) StopAllCoroutines();
             if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
 
             if (Input.GetKeyDown(KeyCode.E)) _sudoku = _generator.Generate();
-            if (Input.GetKeyDown(KeyCode.T)) FillNumbers(_sudoku.GetSolution());
-            else if (Input.GetKeyDown(KeyCode.R)) FillNumbers(_sudoku.GetPuzzle());
+            if (Input.GetKeyDown(KeyCode.T)) SetGridValues(_sudoku.Solution);
+            else if (Input.GetKeyDown(KeyCode.R)) SetGridValues(_sudoku.Puzzle);
         }
 
         #region Base Sudoku Grid Methods
@@ -186,28 +178,21 @@ namespace MySudoku
         public void SetSudoku(Sudoku sudoku)
         {
             _sudoku = sudoku;
-            FillSudokuGrid(sudoku.Puzzle);
-        }
-
-        public void FillSudokuGrid(int[,] puzzle)
-        {
-            for (int row = 0; row < 9; row++)
-                for (int col = 0; col < 9; col++)
-                    _grid[row, col].SetNum(puzzle[row, col]);
+            SetGridValues(sudoku.Puzzle);
         }
 
         /// <summary>
-        /// Fills the sudoku grid with the given numbers/solution.
+        /// Sets the grid values based on the given sudoku grid.
         /// </summary>
-        /// <param name="digits">The sudoku solution.</param>
-        public void FillNumbers(List<int> digits)
+        /// <param name="sudokuGrid">The sudoku grid to get the values from.</param>
+        public void SetGridValues(int[,] sudokuGrid)
         {
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
-                    _grid[row, col].SetNum(digits[row * 9 + col]);
+                    _grid[row, col].SetNum(sudokuGrid[row, col]);
 
-            Sudokutils.CalculateSums(_grid);
-            stop = _tableView.CheckPermutations(_grid);
+            _tableView.Initialize(_grid, _showPermutationGroups);
+            if (_calculateSums) Sudokutils.CalculateSums(_grid);
         }
 
         /// <summary>
@@ -221,55 +206,24 @@ namespace MySudoku
                     Destroy(_grid[row, col].gameObject);
                 }
         }
-
-        /// <summary>
-        /// Cycles through the sudoku solution files and singe solution through key presses.
-        /// </summary>
-        private void CycleSudokuSolutions()
-        {
-            if (Input.GetKeyDown(KeyCode.UpArrow))
-                _sudokuResults.LoadNextFile();
-            else if (Input.GetKeyDown(KeyCode.DownArrow))
-                _sudokuResults.LoadPreviousFile();
-            else if (Input.GetKeyDown(KeyCode.RightArrow))
-                FillNumbers(_sudokuResults.GetNextSolution());
-            else if (Input.GetKeyDown(KeyCode.LeftArrow))
-                FillNumbers(_sudokuResults.GetPreviousSolution());
-        }
         #endregion
-
-        /// <summary>
-        /// Checks the permutation and indexes as a coroutine.
-        /// </summary>
-        private IEnumerator CheckPermutationsCoroutine()
-        {
-            for (int i = 0; i < 100000; i++) {
-                FillNumbers(_sudokuResults.GetNextSolution());
-
-                if (stop) StopAllCoroutines();
-                yield return new WaitForEndOfFrame();
-            }
-        }
 
         /// <summary>
         /// Handles clicks on the sudoku grid.
         /// </summary>
-        /// <param name="eventData"></param>
+        /// <param name="eventData">Pointer event data to process.</param>
         public void OnPointerClick(PointerEventData eventData)
-        {
-            (int row, int col) index = GetClickedCellIndex(eventData.pressPosition);
-            HandleClickedCell(index.row, index.col);
-        }
+            => HandleClickedCell(GetClickedCellIndex(eventData.pressPosition));
 
         /// <summary>
         /// Gets the clicked cell row and column index.
         /// </summary>
         /// <param name="pressPosition">Mouse press position.</param>
         /// <returns>Row and column index.</returns>
-        private (int, int) GetClickedCellIndex(Vector2 pressPosition)
+        private (int row, int col) GetClickedCellIndex(Vector2 pressPosition)
         {
             Vector2 sudokuPos = new(pressPosition.x - Screen.width / 2f - _rectTransform.localPosition.x,
-                                          pressPosition.y - Screen.height / 2f - _rectTransform.localPosition.y);
+                                    pressPosition.y - Screen.height / 2f - _rectTransform.localPosition.y);
             Vector2 sudokuLocalPos = new Vector2(sudokuPos.x + _cellSize * 4.5f, -sudokuPos.y + _cellSize * 4.5f);
             int row = (int)(sudokuLocalPos.y / _cellSize);
             int col = (int)(sudokuLocalPos.x / _cellSize);
@@ -281,8 +235,11 @@ namespace MySudoku
         /// </summary>
         /// <param name="row">Row index of the clicked cell.</param>
         /// <param name="col">Column index of the clicked cell.</param>
-        private void HandleClickedCell(int row, int col)
+        private void HandleClickedCell((int row, int col) index)
         {
+            int row = index.row;
+            int col = index.col;
+
             if (0 <= row && row <= 8 && 0 <= col && col <= 8) {
                 if (_selectedCell.row == -1 && _selectedCell.col == -1) {
                     _selectedCell = (row, col);
@@ -327,18 +284,6 @@ namespace MySudoku
                         if (on) _grid[i, j].Select(_selectedCellColor, null);
                         else _grid[i, j].Deselect(null);
             }
-        }
-
-        public void HighlightCells(int[] permutation, int box, bool highlight)
-        {
-            int boxIndex = box - 1;
-            int col = boxIndex % 3 * 3;
-            int row = boxIndex / 3 * 3;
-            for (int r = 0; r < 3; r++)
-                for (int c = 0; c < 3; c++)
-                    for (int p = 0; p < 3; p++)
-                        if (_grid[row + r, col + c].Number == permutation[p])
-                            _grid[row + r, col + c].Focus(highlight, Color.red);
         }
     }
 }

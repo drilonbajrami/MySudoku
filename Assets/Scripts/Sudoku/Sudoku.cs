@@ -55,40 +55,27 @@ namespace MySudoku
         };
 
         /// <summary>
-        /// Returns the sudoku solution as a list of ints.
+        /// Prints this sudoku's solution in the console.
         /// </summary>
-        /// <returns>The solution as a list of ints.</returns>
-        public List<int> GetSolution() {
-            List<int> solution = new List<int>();
-            StringBuilder sol = new StringBuilder();
-            sol.Append("Solution: ");
+        public void PrintSolution() {
+            StringBuilder sol = new StringBuilder("Solution: ");
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++)
+                    sol.Append($"{_solution[row, col]}");
 
-            for (int j = 0; j < 9; j++)
-                for (int i = 0; i < 9; i++) {
-                    solution.Add(_solution[j, i]);
-                    sol.Append($"{_solution[j, i]}");
-                }
             UnityEngine.Debug.Log(sol.ToString());
-            return solution;
         }
 
         /// <summary>
-        /// Returns the sudoku puzzle as a list of ints, 0's represent empty cells/numbers.
+        /// Prints this sudoku's puzzle in the console, 0's represent empty cell/numbers.
         /// </summary>
-        /// <returns>The puzzle as a list of ints.</returns>
-        public List<int> GetPuzzle() {
-            List<int> puzzle = new List<int>();
-            StringBuilder puz = new StringBuilder();
-            puz.Append("  Puzzle: ");
-
-            for (int j = 0; j < 9; j++)
-                for (int i = 0; i < 9; i++) {
-                    puzzle.Add(_puzzle[j, i]);
-                    puz.Append($"{_puzzle[j, i]}");
-                }
+        public void PrintPuzzle() {
+            StringBuilder puz = new StringBuilder("  Puzzle: ");
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++)
+                    puz.Append($"{_puzzle[row, col]}");
 
             UnityEngine.Debug.Log(puz.ToString());
-            return puzzle;
         }
     }
 }
