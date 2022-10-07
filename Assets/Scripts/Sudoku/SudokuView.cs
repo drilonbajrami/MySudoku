@@ -67,6 +67,13 @@ namespace MySudoku
         /// </summary>
         private (int row, int col) _selectedCell = (-1, -1);
 
+        [SerializeField] private SudokuResultsLibrary _sudokuResults;
+        [SerializeField] private PermutationTableView _tableView;
+
+        bool stop = false;
+
+        public bool _showPermutationGroups;
+
         public SudokuGenerator _generator;
 
         /// <summary>
@@ -80,7 +87,7 @@ namespace MySudoku
         private void Start()
         {
             DrawSudoku();
-            //FillNumbers(_sudokuResults.GetCurrentSolution());
+            FillNumbers(_sudokuResults.GetCurrentSolution());
         }
 
         /// <summary>
@@ -88,6 +95,12 @@ namespace MySudoku
         /// </summary>
         private void Update()
         {
+            CycleSudokuSolutions();
+
+            if (Input.GetKeyDown(KeyCode.Space)) StartCoroutine(CheckPermutationsCoroutine());
+            else if (Input.GetKeyDown(KeyCode.P)) StopAllCoroutines();
+            if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
+
             if (Input.GetKeyDown(KeyCode.E)) _sudoku = _generator.Generate();
             if (Input.GetKeyDown(KeyCode.T)) FillNumbers(_sudoku.GetSolution());
             else if (Input.GetKeyDown(KeyCode.R)) FillNumbers(_sudoku.GetPuzzle());
@@ -192,6 +205,9 @@ namespace MySudoku
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
                     _grid[row, col].SetNum(digits[row * 9 + col]);
+
+            Sudokutils.CalculateSums(_grid);
+            stop = _tableView.CheckPermutations(_grid);
         }
 
         /// <summary>
@@ -205,7 +221,35 @@ namespace MySudoku
                     Destroy(_grid[row, col].gameObject);
                 }
         }
+
+        /// <summary>
+        /// Cycles through the sudoku solution files and singe solution through key presses.
+        /// </summary>
+        private void CycleSudokuSolutions()
+        {
+            if (Input.GetKeyDown(KeyCode.UpArrow))
+                _sudokuResults.LoadNextFile();
+            else if (Input.GetKeyDown(KeyCode.DownArrow))
+                _sudokuResults.LoadPreviousFile();
+            else if (Input.GetKeyDown(KeyCode.RightArrow))
+                FillNumbers(_sudokuResults.GetNextSolution());
+            else if (Input.GetKeyDown(KeyCode.LeftArrow))
+                FillNumbers(_sudokuResults.GetPreviousSolution());
+        }
         #endregion
+
+        /// <summary>
+        /// Checks the permutation and indexes as a coroutine.
+        /// </summary>
+        private IEnumerator CheckPermutationsCoroutine()
+        {
+            for (int i = 0; i < 100000; i++) {
+                FillNumbers(_sudokuResults.GetNextSolution());
+
+                if (stop) StopAllCoroutines();
+                yield return new WaitForEndOfFrame();
+            }
+        }
 
         /// <summary>
         /// Handles clicks on the sudoku grid.
@@ -283,6 +327,18 @@ namespace MySudoku
                         if (on) _grid[i, j].Select(_selectedCellColor, null);
                         else _grid[i, j].Deselect(null);
             }
+        }
+
+        public void HighlightCells(int[] permutation, int box, bool highlight)
+        {
+            int boxIndex = box - 1;
+            int col = boxIndex % 3 * 3;
+            int row = boxIndex / 3 * 3;
+            for (int r = 0; r < 3; r++)
+                for (int c = 0; c < 3; c++)
+                    for (int p = 0; p < 3; p++)
+                        if (_grid[row + r, col + c].Number == permutation[p])
+                            _grid[row + r, col + c].Focus(highlight, Color.red);
         }
     }
 }

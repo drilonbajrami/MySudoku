@@ -46,6 +46,7 @@ namespace SudokuTesting
         /// </summary>
         private int _repetitions = 0;
 
+        private bool _used = false;
         private List<int> _boxes = new List<int>();
         public SudokuView sudokuView;
 
@@ -87,6 +88,7 @@ namespace SudokuTesting
         /// <returns></returns>
         public bool Check(bool horizontal, int box)
         {
+            _used = true;
             // Color the permutation based on the number of its repetitions.
             _repetitions++;
             if (_repetitions == 1) _background.color = new Color(1f, 0.5f, 0.5f);
@@ -131,6 +133,7 @@ namespace SudokuTesting
         /// </summary>
         public void Uncheck()
         {
+            _used = false;
             _boxes.Clear();
             _background.color = Color.white;
             _repetitions = 0;
@@ -141,7 +144,10 @@ namespace SudokuTesting
             _c.gameObject.SetActive(false);
         }
 
-        public void Corner() => _c.gameObject.SetActive(true);
+        public void Corner()
+        {
+            _c.gameObject.SetActive(true);
+        }
 
         /// <summary>
         /// Show or hide the box index data when clicked.
@@ -150,8 +156,8 @@ namespace SudokuTesting
         {
             if (eventData.button == PointerEventData.InputButton.Left) {
                 _data.SetActive(!_data.activeSelf);
-                //foreach (int i in _boxes)
-                //    sudokuView.HighlightCells(Numbers, i, !_data.activeSelf);
+                foreach (int i in _boxes)
+                    sudokuView.HighlightCells(Numbers, i, !_data.activeSelf);
             }
         }
     }
