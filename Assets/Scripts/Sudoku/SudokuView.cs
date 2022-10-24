@@ -5,28 +5,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using SudokuTesting;
+using System.Text;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
+using System.Linq;
 
 namespace MySudoku
 {
     public class SudokuView : MonoBehaviour, IPointerClickHandler
     {
-        // Column & Row = 6 up to 24
-        // Cross = 15 up to 35
-        // Diagonal (1) = 1 up to 9
-        // Diagonal (2) = 3 up to 17
-        // Diagonal (3) = 6 up to 24
-
-        // 6 permutations per group (all permutations starting with number x are considered a group in itself)
-        // out of 6 permutations per group, 3 permutations are in horizontal direction, and 3 are in vertical direction
-        // A same permutation in a group can be present up to 3 times max. with (1-2) or (2-1) - horizontal to vertical ratio directions.
-        // The sums of horizontal and diagonal permutations (triplets) per box are little to no use since there are many combinations with it
-        // that there might not be a way to rely on them for generating a sudoku puzzle 
-
-        // Useful is the index repetition of permutations in groups. Mabye use this within a rule if generating through human based
-        // and recursive backtracking algorithm.
-
-        // A combination of 3 numbers {x, y, z} can appear only 4 times max in a sudoku puzzle
-
+        #region Sudoku Fields
         /// <summary>
         /// The sudoku to show/draw.
         /// </summary>
@@ -41,7 +28,9 @@ namespace MySudoku
         /// The rect transform of the sudoku view.
         /// </summary>
         private RectTransform _rectTransform;
+        #endregion
 
+        #region View Settings
         [Header("Sudoku View Settings")]
         /// <summary>
         /// Cell prefab.
@@ -59,9 +48,15 @@ namespace MySudoku
         /// The thickness of the borders/lines of the sudoku grid view.
         /// </summary>
         [Range(1f, 10f)][SerializeField] private float _borderThickness = 6f;
-
+        /// <summary>
+        /// Color for a selected cell in the sudoku grid.
+        /// </summary>
         [SerializeField] private Color _selectedCellColor;
+        /// <summary>
+        /// Color for focused cells in the sudoku grid.
+        /// </summary>
         [SerializeField] private Color _focusedCellColor;
+        #endregion
 
         /// <summary>
         /// Cache the selected cell index in the grid.
@@ -76,6 +71,10 @@ namespace MySudoku
         public bool _showPermutationGroups;
         public bool _calculateSums;
 
+        public float waitSeconds = 1f;
+
+        private readonly bool[,] _viewNotes = new bool[81, 9];
+
         /// <summary>
         /// Caches the rect transform component of this game object.
         /// </summary>
@@ -86,19 +85,102 @@ namespace MySudoku
         /// </summary>
         private void Start() => DrawSudoku();
 
+        public Dictionary<int, int> HighScores = new() {
+            {6000, 0},
+            {5900, 0},
+            {5800, 0},
+            {5700, 0},
+            {5600, 0},
+            {5500, 0},
+            {5400, 0},
+            {5300, 0},
+            {5200, 0},
+            {5100, 0},
+            {5000, 0},
+        };
+
         /// <summary>
         /// Test methods...
         /// </summary>
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
+            //if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
 
             if (Input.GetKeyDown(KeyCode.E)) _sudoku = _generator.Generate();
-            if (Input.GetKeyDown(KeyCode.T)) SetGridValues(_sudoku.Solution);
-            else if (Input.GetKeyDown(KeyCode.R)) SetGridValues(_sudoku.Puzzle);
+            //if (Input.GetKeyDown(KeyCode.T)) SetGridValues(_sudoku.Solution);
+            //else if (Input.GetKeyDown(KeyCode.R)) SetGridValues(_sudoku.Puzzle);
+
+            if (Input.GetKeyDown(KeyCode.Space)) {
+                //_sudoku = new Sudoku();
+                //_generator.GenerateSolution(_sudoku);
+                //SetGridValues(_sudoku.Solution);
+                //StartCoroutine(_generator.GeneratePuzzle(_sudoku, UpdateValues, waitSeconds, _grid, Difficulty.BEGGINER));
+                RunGenerator();
+            }
+
+            if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {
+                if (Input.GetKeyDown(KeyCode.Keypad1)) Set(_selectedCell.row, _selectedCell.col, 1);
+                else if (Input.GetKeyDown(KeyCode.Keypad2)) Set(_selectedCell.row, _selectedCell.col, 2);
+                else if (Input.GetKeyDown(KeyCode.Keypad3)) Set(_selectedCell.row, _selectedCell.col, 3);
+                else if (Input.GetKeyDown(KeyCode.Keypad4)) Set(_selectedCell.row, _selectedCell.col, 4);
+                else if (Input.GetKeyDown(KeyCode.Keypad5)) Set(_selectedCell.row, _selectedCell.col, 5);
+                else if (Input.GetKeyDown(KeyCode.Keypad6)) Set(_selectedCell.row, _selectedCell.col, 6);
+                else if (Input.GetKeyDown(KeyCode.Keypad7)) Set(_selectedCell.row, _selectedCell.col, 7);
+                else if (Input.GetKeyDown(KeyCode.Keypad8)) Set(_selectedCell.row, _selectedCell.col, 8);
+                else if (Input.GetKeyDown(KeyCode.Keypad9)) Set(_selectedCell.row, _selectedCell.col, 9);
+                else if (Input.GetKeyDown(KeyCode.Keypad0)) Set(_selectedCell.row, _selectedCell.col, 0);
+            }
         }
 
-        #region Base Sudoku Grid Methods
+        public int sample = 1000;
+        public void RunGenerator()
+        {
+            _sudoku = new Sudoku();
+            for (int i = 0; i < sample; i++) {
+                _sudoku.Solution = _generator.GenerateSolution();
+                _sudoku.Puzzle = _generator.GeneratePuzzle(_sudoku.Solution, out bool[,] notes, out int ds);
+                Array.Copy(notes, _viewNotes, notes.Length);
+                HighScores[ds]++;
+            }
+            UpdateValues();
+            Debug.Log("---------------------------------------------------------");
+            PrintHighScores();
+            Debug.Log("---------------------------------------------------------");
+        }
+
+        public float Percentage(int n, int total) => 100f / total * n;
+
+        public void PrintHighScores()
+        {
+            foreach (KeyValuePair<int, int> a in HighScores) {
+                Debug.Log($"Highscore of {a.Key} : {Percentage(a.Value, sample):0.00}%.");
+            }
+
+            ResetHighscores();
+        }
+
+        public void ResetHighscores() => HighScores = new() {
+            {6000, 0},
+            {5900, 0},
+            {5800, 0},
+            {5700, 0},
+            {5600, 0},
+            {5500, 0},
+            {5400, 0},
+            {5300, 0},
+            {5200, 0},
+            {5100, 0},
+            {5000, 0},
+            };
+
+        private void Set(int row, int col, int num)
+        {
+            _viewNotes.UpdateNotes(_sudoku.Puzzle, (row, col), _sudoku.Puzzle[row, col], num);
+            _sudoku.Puzzle[row, col] = num;
+            UpdateValues();
+        }
+
+        #region Sudoku Draw Methods
         /// <summary>
         /// Draws the sudoku grid.
         /// </summary>
@@ -172,6 +254,19 @@ namespace MySudoku
         }
 
         /// <summary>
+        /// Clears the grid of all cells game objects.
+        /// </summary>
+        private void ClearGrid()
+        {
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++) {
+                    if (_grid[row, col] == null) return;
+                    Destroy(_grid[row, col].gameObject);
+                }
+        }
+        #endregion
+
+        /// <summary>
         /// Sets the sudoku to draw in this view.
         /// </summary>
         /// <param name="sudoku"></param>
@@ -191,23 +286,26 @@ namespace MySudoku
                 for (int col = 0; col < 9; col++)
                     _grid[row, col].SetNum(sudokuGrid[row, col]);
 
-            _tableView.Initialize(_grid, _showPermutationGroups);
-            if (_calculateSums) Sudokutils.CalculateSums(_grid);
+            //_tableView.Initialize(_grid, _showPermutationGroups);
+            //if (_calculateSums) Sudokutils.CalculateSums(_grid);
         }
 
-        /// <summary>
-        /// Clears the grid of all cells game objects.
-        /// </summary>
-        private void ClearGrid()
+        public void UpdateValues()
         {
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
-                    if (_grid[row, col] == null) return;
-                    Destroy(_grid[row, col].gameObject);
+                    _grid[row, col].SetNum(_sudoku.Puzzle[row, col]);
+                    CheckNotes((row, col));
                 }
         }
-        #endregion
 
+        private void CheckNotes((int row, int col) cell)
+        {
+            for (int n = 0; n < 9; n++)
+                _grid[cell.row, cell.col].ShowNote(n + 1, _viewNotes[cell.row * 9 + cell.col, n]);
+        }
+
+        #region Click Handling Methods
         /// <summary>
         /// Handles clicks on the sudoku grid.
         /// </summary>
@@ -285,5 +383,6 @@ namespace MySudoku
                         else _grid[i, j].Deselect(null);
             }
         }
+        #endregion
     }
 }

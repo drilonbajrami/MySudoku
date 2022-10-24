@@ -1,8 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data.Common;
-using TMPro;
 using UnityEngine;
 
 /// <summary>
@@ -19,14 +14,15 @@ public class Notes : MonoBehaviour
     /// Resizes and rearranges the positioning of the note's numbers within the cell,
     /// based on the cell's size.
     /// </summary>
-    public void Initialize()
+    public void Initialize(float cellSize)
     {
-        float cellSize = transform.GetComponentInParent<RectTransform>().sizeDelta.x / 3;
+        float noteSize = cellSize / 3f;
         for(int i = 0; i < 9; i++) {
             int row = i / 3;
             int col = i % 3;
-            _numbers[i].sizeDelta = new Vector2(cellSize, cellSize);
-            _numbers[i].anchoredPosition = new Vector2(col * cellSize, -row * cellSize);
+            _numbers[i].sizeDelta = new Vector2(noteSize, noteSize);
+            _numbers[i].anchoredPosition = new Vector2(col * noteSize, -row * noteSize);
+            _numbers[i].gameObject.SetActive(false);
         }
     }
 
@@ -36,7 +32,7 @@ public class Notes : MonoBehaviour
     /// <param name="number">The number to show.</param>
     public void Show(int number)
     {
-        if(0 > number && number < 10)
+        if(0 < number && number < 10)
             _numbers[number - 1].gameObject.SetActive(true);
     }
 
@@ -56,7 +52,7 @@ public class Notes : MonoBehaviour
     /// <param name="number">The number to hide.</param>
     public void Hide(int number)
     {
-        if (0 > number && number < 10)
+        if (0 < number && number < 10)
             _numbers[number - 1].gameObject.SetActive(false);
     }
 

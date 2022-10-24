@@ -33,7 +33,7 @@ public class Cell : MonoBehaviour
     /// <summary>
     /// The notes for this cell.
     /// </summary>
-    [SerializeField] private Notes _notes;
+    [SerializeField] private Notes _notesView;
 
     public GridSums Sums;
 
@@ -45,6 +45,7 @@ public class Cell : MonoBehaviour
         RectTransform = GetComponent<RectTransform>();
         _background = GetComponent<Image>();
         _text = GetComponentInChildren<TMP_Text>();
+        _notesView = GetComponentInChildren<Notes>();
     }
     
     /// <summary>
@@ -52,8 +53,8 @@ public class Cell : MonoBehaviour
     /// </summary>
     public void Initialize()
     {
-        _notes.Initialize();
-        _notes.gameObject.SetActive(Number == 0);
+        _notesView.Initialize(RectTransform.sizeDelta.x);
+        _notesView.gameObject.SetActive(Number == 0);
     }
 
     /// <summary>
@@ -63,7 +64,7 @@ public class Cell : MonoBehaviour
     public void SetNum(int num)
     {
         Number = num;
-        _notes.gameObject.SetActive(num == 0);
+        _notesView.gameObject.SetActive(num == 0);
         _text.text = num == 0 ? "" : num.ToString();
     }
 
@@ -71,13 +72,16 @@ public class Cell : MonoBehaviour
     /// Shows the given number in the notes of this cell.
     /// </summary>
     /// <param name="number">The number to show.</param>
-    public void ShowNote(int number) => _notes.Show(number);
+    public void ShowNote(int number, bool show) {
+        if (show) _notesView.Show(number);
+        else _notesView.Hide(number);
+    }
 
-    /// <summary>
-    /// Hides the given number in the notes of this cell.
-    /// </summary>
-    /// <param name="number">The number to hide.</param>
-    public void HideNote(int number) => _notes.Hide(number);
+    ///// <summary>
+    ///// Hides the given number in the notes of this cell.
+    ///// </summary>
+    ///// <param name="number">The number to hide.</param>
+    //public void HideNote(int number) => _notes.Hide(number);
     
     /// <summary>
     /// Selects this cell by marking it and its neighbor cells.

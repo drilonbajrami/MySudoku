@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace MySudoku
 {
@@ -69,6 +68,22 @@ namespace MySudoku
                 if (sudoku[row, col] == num) return true;
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks if this sudoku puzzle is equal to the given sudoku solution.
+        /// </summary>
+        /// <param name="puzzle">The sudoku puzzle.</param>
+        /// <param name="solution">The sudoku solution to compare to.</param>
+        /// <returns>Whether the puzzle and solution are equal or not.</returns>
+        public static bool IsEqualTo(this int[,] puzzle, int[,] solution)
+        {
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++)
+                    if (puzzle[row, col] != solution[row, col])
+                        return false;
+
+            return true;
         }
     }
 }

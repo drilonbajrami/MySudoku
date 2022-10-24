@@ -242,6 +242,8 @@ MonoBehaviour:
   _tableView: {fileID: 974511135}
   _showPermutationGroups: 0
   _calculateSums: 0
+  waitSeconds: 0.025
+  sample: 100
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -350,7 +352,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &903614707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -358,13 +360,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 903614706}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d45fe6e3c4596642bf8f6112b285be7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _sudokuView: {fileID: 487582036}
-  _printSolutions: 1
+  _printSolutions: 0
 --- !u!4 &903614708
 Transform:
   m_ObjectHideFlags: 0

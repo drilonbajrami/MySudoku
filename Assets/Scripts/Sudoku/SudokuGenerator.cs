@@ -1,12 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Drawing.Text;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-using TMPro.EditorUtilities;
+using System.Runtime.Remoting.Messaging;
+using UnityEditor.Experimental.GraphView;
+using UnityEditorInternal;
 using UnityEngine;
-using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 namespace MySudoku
 {
@@ -36,75 +34,160 @@ namespace MySudoku
                 return null;
             }
 
-            _randGenerator.SetSeed(_seed);
             Sudoku sudoku = new();
-            GenerateSolution(sudoku);
-            GeneratePuzzle(sudoku, 30);
+            _randGenerator.SetSeed(_seed);
+            sudoku.Solution = GenerateSolution();
+            sudoku.Puzzle = GeneratePuzzle(sudoku.Solution, out bool[,] notes, out int ds);     
             return sudoku;
         }
 
+        public int[,] GeneratePuzzle(int[,] solution, out bool[,] notes, out int difficultyScore)
+        {
+            int[,] puzzle = new int[9,9];
+            /*bool[,] */notes = new bool[81,9];
+            bool[,] notesCopy = new bool[81, 9];
+
+            Array.Copy(solution, puzzle, solution.Length);
+
+            // Cache all sudoku grid cells by their indexes and clear the notes.
+            List<(int row, int col)> cellIndexes = new();
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++) {
+                    cellIndexes.Add((row, col));
+                    for (int i = 0; i < 9; i++)
+                        notes[row * 9 + col, i] = notesCopy[row * 9 + col, i] = false;
+                }
+
+            difficultyScore = 0;
+            (int lower, int upper) difficultyScoreRange = SudokuTechniques.DifficultyMap[Difficulty.BEGGINER];
+            bool solvable = true;
+
+            int tries = 1000;
+
+            while (/*difficultyScore < diffRange.upper ||*/  solvable || tries > 0) {
+                // Pick random index (cell) and store its current value
+                int randIndex = _randGenerator.Next(0, cellIndexes.Count);
+                (int row, int col) cellIndex = cellIndexes[randIndex];
+                int oldValue = puzzle[cellIndex.row, cellIndex.col];
+
+                puzzle[cellIndex.row, cellIndex.col] = 0;
+                notes.UpdateNotes(puzzle, cellIndex, oldValue, 0);
+                Array.Copy(notes, notesCopy, notes.Length);
+
+                if (TrySolve(puzzle, solution, notesCopy)) {
+                    cellIndexes.RemoveAt(randIndex);
+                    difficultyScore += 100;
+                }
+                else {
+                    puzzle[cellIndex.row, cellIndex.col] = oldValue;
+                    notes.UpdateNotes(puzzle, cellIndex, 0, oldValue);
+                    solvable = false;
+                    tries--;
+                }
+            }
+
+            return puzzle;
+        }
+
+        private bool TrySolve(int[,] puzzle, int[,] solution, bool[,] notesCopy)
+        {
+            int[,] solvePuzzle = new int[9, 9];
+            Array.Copy(puzzle, solvePuzzle, puzzle.Length);
+
+            int tries = 100;
+            bool solved = false;
+
+            while (tries > 0 && !solved) {
+                tries--;
+                solvePuzzle.NakedSingle(notesCopy);
+                solved = solvePuzzle.IsEqualTo(solution);
+            }
+
+            return solved;
+        }
+
+        /// <summary>
+        /// Coroutine Sudoku Puzzle Generator
+        /// </summary>
+        //public IEnumerator GeneratePuzzle(Sudoku sudoku, Action action, float waitSeconds, Cell[,] grid, Difficulty difficulty)
+        //{
+        //    Array.Copy(sudoku.Solution, sudoku.Puzzle, sudoku.Solution.Length);
+
+        //    // Cache all sudoku grid cells by their indexes
+        //    List<(int row, int col)> cellIndexes = new();
+        //    for (int row = 0; row < 9; row++)
+        //        for (int col = 0; col < 9; col++) {
+        //            cellIndexes.Add((row, col));
+        //        }
+
+        //    int difficultyScore = 0;
+        //    (int lower, int upper) diffRange = SudokuTechniques.DifficultyMap[difficulty];
+        //    bool solvable = true;
+
+        //    int tries = 500;
+        //    int lastStableCount = 500;
+
+        //    while (/*difficultyScore < diffRange.upper ||*/  solvable || tries > 0) {
+        //        // Pick random index (cell) and store its current value
+        //        int randIndex = _randGenerator.Next(0, cellIndexes.Count);
+        //        (int row, int col) cellIndex = cellIndexes[randIndex];
+
+        //        //sudoku.SetValue(cellIndex, 0);
+
+        //        // Highlight the cells for visualization purposes and invoke ACTION
+        //        grid[cellIndex.row, cellIndex.col].Select(Color.magenta, null);
+        //        yield return waitSeconds != 0 ? new WaitForSeconds(waitSeconds * 2f / 3f) : (object)null;
+
+        //        action?.Invoke();
+
+        //        if (TrySolve(sudoku)) {
+        //            cellIndexes.RemoveAt(randIndex);
+        //            difficultyScore += 100;
+        //            //Debug.Log($"Difficulty now is at: {difficultyScore}");
+        //            grid[cellIndex.row, cellIndex.col].Select(Color.green, null);
+        //            lastStableCount = tries;
+        //            Debug.Log($"Number of tries: {tries}        STABLE");
+        //        }
+        //        else {
+        //            sudoku.SetValue(cellIndex, sudoku.Solution[cellIndex.row, cellIndex.col]);
+        //            grid[cellIndex.row, cellIndex.col].Select(Color.red, null);
+        //            solvable = false;
+        //            tries--;
+        //            Debug.Log($"Number of tries: {tries}");
+        //        }
+
+        //        // Highlight the cells for visualization purposes and invoke ACTION
+        //        action?.Invoke();
+
+        //        yield return waitSeconds != 0 ? new WaitForSeconds(waitSeconds / 3f) : (object)null;
+
+        //        grid[cellIndex.row, cellIndex.col].Deselect(null);
+        //    }
+
+        //    Debug.Log($"Latest stable appearance at {lastStableCount}");
+        //    Debug.Log($"Difficulty score: {difficultyScore}");
+        //    sudoku.PrintPuzzle();
+        //}
+
+
+
+        #region Solution Generator
         /// <summary>
         /// Generates the solution for the given sudoku.
         /// </summary>
         /// <param name="sudoku">The sudoku to generate the solution for.</param>
-        private void GenerateSolution(Sudoku sudoku)
+        public int[,] GenerateSolution()
         {
+            int[,] sudoku = new int[9, 9];
             // Fill the diagonal boxes first (1,5,9) because these boxes
             // do not affect each other's order of numbers.
             for (int i = 0; i < 9; i += 3)
-                FillBox(sudoku.Solution, row: i, col: i);
+                FillBox(sudoku, row: i, col: i);
 
             // Fills the remaining cells in boxes (2,3,4,6,7,8).
-            FillRemaining(sudoku.Solution, row: 0, col: 3);
-        }
+            FillRemaining(sudoku, row: 0, col: 3);
 
-        /// <summary>
-        /// Generates the puzzle for the given sudoku.
-        /// </summary>
-        /// <param name="sudoku">The sudoku to generate the puzzle for.</param>
-        private void GeneratePuzzle(Sudoku sudoku) // To be changed
-        {
-            Array.Copy(sudoku.Solution, sudoku.Puzzle, sudoku.Solution.Length);
-            int count = 64;
-            while (count != 0) {
-                // Pick random cell
-                int cellId = _randGenerator.Next(81);
-
-                // extract coordinates i and j
-                int row = cellId / 9;
-                int col = cellId % 9;
-                if (col != 0)
-                    col--;
-
-                // If not removed yet, then remove
-                if (sudoku.Puzzle[row, col] != 0) {
-                    count--;
-                    sudoku.Puzzle[row, col] = 0;
-                }
-            }
-        }
-        
-        private void GeneratePuzzle(Sudoku sudoku, int numOfClues)
-        {
-            Array.Copy(sudoku.Solution, sudoku.Puzzle, sudoku.Solution.Length);
-            //int clueCount = 81;
-
-            List<(int row, int col)> indexes = new();
-            for (int row = 0; row < 9; row++)
-                for (int col = 0; col < 9; col++) {
-                    indexes.Add((row, col));
-                }
-
-            for (int i = 0; i < 15; i++) {
-                int randIndex = _randGenerator.Next(0, indexes.Count);
-                (int row, int col) randomCell = indexes[randIndex];
-                indexes.RemoveAt(randIndex);
-                sudoku.Puzzle[randomCell.row, randomCell.col] = 0;
-                if (randomCell.row != 5 || randomCell.col != 5) {
-                    indexes.Remove((8 - randomCell.row, 8 - randomCell.col));
-                    sudoku.Puzzle[8 - randomCell.row, 8 - randomCell.col] = 0;
-                }
-            }
+            return sudoku;
         }
 
         /// <summary>
@@ -120,7 +203,7 @@ namespace MySudoku
             int number;
             for (int r = 0; r < 3; r++)
                 for (int c = 0; c < 3; c++) {
-                    do { 
+                    do {
                         int index = _randGenerator.Next(numbers.Count);
                         number = numbers[index];
                         numbers.RemoveAt(index);
@@ -161,5 +244,6 @@ namespace MySudoku
 
             return false;
         }
+        #endregion
     }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace MySudoku
@@ -9,25 +11,14 @@ namespace MySudoku
     public class Sudoku
     {
         /// <summary>
+        /// The difficulty of this sudoku puzzle.
+        /// </summary>
+        public Difficulty Difficulty { get; private set; }
+
+        /// <summary>
         /// Sudoku puzzle.
         /// </summary>
-        public int[,] Puzzle {
-            get { return _puzzle; }
-            set { _puzzle = value; }
-        }
-
-        /// <summary>
-        /// Sudoku solution.
-        /// </summary>
-        public int[,] Solution {
-            get { return _solution; }
-            set { _solution = value; }
-        }
-
-        /// <summary>
-        /// Puzzle.
-        /// </summary>
-        private int[,] _puzzle = new int[9, 9] {
+        public int[,] Puzzle { get; set; } = new int[9, 9] {
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -40,9 +31,9 @@ namespace MySudoku
         };
 
         /// <summary>
-        /// Solution.
+        /// Sudoku solution.
         /// </summary>
-        private int[,] _solution = new int[9, 9] {
+        public int[,] Solution { get; set; } = new int[9, 9] {
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -57,11 +48,12 @@ namespace MySudoku
         /// <summary>
         /// Prints this sudoku's solution in the console.
         /// </summary>
-        public void PrintSolution() {
+        public void PrintSolution()
+        {
             StringBuilder sol = new StringBuilder("Solution: ");
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
-                    sol.Append($"{_solution[row, col]}");
+                    sol.Append($"{Solution[row, col]}");
 
             UnityEngine.Debug.Log(sol.ToString());
         }
@@ -69,11 +61,12 @@ namespace MySudoku
         /// <summary>
         /// Prints this sudoku's puzzle in the console, 0's represent empty cell/numbers.
         /// </summary>
-        public void PrintPuzzle() {
+        public void PrintPuzzle()
+        {
             StringBuilder puz = new StringBuilder("  Puzzle: ");
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
-                    puz.Append($"{_puzzle[row, col]}");
+                    puz.Append($"{Puzzle[row, col]}");
 
             UnityEngine.Debug.Log(puz.ToString());
         }
