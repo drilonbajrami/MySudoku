@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MySudoku
@@ -71,12 +72,12 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// Checks if this sudoku puzzle is equal to the given sudoku solution.
+        /// Checks if this sudoku puzzle is identical to the given sudoku solution.
         /// </summary>
         /// <param name="puzzle">The sudoku puzzle.</param>
         /// <param name="solution">The sudoku solution to compare to.</param>
         /// <returns>Whether the puzzle and solution are equal or not.</returns>
-        public static bool IsEqualTo(this int[,] puzzle, int[,] solution)
+        public static bool IsIdenticalTo(this int[,] puzzle, int[,] solution)
         {
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
@@ -84,6 +85,22 @@ namespace MySudoku
                         return false;
 
             return true;
+        }
+
+        /// <summary>
+        /// Shuffles this list with a <see cref="RandomGenerator"/> which has a seed.
+        /// </summary>
+        /// <typeparam name="T">The data type.</typeparam>
+        /// <param name="list">List to shuffle.</param>
+        /// <param name="random">Random generator.</param>
+        public static void Shuffle<T>(this List<T> list, RandomGenerator random)
+        {
+            int n = list.Count;
+            while (n > 1) {
+                n--;
+                int k = random.Next(n + 1);
+                (list[n], list[k]) = (list[k], list[n]);
+            }
         }
     }
 }

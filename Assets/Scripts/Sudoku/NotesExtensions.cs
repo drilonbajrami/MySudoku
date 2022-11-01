@@ -33,4 +33,7 @@ public static class NotesExtensions
             notes[row * 9 + col, valueIndex] = addedValueIsZero && sudoku.CanUseNumber(row, col, valueIndex + 1);
         }
     }
+
+    public static void RemoveNote(this bool[,] notes, int[,] sudoku, (int row, int col) cellIndex, int noteIndexToHide) => notes[cellIndex.row * 9 + cellIndex.col, noteIndexToHide] = false;
+
 }

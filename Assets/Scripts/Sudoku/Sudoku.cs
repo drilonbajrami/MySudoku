@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Text;
 
 namespace MySudoku
@@ -63,12 +60,21 @@ namespace MySudoku
         /// </summary>
         public void PrintPuzzle()
         {
-            StringBuilder puz = new StringBuilder("  Puzzle: ");
+            StringBuilder puz = new StringBuilder();
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
                     puz.Append($"{Puzzle[row, col]}");
 
             UnityEngine.Debug.Log(puz.ToString());
+        }
+
+        public string GetPuzzle()
+        {
+            StringBuilder puz = new StringBuilder();
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++)
+                    puz.Append($"{Puzzle[row, col]}");
+            return puz.ToString();
         }
     }
 }

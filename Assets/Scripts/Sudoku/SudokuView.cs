@@ -75,6 +75,8 @@ namespace MySudoku
 
         private readonly bool[,] _viewNotes = new bool[81, 9];
 
+        public Toggle noteToggle;
+
         /// <summary>
         /// Caches the rect transform component of this game object.
         /// </summary>
@@ -84,20 +86,6 @@ namespace MySudoku
         /// Draws the sudoku grid and fills it with the current solution loaded in the sudoku results library.
         /// </summary>
         private void Start() => DrawSudoku();
-
-        public Dictionary<int, int> HighScores = new() {
-            {6000, 0},
-            {5900, 0},
-            {5800, 0},
-            {5700, 0},
-            {5600, 0},
-            {5500, 0},
-            {5400, 0},
-            {5300, 0},
-            {5200, 0},
-            {5100, 0},
-            {5000, 0},
-        };
 
         /// <summary>
         /// Test methods...
@@ -119,16 +107,82 @@ namespace MySudoku
             }
 
             if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {
-                if (Input.GetKeyDown(KeyCode.Keypad1)) Set(_selectedCell.row, _selectedCell.col, 1);
-                else if (Input.GetKeyDown(KeyCode.Keypad2)) Set(_selectedCell.row, _selectedCell.col, 2);
-                else if (Input.GetKeyDown(KeyCode.Keypad3)) Set(_selectedCell.row, _selectedCell.col, 3);
-                else if (Input.GetKeyDown(KeyCode.Keypad4)) Set(_selectedCell.row, _selectedCell.col, 4);
-                else if (Input.GetKeyDown(KeyCode.Keypad5)) Set(_selectedCell.row, _selectedCell.col, 5);
-                else if (Input.GetKeyDown(KeyCode.Keypad6)) Set(_selectedCell.row, _selectedCell.col, 6);
-                else if (Input.GetKeyDown(KeyCode.Keypad7)) Set(_selectedCell.row, _selectedCell.col, 7);
-                else if (Input.GetKeyDown(KeyCode.Keypad8)) Set(_selectedCell.row, _selectedCell.col, 8);
-                else if (Input.GetKeyDown(KeyCode.Keypad9)) Set(_selectedCell.row, _selectedCell.col, 9);
-                else if (Input.GetKeyDown(KeyCode.Keypad0)) Set(_selectedCell.row, _selectedCell.col, 0);
+                if (Input.GetKeyDown(KeyCode.Keypad1)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 0];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 0] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(1, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 1);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad2)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 1];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 1] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(2, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 2);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad3)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 2];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 2] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(3, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 3);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad4)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 3];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 3] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(4, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 4);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad5)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 4];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 4] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(5, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 5);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad6)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 5];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 5] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(6, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 6);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad7)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 6];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 6] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(7, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 7);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad8)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 7];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 7] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(8, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 8);
+                }
+                if (Input.GetKeyDown(KeyCode.Keypad9)) {
+                    if (noteToggle.isOn) {
+                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 8];
+                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 8] = !currentFlag;
+                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(9, !currentFlag);
+                    }
+                    else Set(_selectedCell.row, _selectedCell.col, 9);
+                }
+                else if (Input.GetKeyDown(KeyCode.Keypad0)) {
+                    if (!noteToggle)
+                        Set(_selectedCell.row, _selectedCell.col, 0); 
+                }
             }
         }
 
@@ -140,38 +194,10 @@ namespace MySudoku
                 _sudoku.Solution = _generator.GenerateSolution();
                 _sudoku.Puzzle = _generator.GeneratePuzzle(_sudoku.Solution, out bool[,] notes, out int ds);
                 Array.Copy(notes, _viewNotes, notes.Length);
-                HighScores[ds]++;
             }
             UpdateValues();
-            Debug.Log("---------------------------------------------------------");
-            PrintHighScores();
-            Debug.Log("---------------------------------------------------------");
+            _sudoku.PrintPuzzle();
         }
-
-        public float Percentage(int n, int total) => 100f / total * n;
-
-        public void PrintHighScores()
-        {
-            foreach (KeyValuePair<int, int> a in HighScores) {
-                Debug.Log($"Highscore of {a.Key} : {Percentage(a.Value, sample):0.00}%.");
-            }
-
-            ResetHighscores();
-        }
-
-        public void ResetHighscores() => HighScores = new() {
-            {6000, 0},
-            {5900, 0},
-            {5800, 0},
-            {5700, 0},
-            {5600, 0},
-            {5500, 0},
-            {5400, 0},
-            {5300, 0},
-            {5200, 0},
-            {5100, 0},
-            {5000, 0},
-            };
 
         private void Set(int row, int col, int num)
         {
