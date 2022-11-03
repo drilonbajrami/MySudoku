@@ -106,6 +106,21 @@ namespace MySudoku
                 RunGenerator();
             }
 
+            if (Input.GetKeyDown(KeyCode.LeftShift)) {
+                _sudoku = new Sudoku();
+                //_sudoku.Puzzle.SetPuzzle("000020000768149235502060140210006904000000002809210300004053000000600000600472003");
+                //_sudoku.Puzzle.SetPuzzle("004006020007800910000000308018300200300789001009001060803000500045003600026500100");
+                _sudoku.Puzzle.SetPuzzle("001957063000806070769130805007261350312495786056378000108609507090710608674583000");
+                _viewNotes.SetNotes(_sudoku.Puzzle);
+                
+                UpdateValues();
+            }
+            if(Input.GetKeyDown(KeyCode.A)) {
+                if (_sudoku.Puzzle.CandidateLines(_viewNotes)) {
+                }
+                UpdateValues();
+            }
+
             if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {
                 if (Input.GetKeyDown(KeyCode.Keypad1)) {
                     if (noteToggle.isOn) {

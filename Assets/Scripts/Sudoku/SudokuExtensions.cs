@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -100,6 +101,15 @@ namespace MySudoku
                 n--;
                 int k = random.Next(n + 1);
                 (list[n], list[k]) = (list[k], list[n]);
+            }
+        }
+
+        public static void SetPuzzle(this int[,] grid, string puzzle)
+        {
+            for (int row = 0; row < 9; row++) {
+                for (int col = 0; col < 9; col++) {
+                    grid[row, col] = (int)Char.GetNumericValue(puzzle[row * 9 + col]);
+                }
             }
         }
     }

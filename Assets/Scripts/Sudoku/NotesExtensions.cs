@@ -36,4 +36,15 @@ public static class NotesExtensions
 
     public static void RemoveNote(this bool[,] notes, int[,] sudoku, (int row, int col) cellIndex, int noteIndexToHide) => notes[cellIndex.row * 9 + cellIndex.col, noteIndexToHide] = false;
 
+    public static void SetNotes(this bool[,] notes, int[,] puzzle)
+    {
+        for(int row = 0; row < 9; row++)
+            for(int col = 0; col < 9; col++) {
+                bool isEmpty = puzzle[row, col] == 0;
+
+                for(int i = 0; i < 9; i++) {
+                    notes[row * 9 + col, i] = isEmpty && puzzle.CanUseNumber(row, col, i + 1);
+                }
+            }
+    }
 }

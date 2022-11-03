@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
 
@@ -109,36 +110,33 @@ namespace MySudoku
             return applicable;
         }
 
-        private static bool NakedSingle(this int[,] sudoku, bool[,] notes)
+        public static bool NakedSingle(this int[,] sudoku, bool[,] notes)
         {
-            // Search for an empty cell.
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     // Process empty cells only.
                     if (sudoku[row, col] != 0) continue;
 
-                    // Cache the single candidate value and flag.
-                    int value = 0;
-                    bool singleCandidate = false;
+                    // Set single candidate flag to false.
+                    int candidate = 0;
 
                     // Check each note of the cell.
                     for (int i = 0; i < 9; i++) {
+                        // If note is inactive then continue with the next note.
                         if (!notes[row * 9 + col, i]) continue;
 
-                        if (singleCandidate) {
-                            value = 0;
+                        // If there was already a candidate before, then skip this cell.
+                        if (candidate != 0) {
+                            candidate = 0;
                             break;
                         }
-                        else {
-                            singleCandidate = true;
-                            value = i + 1;
-                        }
+                        else candidate = i + 1;
                     }
 
-                    // Replace with candidate value if there is only one.
-                    if (value != 0) {
-                        sudoku[row, col] = value;
-                        notes.UpdateNotes(sudoku, (row, col), 0, value);
+                    // If there was only one candidate then use its value.
+                    if (candidate != 0) {
+                        sudoku[row, col] = candidate;
+                        notes.UpdateNotes(sudoku, (row, col), 0, candidate);
                         return true;
                     }
                 }
@@ -146,9 +144,8 @@ namespace MySudoku
             return false;
         }
 
-        private static bool HiddenSingle(this int[,] sudoku, bool[,] notes)
+        public static bool HiddenSingle(this int[,] sudoku, bool[,] notes)
         {
-            // Search for an empty cell.
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     // Process empty cells only.
@@ -156,52 +153,37 @@ namespace MySudoku
 
                     // Check each note of the cell.
                     for (int i = 0; i < 9; i++) {
-                        // First check if it is a hidden single within the box/region of the current cell.
-                        // If not, then proceed with checking the row and column it is on.
                         if (!notes[row * 9 + col, i]) continue;
 
+                        // Track if the current candidate (i) is a hidden single.
                         bool isHiddenSingle;
+                        bool hiddenInBox = true;
+                        bool hiddenInRow = true;
+                        bool hiddenInCol = true;
 
-                        // Box
+                        // First check if it is a hidden single within the box/region, row or column of the current cell.
                         for (int j = 0; j < 9; j++) {
-                            int nRow = row - row % 3 + j / 3;
-                            int nCol = col - col % 3 + j % 3;
-                            bool isNotSelf = row != nRow || col != nCol;
-                            if (!(isNotSelf && sudoku[nRow, nCol] == 0)) continue;
+                            int nRow = row - (row % 3) + (j / 3); // neighbor box row.
+                            int nCol = col - (col % 3) + (j % 3); // neighbor box column.             
 
-                            isHiddenSingle = !notes[nRow * 9 + nCol, i];
-                            if (!isHiddenSingle) break;
-                            else if (j == 8) {
+                            bool isBoxNeighbor = row != nRow || col != nCol;
+                            bool isRowNeighbor = col != j;
+                            bool isColNeighbor = row != j;
+
+                            // Box, row and column
+                            if (isBoxNeighbor && sudoku[nRow, nCol] == 0 && hiddenInBox) hiddenInBox = !notes[nRow * 9 + nCol, i];
+                            if (isRowNeighbor && sudoku[row, j] == 0 && hiddenInRow) hiddenInRow = !notes[row * 9 + j, i];
+                            if (isColNeighbor && sudoku[j, col] == 0 && hiddenInCol) hiddenInCol = !notes[j * 9 + col, i];
+
+                            isHiddenSingle = hiddenInBox || hiddenInRow || hiddenInCol;
+
+                            // Check if the current note is still a hidden single when processing all neighbor cells.
+                            if (isHiddenSingle && j == 8) {
                                 sudoku[row, col] = i + 1;
                                 notes.UpdateNotes(sudoku, (row, col), 0, i + 1);
                                 return true;
                             }
-                        }
-
-                        // Row
-                        for (int j = 0; j < 9; j++) {
-                            if (!(row != j && sudoku[j, col] == 0)) continue;
-
-                            isHiddenSingle = !(row != j && notes[j * 9 + col, i]);
-                            if (!isHiddenSingle) break;
-                            else if (j == 8) {
-                                sudoku[row, col] = i + 1;
-                                notes.UpdateNotes(sudoku, (row, col), 0, i + 1);
-                                return true;
-                            }
-                        }
-
-                        // Col
-                        for (int j = 0; j < 9; j++) {
-                            if (!(col != j && sudoku[row, j] == 0)) continue;
-
-                            isHiddenSingle = !notes[row * 9 + j, i];
-                            if (!isHiddenSingle) break;
-                            else if (j == 8) {
-                                sudoku[row, col] = i + 1;
-                                notes.UpdateNotes(sudoku, (row, col), 0, i + 1);
-                                return true;
-                            }
+                            else if (!isHiddenSingle) break; // Skip for current note if it is not a hidden single.
                         }
                     }
                 }
@@ -209,9 +191,8 @@ namespace MySudoku
             return false;
         }
 
-        private static bool CandidateLines(this int[,] sudoku, bool[,] notes)
+        public static bool CandidateLines(this int[,] sudoku, bool[,] notes)
         {
-            // Search for an empty cell.
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     // Process empty cells only.
@@ -225,52 +206,48 @@ namespace MySudoku
                         bool inLineRow = false;
                         bool inLineCol = false;
 
-                        // Check if the current note appears only within a row or column line within the box of cells.
+                        // Check if the current note appears only within a row or column within this box.
                         for (int j = 0; j < 9; j++) {
-                            int nRow = row - row % 3 + j / 3;
-                            int nCol = col - col % 3 + j % 3;
-                            bool isNotSelf = row != nRow || col != nCol;
+                            int nRow = row - (row % 3) + (j / 3); // neighbor box row.
+                            int nCol = col - (col % 3) + (j % 3); // neighbor box column.  
+                            bool isNeighbor = row != nRow || col != nCol;
 
                             // If not the same cell 
-                            if (!(isNotSelf && sudoku[nRow, nCol] == 0)) continue;
+                            if (!(isNeighbor && sudoku[nRow, nCol] == 0)) continue;
 
-                            // Can't be applied if same note appears on a different column and row.
-                            if (row != nRow && col != nCol && notes[nRow * 9 + nCol, i]) {
-                                inLineRow = inLineCol = false;
-                                break; 
-                            }
-                            else if (row == nRow && col != nCol && !inLineRow)
-                                inLineRow = true;
-                            else if (row != nRow && col == nCol && !inLineCol)
-                                inLineCol = true;
-                   
+                            // Can't be applied if same note appears on a different column and row within this box/region.
+                            if (row != nRow && col != nCol && notes[nRow * 9 + nCol, i])
+                                inLineRow = inLineCol = true;
+
                             if (inLineRow && inLineCol) break;
+                            else if (!inLineRow && row == nRow && col != nCol) inLineRow = notes[nRow * 9 + nCol, i];
+                            else if (!inLineCol && row != nRow && col == nCol) inLineCol = notes[nRow * 9 + nCol, i];
                         }
 
-                        if (inLineRow) {
-                            bool notePresent = false;
-                            int currentBoxRow = row - row % 3;
-                            for (int j = 0; j < 9; j++)
-                                if ((j < currentBoxRow || j > currentBoxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i]) {
-                                    notes[j * 9 + col, i] = false;
-                                    notePresent = true;
-                                }
+                        bool techniqueIsApplied = false;
 
-                            if (notePresent) return true;
-                            else break;
-                        }
-                        else if (inLineCol) {
-                            bool notePresent = false;
+                        // If candidate has appared more than once within a row in this box, then check for neighbor cells on the same row in other boxes.
+                        if (inLineRow && !inLineCol) {
                             int currentBoxCol = col - col % 3;
                             for (int j = 0; j < 9; j++)
+                                // If there is any occurrence of this candidate within row neighbour cells outside of this box then remove it.
                                 if ((j < currentBoxCol || j > currentBoxCol + 2) && sudoku[row, j] == 0 && notes[row * 9 + j, i]) {
                                     notes[row * 9 + j, i] = false;
-                                    notePresent = true;
+                                    techniqueIsApplied = true;
                                 }
-
-                            if (notePresent) return true;
-                            else break;
                         }
+                        // If candidate has appared more than once within a column in this box, then check for neighbor cells on the same column in other boxes.
+                        else if (inLineCol && !inLineRow) {
+                            int currentBoxRow = row - row % 3;
+                            for (int j = 0; j < 9; j++)
+                                // If there is any occurrence of this candidate within column neighbour cells outside of this box then remove it.
+                                if ((j < currentBoxRow || j > currentBoxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i]) {
+                                    notes[j * 9 + col, i] = false;
+                                    techniqueIsApplied = true;
+                                }
+                        }
+
+                        if (techniqueIsApplied) return true;               
                     }
                 }
 
@@ -285,6 +262,82 @@ namespace MySudoku
         private static bool MultipleLines(this int[,] sudoku, bool[,] notes)
         {
             return false;
+            //for (int row = 0; row < 9; row++)
+            //    for (int col = 0; col < 9; col++) {
+            //        // Process empty cells only.
+            //        if (sudoku[row, col] != 0) continue;
+
+            //        // Process each active note of that cell.
+            //        for (int i = 0; i < 9; i++) {
+            //            // If note is not active then skip to next one.
+            //            if (!notes[row * 9 + col, i]) continue;
+
+            //            // Track the flags of whether the current note appears both in a row and column.
+            //            bool inBox = false;
+            //            bool inBoxRow = false;
+            //            bool inBoxCol = false;
+            //            bool inRow = false;
+            //            bool inCol = false;
+
+            //            // Check if the current note appears on a neighbor cell within a row, column or box.
+            //            for (int j = 0; j < 9; j++) {
+            //                int boxRow = row - row % 3; // current box starting row (top left cell)
+            //                int boxCol = col - col % 3; // current box starting col (top left cell)
+            //                int nRow = boxRow + j / 3;  // box neighbor row
+            //                int nCol = boxCol + j % 3;  // box neighbor column
+
+            //                // Box
+            //                if ((row != nRow || col != nCol) && sudoku[nRow, nCol] == 0 && notes[nRow * 9 + nCol, i]) {
+            //                    if (!inBoxRow && row == nRow) inBoxRow = true;
+            //                    if (!inBoxCol && col == nCol) inBoxCol = true;
+            //                    if (!inBox && row != nRow && col != nCol) inBox = true;
+            //                }
+
+            //                // Row (j : col)
+            //                if (!inRow && (j < boxCol || j > boxCol + 2) && sudoku[row, j] == 0 && notes[row * 9 + j, i])
+            //                    inRow = true;
+
+            //                // Column (j : row)
+            //                if (!inCol && (j < boxRow || j > boxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i])
+            //                    inCol = true;
+
+            //                if (inBox && inBoxRow && inBoxCol && inRow && inCol) break;
+            //            }
+
+            //            if (inBox && inBoxRow && inBoxCol && inRow && inCol) continue;
+
+            //            if (!inRow && inBoxRow && (!inCol && (inBoxCol || inBox))) {
+            //                for (int j = 0; j < 9; j++) {
+            //                    int boxRow = row - row % 3; // current box starting row (top left cell)
+            //                    int boxCol = col - col % 3; // current box starting col (top left cell)
+            //                }
+
+            //            }
+
+            //            // case 1 : inRow(false) and inBoxRow(true) and (inCol(false) 
+
+            //            //bool notePresent = false;
+            //            //if (inLineRow) {
+            //            //    int currentBoxRow = row - row % 3;
+            //            //    for (int j = 0; j < 9; j++)
+            //            //        if ((j < currentBoxRow || j > currentBoxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i]) {
+            //            //            notes[j * 9 + col, i] = false;
+            //            //            notePresent = true;
+            //            //        }
+            //            //} else if (inLineCol) {
+            //            //    int currentBoxCol = col - col % 3;
+            //            //    for (int j = 0; j < 9; j++)
+            //            //        if ((j < currentBoxCol || j > currentBoxCol + 2) && sudoku[row, j] == 0 && notes[row * 9 + j, i]) {
+            //            //            notes[row * 9 + j, i] = false;
+            //            //            notePresent = true;
+            //            //        }
+            //            //}
+
+            //            //if (notePresent) return true;
+            //        }
+            //    }
+
+            //return false;
         }
 
         private static bool NakedPair(this int[,] sudoku, bool[,] notes)
