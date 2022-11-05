@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEditor;
+using UnityEditor.Tilemaps;
 using UnityEngine;
 
 namespace MySudoku
@@ -247,19 +248,102 @@ namespace MySudoku
                                 }
                         }
 
-                        if (techniqueIsApplied) return true;               
+                        if (techniqueIsApplied) return true;
                     }
                 }
 
             return false;
         }
 
-        private static bool DoublePairs(this int[,] sudoku, bool[,] notes)
+        public static bool DoublePairs(this int[,] sudoku, bool[,] notes)
         {
+            // Process only the diagonal boxes (1, 5, 9)
+            for (int box = 0; box < 9; box += 3) {
+
+                // Check for each note.
+                for (int i = 0; i < 9; i++) {
+                    // Keep track of rows where this note is present in boxes.
+                    // boxPerRow[x, y] -> x -> box index && y -> row index.
+                    bool[,] boxPerRow = new bool[3, 3];
+
+                    // Keep track of columns where this note is present in boxes.
+                    // boxPerCol[x, y] -> x -> box index && y -> column index.
+                    bool[,] boxPerCol = new bool[3, 3];
+
+                    // d -> row or column index.
+                    // k -> index of element in row or column.
+                    for (int d = 0; d < 3; d++) {
+                        for (int k = 0; k < 9; k++) {
+                            boxPerRow[k / 3, d] = boxPerRow[k / 3, d] || notes[(d + box) * 9 + k, i];
+                            boxPerCol[k / 3, d] = boxPerCol[k / 3, d] || notes[k * 9 + d + box, i];
+                        }
+                    }
+
+                    if (DoublePairsApplicable(boxPerRow, out int toBoxR, out int row)) {
+                        for (int r = 0; r < 3; r++) {
+                            if (r != row)
+                                for (int c = 0; c < 3; c++) {
+                                    notes[(box + r) * 9 + toBoxR * 3 + c, i] = false;
+                                    Debug.Log($"Applied on cell ({box + r}, {toBoxR * 3 + c}) for candidate {i + 1}");
+                                }
+                        }
+                        return true;
+                    }
+
+                    if (DoublePairsApplicable(boxPerCol, out int toBoxC, out int col)) {
+                        for (int c = 0; c < 3; c++) {
+                            if (c != col)
+                                for (int r = 0; r < 3; r++) {
+                                    notes[(toBoxC * 3 + r) * 9 + box + c, i] = false;
+                                    Debug.Log($"Applied on cell ({toBoxC * 3 + r}, {box + c}) for candidate {i + 1}");
+                                }
+                        }
+                        return true;
+                    }
+                }
+            }
+
             return false;
         }
 
-        private static bool MultipleLines(this int[,] sudoku, bool[,] notes)
+        /// <summary>
+        /// Checks if the <see cref="DoublePairs(int[,], bool[,])"/> can be applied to the given boxes, on a row or column direction.
+        /// </summary>
+        /// <param name="boxs">The boxes/regions to check for.</param>
+        /// <param name="toBox">The box where there should be removal of a note.</param>
+        /// <param name="directionToKeep">The row/column to keep, by removing the notes on the other two remaining rows/columns.</param>
+        /// <returns>Whether the technique is applicable, and the box to edit the notes int and the row or column to keep the notes in.</returns>
+        private static bool DoublePairsApplicable(bool[,] boxs, out int toBox, out int directionToKeep)
+        {
+            int p = -1;
+            int q = -1;
+            toBox = -1;
+            directionToKeep = -1;
+
+            int[] boxSums = new int[3];
+            for(int i = 0; i < 3; i++)
+                boxSums[i] = (boxs[i, 0] ? 1 : 0) + (boxs[i, 1] ? 1 : 0) + (boxs[i, 2] ? 1 : 0);
+
+            if (boxSums[0] > 1 && boxSums[1] > 1 && boxSums[2] > 1 && (boxSums[0] + boxSums[1] + boxSums[2]) <= 7) {
+                for(int i = 0; i < 3; i++) {
+                    p = i % 3;
+                    q = (i + 1) % 3;
+                    if (boxs[p, 0] == boxs[q, 0] && boxs[p, 1] == boxs[q, 1] && boxs[p, 2] == boxs[q, 2]) 
+                        toBox = (i + 2) % 3;
+                }
+
+                if (toBox == -1) return false;
+
+                for (int i = 0; i < 3; i++)
+                    if (boxs[toBox, i] == (!boxs[p, i] || !boxs[q, i]) == true)
+                        directionToKeep = i;
+
+                return directionToKeep != -1;
+            }
+            else return false;
+        }
+
+        public static bool MultipleLines(this int[,] sudoku, bool[,] notes)
         {
             return false;
             //for (int row = 0; row < 9; row++)
@@ -340,52 +424,52 @@ namespace MySudoku
             //return false;
         }
 
-        private static bool NakedPair(this int[,] sudoku, bool[,] notes)
+        public static bool NakedPair(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool HiddenPair(this int[,] sudoku, bool[,] notes)
+        public static bool HiddenPair(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool NakedTriple(this int[,] sudoku, bool[,] notes)
+        public static bool NakedTriple(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool HiddenTriple(this int[,] sudoku, bool[,] notes)
+        public static bool HiddenTriple(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool XWing(this int[,] sudoku, bool[,] notes)
+        public static bool XWing(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool YWing(this int[,] sudoku, bool[,] notes)
+        public static bool YWing(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool ForcingChains(this int[,] sudoku, bool[,] notes)
+        public static bool ForcingChains(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool NakedQuad(this int[,] sudoku, bool[,] notes)
+        public static bool NakedQuad(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool HiddenQuad(this int[,] sudoku, bool[,] notes)
+        public static bool HiddenQuad(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }
 
-        private static bool Swordfish(this int[,] sudoku, bool[,] notes)
+        public static bool Swordfish(this int[,] sudoku, bool[,] notes)
         {
             return false;
         }

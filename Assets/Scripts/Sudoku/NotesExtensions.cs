@@ -19,6 +19,10 @@ public static class NotesExtensions
         int valueIndex = addedValueIsZero ? removedValue - 1 : addedValue - 1;
 
         for (int i = 0; i < 9; i++) {
+
+            // Disable all notes in this cell if the new value is not zero.
+            if (!addedValueIsZero) notes[cellIndex.row * 9 + cellIndex.col, i] = false;
+
             // Row
             notes[i * 9 + cellIndex.col, valueIndex] =
                 addedValueIsZero && sudoku.CanUseNumber(i, cellIndex.col, valueIndex + 1);
@@ -34,7 +38,13 @@ public static class NotesExtensions
         }
     }
 
-    public static void RemoveNote(this bool[,] notes, int[,] sudoku, (int row, int col) cellIndex, int noteIndexToHide) => notes[cellIndex.row * 9 + cellIndex.col, noteIndexToHide] = false;
+    /// <summary>
+    /// Removes the given note from the given cell by index.
+    /// </summary>
+    /// <param name="notes">The notes.</param>
+    /// <param name="cellIndex">Index of the cell to remove note in.</param>
+    /// <param name="noteValue">The note to hide.</param>
+    public static void RemoveNote(this bool[,] notes, (int row, int col) cellIndex, int noteValue) => notes[cellIndex.row * 9 + cellIndex.col, noteValue - 1] = false;
 
     public static void SetNotes(this bool[,] notes, int[,] puzzle)
     {

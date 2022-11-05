@@ -1,13 +1,9 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using SudokuTesting;
-using System.Text;
-using static UnityEngine.UIElements.UxmlAttributeDescription;
-using System.Linq;
 
 namespace MySudoku
 {
@@ -110,95 +106,88 @@ namespace MySudoku
                 _sudoku = new Sudoku();
                 //_sudoku.Puzzle.SetPuzzle("000020000768149235502060140210006904000000002809210300004053000000600000600472003");
                 //_sudoku.Puzzle.SetPuzzle("004006020007800910000000308018300200300789001009001060803000500045003600026500100");
-                _sudoku.Puzzle.SetPuzzle("001957063000806070769130805007261350312495786056378000108609507090710608674583000");
+                //_sudoku.Puzzle.SetPuzzle("001957063000806070769130805007261350312495786056378000108609507090710608674583000");
+                _sudoku.Puzzle.SetPuzzle("934060050006004923008900046800546007600010005500390062360401270470600500080000634");
+                //_sudoku.Puzzle.SetPuzzle("009030600036014089100869035090000800010000090068090170601903002972640300003020900");
                 _viewNotes.SetNotes(_sudoku.Puzzle);
                 
                 UpdateValues();
             }
             if(Input.GetKeyDown(KeyCode.A)) {
-                if (_sudoku.Puzzle.CandidateLines(_viewNotes)) {
+                if (_sudoku.Puzzle.DoublePairs(_viewNotes)) {
+                    Debug.Log("Tried.");
                 }
+                //StartCoroutine(Try(_viewNotes, _grid));
                 UpdateValues();
             }
 
             if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {
-                if (Input.GetKeyDown(KeyCode.Keypad1)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 0];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 0] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(1, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 1);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad2)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 1];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 1] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(2, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 2);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad3)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 2];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 2] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(3, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 3);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad4)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 3];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 3] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(4, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 4);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad5)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 4];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 4] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(5, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 5);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad6)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 5];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 5] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(6, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 6);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad7)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 6];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 6] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(7, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 7);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad8)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 7];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 7] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(8, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 8);
-                }
-                if (Input.GetKeyDown(KeyCode.Keypad9)) {
-                    if (noteToggle.isOn) {
-                        bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 8];
-                        _viewNotes[_selectedCell.row * 9 + _selectedCell.col, 8] = !currentFlag;
-                        _grid[_selectedCell.row, _selectedCell.col].ShowNote(9, !currentFlag);
-                    }
-                    else Set(_selectedCell.row, _selectedCell.col, 9);
-                }
-                else if (Input.GetKeyDown(KeyCode.Keypad0)) {
+                if (Input.GetKeyDown(KeyCode.Keypad1)) OnNumberClicked(1);
+                if (Input.GetKeyDown(KeyCode.Keypad2)) OnNumberClicked(2);
+                if (Input.GetKeyDown(KeyCode.Keypad3)) OnNumberClicked(3);
+                if (Input.GetKeyDown(KeyCode.Keypad4)) OnNumberClicked(4);
+                if (Input.GetKeyDown(KeyCode.Keypad5)) OnNumberClicked(5);
+                if (Input.GetKeyDown(KeyCode.Keypad6)) OnNumberClicked(6);
+                if (Input.GetKeyDown(KeyCode.Keypad7)) OnNumberClicked(7);
+                if (Input.GetKeyDown(KeyCode.Keypad8)) OnNumberClicked(8); 
+                if (Input.GetKeyDown(KeyCode.Keypad9)) OnNumberClicked(9);
+                if (Input.GetKeyDown(KeyCode.Keypad0)) {
                     if (!noteToggle)
                         Set(_selectedCell.row, _selectedCell.col, 0); 
                 }
             }
+        }
+
+        public IEnumerator Try(bool[,] notes, Cell[,] grid)
+        {
+            // Process only the diagonal boxes (1, 5, 9)
+            for (int box = 0; box < 9; box += 3) {
+                Debug.Log($"BOX ({box}, {box}):");
+
+                // Check for each note.
+                for (int i = 0; i < 9; i++) {
+
+                    Debug.Log($"    Note {i + 1}:");
+
+                    // Keep track of rows where this note is present in boxes.
+                    // boxPerRow[x, y] -> x -> box index && y -> row index.
+                    bool[,] boxPerRow = new bool[3, 3];
+
+                    // Keep track of columns where this note is present in boxes.
+                    // boxPerCol[x, y] -> x -> box index && y -> column index.
+                    bool[,] boxPerCol = new bool[3, 3];
+
+                    // d -> row or column index.
+                    // k -> index of element in row or column.
+                    for (int d = 0; d < 3; d++) {
+                        for (int k = 0; k < 9; k++) {
+                            Debug.Log($"        ROW ({d + box}, {k}) for {i + 1} => {notes[(d + box) * 9 + k, i]}");
+                            //if (sudoku[d + box, k] == 0)
+                            boxPerRow[k / 3, d] = boxPerRow[k / 3, d] || notes[(d + box) * 9 + k, i];
+
+                            Debug.Log($"        COL ({k}, {d + box}) for {i + 1} => {notes[k * 9 + d + box, i]}");
+                            //if (sudoku[k, d + box] == 0)
+                            boxPerCol[k / 3, d] = boxPerCol[k / 3, d] || notes[k * 9 + d + box, i];
+
+                            _grid[d + box, k].Focus(Color.green, true);
+                            _grid[k, d + box].Focus(Color.green, true);
+                            yield return new WaitForSeconds(0.025f);
+                            _grid[d + box, k].Focus(Color.green, false);
+                            _grid[k, d + box].Focus(Color.green, false);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void OnNumberClicked(int number)
+        {
+            if (noteToggle.isOn) {
+                bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, number - 1];
+                _viewNotes[_selectedCell.row * 9 + _selectedCell.col, number - 1] = !currentFlag;
+                _grid[_selectedCell.row, _selectedCell.col].ShowNote(number, !currentFlag);
+            }
+            else Set(_selectedCell.row, _selectedCell.col, 9);
         }
 
         public int sample = 1000;

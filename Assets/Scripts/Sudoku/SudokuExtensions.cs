@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace MySudoku
 {
@@ -108,9 +109,21 @@ namespace MySudoku
         {
             for (int row = 0; row < 9; row++) {
                 for (int col = 0; col < 9; col++) {
-                    grid[row, col] = (int)Char.GetNumericValue(puzzle[row * 9 + col]);
+                    grid[row, col] = (int)char.GetNumericValue(puzzle[row * 9 + col]);
                 }
             }
+        }
+
+        public static string CopyToClipboard(this int[,] puzzle)
+        {
+            StringBuilder puz = new StringBuilder();
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++)
+                    puz.Append($"{puzzle[row, col]}");
+
+            string p = puz.ToString();
+            p.CopyToClipboard();
+            return p;
         }
     }
 }

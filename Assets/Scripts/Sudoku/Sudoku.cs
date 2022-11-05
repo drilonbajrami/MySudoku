@@ -58,7 +58,7 @@ namespace MySudoku
         /// <summary>
         /// Prints this sudoku's puzzle in the console, 0's represent empty cell/numbers.
         /// </summary>
-        public void PrintPuzzle()
+        public string PrintPuzzle()
         {
             StringBuilder puz = new StringBuilder();
             for (int row = 0; row < 9; row++)
@@ -66,14 +66,6 @@ namespace MySudoku
                     puz.Append($"{Puzzle[row, col]}");
 
             UnityEngine.Debug.Log(puz.ToString());
-        }
-
-        public string GetPuzzle()
-        {
-            StringBuilder puz = new StringBuilder();
-            for (int row = 0; row < 9; row++)
-                for (int col = 0; col < 9; col++)
-                    puz.Append($"{Puzzle[row, col]}");
             return puz.ToString();
         }
     }

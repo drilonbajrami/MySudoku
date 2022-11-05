@@ -72,8 +72,8 @@ namespace MySudoku
             List<(int row, int col)> emptyCellIndexes = new();
 
             while (/*(difficultyScore < difficultyScoreRange.upper || */tries > 0) {
-                (int row, int col) index = /*indexes[^1]*/ind.Dequeue();
-                //indexes.RemoveAt(indexes.Count - 1);
+                (int row, int col) index = ind.Dequeue();
+
                 int oldValue = puzzle[index.row, index.col];
 
                 // Set the current cell value to 0 and update notes.
@@ -126,31 +126,6 @@ namespace MySudoku
             }
 
             return solved;
-        }
-
-        public bool SolveSudoku(int[,] grid, int row, int col)
-        {
-            if (row == 8 && col == 9)
-                return true;
-
-            if (col == 9) {
-                row++;
-                col = 0;
-            }
-
-            if (grid[row, col] != 0)
-                return SolveSudoku(grid, row, col + 1);
-
-            for (int num = 1; num < 10; num++) {
-                if (grid.CanUseNumber(row, col, num)) {
-                    grid[row, col] = num;
-                    if (SolveSudoku(grid, row, col + 1))
-                        return true;
-                }
-                grid[row, col] = 0;
-            }
-
-            return false;
         }
 
         // returns 0, 1 or more than 1 depending on whether 0, 1 or more than 1 solutions are found
