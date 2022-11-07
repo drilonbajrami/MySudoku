@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using UnityEditor;
 using UnityEditor.Tilemaps;
 using UnityEngine;
@@ -60,15 +62,22 @@ namespace MySudoku
             switch (techniqueRank) {
                 case 0:
                     applicable = sudoku.NakedSingle(notes);
+                    if (applicable) SudokuGenerator.NS++;
                     break;
                 case 1:
                     applicable = sudoku.HiddenSingle(notes);
+                    if (applicable) SudokuGenerator.HS++;
                     break;
                 case 2:
                     applicable = sudoku.CandidateLines(notes);
+                    if (applicable) SudokuGenerator.CL++;
                     break;
                 case 3:
                     applicable = sudoku.DoublePairs(notes);
+                    if (applicable) {
+                        SudokuGenerator.ML++;
+                        SudokuGenerator.MULTIPLE_LINES_USED = true;
+                    }
                     break;
                 case 4:
                     applicable = sudoku.MultipleLines(notes);
@@ -138,6 +147,7 @@ namespace MySudoku
                     if (candidate != 0) {
                         sudoku[row, col] = candidate;
                         notes.UpdateNotes(sudoku, (row, col), 0, candidate);
+                        Debug.Log($"NAKED SINGLE: Cell ({row}, {col}) for {candidate}");
                         return true;
                     }
                 }
@@ -158,9 +168,9 @@ namespace MySudoku
 
                         // Track if the current candidate (i) is a hidden single.
                         bool isHiddenSingle;
-                        bool hiddenInBox = true;
-                        bool hiddenInRow = true;
-                        bool hiddenInCol = true;
+                        bool isHiddenInBox = true;
+                        bool isHiddenInRow = true;
+                        bool isHiddenInCol = true;
 
                         // First check if it is a hidden single within the box/region, row or column of the current cell.
                         for (int j = 0; j < 9; j++) {
@@ -172,16 +182,17 @@ namespace MySudoku
                             bool isColNeighbor = row != j;
 
                             // Box, row and column
-                            if (isBoxNeighbor && sudoku[nRow, nCol] == 0 && hiddenInBox) hiddenInBox = !notes[nRow * 9 + nCol, i];
-                            if (isRowNeighbor && sudoku[row, j] == 0 && hiddenInRow) hiddenInRow = !notes[row * 9 + j, i];
-                            if (isColNeighbor && sudoku[j, col] == 0 && hiddenInCol) hiddenInCol = !notes[j * 9 + col, i];
+                            if (isHiddenInBox && isBoxNeighbor && sudoku[nRow, nCol] == 0) isHiddenInBox = !notes[nRow * 9 + nCol, i];
+                            if (isHiddenInRow && isRowNeighbor && sudoku[row, j] == 0) isHiddenInRow = !notes[row * 9 + j, i];
+                            if (isHiddenInCol && isColNeighbor && sudoku[j, col] == 0) isHiddenInCol = !notes[j * 9 + col, i];
 
-                            isHiddenSingle = hiddenInBox || hiddenInRow || hiddenInCol;
-
+                            isHiddenSingle = isHiddenInBox || isHiddenInRow || isHiddenInCol;
+                            
                             // Check if the current note is still a hidden single when processing all neighbor cells.
                             if (isHiddenSingle && j == 8) {
                                 sudoku[row, col] = i + 1;
                                 notes.UpdateNotes(sudoku, (row, col), 0, i + 1);
+                                Debug.Log($"HIDDEN SINGLE: Cell ({row}, {col}) for {i + 1}: {(isHiddenInBox ? "B" : "")} {(isHiddenInRow ? "R" : "")} {(isHiddenInCol ? "C" : "")}");
                                 return true;
                             }
                             else if (!isHiddenSingle) break; // Skip for current note if it is not a hidden single.
@@ -211,21 +222,25 @@ namespace MySudoku
                         for (int j = 0; j < 9; j++) {
                             int nRow = row - (row % 3) + (j / 3); // neighbor box row.
                             int nCol = col - (col % 3) + (j % 3); // neighbor box column.  
-                            bool isNeighbor = row != nRow || col != nCol;
+                            bool isRowNeighbor = row == nRow && col != nCol;
+                            bool isColNeighbor = row != nRow && col == nCol;
 
-                            // If not the same cell 
-                            if (!(isNeighbor && sudoku[nRow, nCol] == 0)) continue;
+                            // If not the same as the cell being processed the skip. 
+                            if (!((row != nRow || col != nCol) && sudoku[nRow, nCol] == 0)) continue;
 
                             // Can't be applied if same note appears on a different column and row within this box/region.
-                            if (row != nRow && col != nCol && notes[nRow * 9 + nCol, i])
+                            if (!isRowNeighbor && !isColNeighbor && notes[nRow * 9 + nCol, i]) {
                                 inLineRow = inLineCol = true;
+                                break;
+                            }
 
-                            if (inLineRow && inLineCol) break;
-                            else if (!inLineRow && row == nRow && col != nCol) inLineRow = notes[nRow * 9 + nCol, i];
-                            else if (!inLineCol && row != nRow && col == nCol) inLineCol = notes[nRow * 9 + nCol, i];
+                            inLineRow = !inLineRow && isRowNeighbor ? notes[nRow * 9 + nCol, i] : inLineRow;
+                            inLineCol = !inLineCol && isColNeighbor ? notes[nRow * 9 + nCol, i] : inLineCol;
                         }
 
                         bool techniqueIsApplied = false;
+
+                        List<(int, int)> cand = new List<(int, int)>();
 
                         // If candidate has appared more than once within a row in this box, then check for neighbor cells on the same row in other boxes.
                         if (inLineRow && !inLineCol) {
@@ -235,7 +250,15 @@ namespace MySudoku
                                 if ((j < currentBoxCol || j > currentBoxCol + 2) && sudoku[row, j] == 0 && notes[row * 9 + j, i]) {
                                     notes[row * 9 + j, i] = false;
                                     techniqueIsApplied = true;
+                                    cand.Add((row, j));
                                 }
+
+                            if (techniqueIsApplied) {
+                                StringBuilder s = new($"CANDIDATE LINES: Cell ({row}, {col}) R{row} for {i + 1} removed from cells: ");
+                                for (int x = 0; x < cand.Count; x++)
+                                    s.Append($"({cand[x].Item1}, {cand[x].Item2}), ");
+                                Debug.Log(s.ToString());
+                            }
                         }
                         // If candidate has appared more than once within a column in this box, then check for neighbor cells on the same column in other boxes.
                         else if (inLineCol && !inLineRow) {
@@ -245,7 +268,15 @@ namespace MySudoku
                                 if ((j < currentBoxRow || j > currentBoxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i]) {
                                     notes[j * 9 + col, i] = false;
                                     techniqueIsApplied = true;
+                                    cand.Add((j, row));
                                 }
+
+                            if (techniqueIsApplied) {
+                                StringBuilder s = new($"CANDIDATE LINES: Cell ({row}, {col}) C{col} for {i + 1} removed from cells: ");
+                                for (int x = 0; x < cand.Count; x++)
+                                    s.Append($"({cand[x].Item1}, {cand[x].Item2}), ");
+                                Debug.Log(s.ToString());
+                            }
                         }
 
                         if (techniqueIsApplied) return true;
@@ -259,7 +290,6 @@ namespace MySudoku
         {
             // Process only the diagonal boxes (1, 5, 9)
             for (int box = 0; box < 9; box += 3) {
-
                 // Check for each note.
                 for (int i = 0; i < 9; i++) {
                     // Keep track of rows where this note is present in boxes.
@@ -271,33 +301,44 @@ namespace MySudoku
                     bool[,] boxPerCol = new bool[3, 3];
 
                     // d -> row or column index.
-                    // k -> index of element in row or column.
+                    // k -> index of element in a row or column.
                     for (int d = 0; d < 3; d++) {
                         for (int k = 0; k < 9; k++) {
-                            boxPerRow[k / 3, d] = boxPerRow[k / 3, d] || notes[(d + box) * 9 + k, i];
-                            boxPerCol[k / 3, d] = boxPerCol[k / 3, d] || notes[k * 9 + d + box, i];
+                            if (sudoku[d + box, k] == 0)
+                                boxPerRow[k / 3, d] = boxPerRow[k / 3, d] || notes[(d + box) * 9 + k, i];
+
+                            if (sudoku[k, d + box] == 0)
+                                boxPerCol[k / 3, d] = boxPerCol[k / 3, d] || notes[k * 9 + d + box, i];
                         }
                     }
 
+                    StringBuilder s = new();
+                    // Check if this technique is applicable on the row direction of the currently processed boxes/regions.
                     if (DoublePairsApplicable(boxPerRow, out int toBoxR, out int row)) {
+                        s.Append($"MULTIPLE LINES: BOX {box + toBoxR} - Keep-ROW {row + box} for note {i + 1} -> removing from: ");
                         for (int r = 0; r < 3; r++) {
                             if (r != row)
                                 for (int c = 0; c < 3; c++) {
                                     notes[(box + r) * 9 + toBoxR * 3 + c, i] = false;
-                                    Debug.Log($"Applied on cell ({box + r}, {toBoxR * 3 + c}) for candidate {i + 1}");
+                                    s.Append($"({box + r}, {toBoxR * 3 + c}), ");
                                 }
                         }
+                        Debug.Log(s.ToString());
                         return true;
                     }
 
+                    // Check if this technique is applicable on the column direction of the currently processed boxes/regions.
                     if (DoublePairsApplicable(boxPerCol, out int toBoxC, out int col)) {
+                        s.Append($"MULTIPLE LINES: BOX {box + toBoxC} - Keep-COL {col + box} for note {i + 1} -> removing from: ");
                         for (int c = 0; c < 3; c++) {
                             if (c != col)
                                 for (int r = 0; r < 3; r++) {
                                     notes[(toBoxC * 3 + r) * 9 + box + c, i] = false;
-                                    Debug.Log($"Applied on cell ({toBoxC * 3 + r}, {box + c}) for candidate {i + 1}");
+                                    s.Append($"({toBoxC * 3 + r}, {box + c}), ");
                                 }
                         }
+                        Debug.Log(s.ToString());
+                        SudokuGenerator.MULTIPLE_LINES_USED = true;
                         return true;
                     }
                 }
@@ -315,25 +356,41 @@ namespace MySudoku
         /// <returns>Whether the technique is applicable, and the box to edit the notes int and the row or column to keep the notes in.</returns>
         private static bool DoublePairsApplicable(bool[,] boxs, out int toBox, out int directionToKeep)
         {
+            // 'p' and 'q' are for caching the indexes of the boxes that should not be changed,
+            // in other words they are the same in terms of a note occurrence on the same rows/columns of these boxes.
             int p = -1;
             int q = -1;
+
+            // 'toBox' is for caching the index of the box that needs to be changed/edited.
             toBox = -1;
+
+            // It is used to cache the index of the row/column of the 'toBox',
+            // based on this the note occurrences in the two remaining rows/columns will be removed.
             directionToKeep = -1;
 
+            // Add up the number of note occurrences in rows/columns for each box. 
             int[] boxSums = new int[3];
             for(int i = 0; i < 3; i++)
                 boxSums[i] = (boxs[i, 0] ? 1 : 0) + (boxs[i, 1] ? 1 : 0) + (boxs[i, 2] ? 1 : 0);
 
+            // If at least each box contains the same note in more than one row/column,
+            // and the total number of times a note appears on rows/columns in all three boxes should be at between 6 or 7 times.
+            // The reason that the sum of all occurrences is checked only for 7,
+            // is that the first condition of each box having a number of occurrences higher than 2 will dictate if it is equal to or greater than 6. 
+            // The for loop checks the possiblites of equality between boxes in this order by their indexes ->
+            // box[p] == box[q] - where (p,q) => (0,1), (1, 0), (2,0).
             if (boxSums[0] > 1 && boxSums[1] > 1 && boxSums[2] > 1 && (boxSums[0] + boxSums[1] + boxSums[2]) <= 7) {
                 for(int i = 0; i < 3; i++) {
                     p = i % 3;
                     q = (i + 1) % 3;
-                    if (boxs[p, 0] == boxs[q, 0] && boxs[p, 1] == boxs[q, 1] && boxs[p, 2] == boxs[q, 2]) 
+                    if (boxs[p, 0] == boxs[q, 0] && boxs[p, 1] == boxs[q, 1] && boxs[p, 2] == boxs[q, 2])
                         toBox = (i + 2) % 3;
                 }
 
+                // If no box has been assigned as the box to edit then skip everything. It is not possible to apply this technique anymore.
                 if (toBox == -1) return false;
 
+                // Once the index of a box to change is assigned, then check for which row/column should not be edited in that particular box.
                 for (int i = 0; i < 3; i++)
                     if (boxs[toBox, i] == (!boxs[p, i] || !boxs[q, i]) == true)
                         directionToKeep = i;
@@ -398,7 +455,7 @@ namespace MySudoku
 
             //            }
 
-            //            // case 1 : inRow(false) and inBoxRow(true) and (inCol(false) 
+            //            // case 1 : inRow(false) and inBoxRow(true) and inCol(false) 
 
             //            //bool notePresent = false;
             //            //if (inLineRow) {

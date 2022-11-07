@@ -14,6 +14,12 @@ namespace MySudoku
     /// </summary>
     public class SudokuGenerator : MonoBehaviour
     {
+        public static bool MULTIPLE_LINES_USED = false;
+        public static int NS = 0;
+        public static int HS = 0;
+        public static int CL = 0;
+        public static int ML = 0;
+
         /// <summary>
         /// Seed for the random generator.
         /// </summary>
@@ -23,8 +29,6 @@ namespace MySudoku
         /// Random number generator with seed.
         /// </summary>
         [SerializeField] RandomGenerator _randGenerator;
-
-        public string sol = "";
 
         /// <summary>
         /// Creates a sudoku.
@@ -46,7 +50,7 @@ namespace MySudoku
 
         public int[,] GeneratePuzzle(int[,] solution, out bool[,] notes, out int difficultyScore)
         {
-            //startPoint:
+            startPoint:
             int[,] puzzle = new int[9, 9];
             notes = new bool[81, 9];
             bool[,] notesCopy = new bool[81, 9];
@@ -67,13 +71,12 @@ namespace MySudoku
             difficultyScore = 0;
             (int lower, int upper) difficultyScoreRange = SudokuTechniques.DifficultyMap[Difficulty.MEDIUM];
 
-            int tries = 243;
+            int tries = 81;
 
             List<(int row, int col)> emptyCellIndexes = new();
 
             while (/*(difficultyScore < difficultyScoreRange.upper || */tries > 0) {
                 (int row, int col) index = ind.Dequeue();
-
                 int oldValue = puzzle[index.row, index.col];
 
                 // Set the current cell value to 0 and update notes.
@@ -92,14 +95,19 @@ namespace MySudoku
                 }
             }
 
-            //if(Solve(0,0, puzzle, 0) != 1) {
-            //    Debug.Log("Trying again...");
-            //    goto startPoint;
-            //}
+            MULTIPLE_LINES_USED = false;
+            NS = HS = CL = ML = 0;
+            Array.Copy(notes, notesCopy, notes.Length);
+            if (TrySolve(puzzle, solution, notesCopy)) {
+                if (!MULTIPLE_LINES_USED) goto startPoint;
+            }
 
             Debug.Log($"Difficulty Score: {difficultyScore}");
-            /*sol = */GetPuzzle(puzzle).CopyToClipboard();
-            //sol.CopyToClipboard();
+            Debug.Log($"Naked Single: {NS} times.");
+            Debug.Log($"Hidden Single: {HS} times.");
+            Debug.Log($"Candidate Lines: {CL} times.");
+            Debug.Log($"Multiple Lines: {ML} times.");
+            GetPuzzle(puzzle).CopyToClipboard();
             return puzzle;
         }
 
@@ -112,7 +120,7 @@ namespace MySudoku
             return puz.ToString();
         }
 
-        private bool TrySolve(int[,] puzzleTemplate, int[,] solution, bool[,] notesCopy)
+        public bool TrySolve(int[,] puzzleTemplate, int[,] solution, bool[,] notesCopy)
         {
             int[,] puzzle = new int[9, 9];
             Array.Copy(puzzleTemplate, puzzle, puzzleTemplate.Length);
@@ -125,6 +133,7 @@ namespace MySudoku
                 solved = puzzle.IsIdenticalTo(solution);
             }
 
+            Debug.Log($"Solved: {solved}");
             return solved;
         }
 

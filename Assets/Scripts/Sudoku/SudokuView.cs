@@ -102,19 +102,27 @@ namespace MySudoku
                 RunGenerator();
             }
 
+            if (Input.GetKeyDown(KeyCode.S)) {
+                bool[,] n = new bool[81, 9];
+                Array.Copy(_viewNotes, n, _viewNotes.Length);
+                _generator.TrySolve(_sudoku.Puzzle, _sudoku.Solution, n);
+            }
+
             if (Input.GetKeyDown(KeyCode.LeftShift)) {
                 _sudoku = new Sudoku();
                 //_sudoku.Puzzle.SetPuzzle("000020000768149235502060140210006904000000002809210300004053000000600000600472003");
                 //_sudoku.Puzzle.SetPuzzle("004006020007800910000000308018300200300789001009001060803000500045003600026500100");
                 //_sudoku.Puzzle.SetPuzzle("001957063000806070769130805007261350312495786056378000108609507090710608674583000");
-                _sudoku.Puzzle.SetPuzzle("934060050006004923008900046800546007600010005500390062360401270470600500080000634");
+                //_sudoku.Puzzle.SetPuzzle("934060050006004923008900046800546007600010005500390062360401270470600500080000634");
                 //_sudoku.Puzzle.SetPuzzle("009030600036014089100869035090000800010000090068090170601903002972640300003020900");
+               //_sudoku.Puzzle.SetPuzzle("900204006006000008502068010130000000000300090000000602400005000005040020007000100");
+                _sudoku.Puzzle.SetPuzzle("000020008910000005000079120006004000005010000700000210050090302003001000000507040");
                 _viewNotes.SetNotes(_sudoku.Puzzle);
                 
                 UpdateValues();
             }
             if(Input.GetKeyDown(KeyCode.A)) {
-                if (_sudoku.Puzzle.DoublePairs(_viewNotes)) {
+                if (_sudoku.Puzzle.CandidateLines(_viewNotes)) {
                     Debug.Log("Tried.");
                 }
                 //StartCoroutine(Try(_viewNotes, _grid));
@@ -122,16 +130,16 @@ namespace MySudoku
             }
 
             if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {
-                if (Input.GetKeyDown(KeyCode.Keypad1)) OnNumberClicked(1);
-                if (Input.GetKeyDown(KeyCode.Keypad2)) OnNumberClicked(2);
-                if (Input.GetKeyDown(KeyCode.Keypad3)) OnNumberClicked(3);
-                if (Input.GetKeyDown(KeyCode.Keypad4)) OnNumberClicked(4);
-                if (Input.GetKeyDown(KeyCode.Keypad5)) OnNumberClicked(5);
-                if (Input.GetKeyDown(KeyCode.Keypad6)) OnNumberClicked(6);
-                if (Input.GetKeyDown(KeyCode.Keypad7)) OnNumberClicked(7);
-                if (Input.GetKeyDown(KeyCode.Keypad8)) OnNumberClicked(8); 
-                if (Input.GetKeyDown(KeyCode.Keypad9)) OnNumberClicked(9);
-                if (Input.GetKeyDown(KeyCode.Keypad0)) {
+                if (Input.GetKeyDown(KeyCode.Keypad1) || Input.GetKeyDown(KeyCode.Alpha1)) OnNumberClicked(1);
+                if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Alpha2)) OnNumberClicked(2);
+                if (Input.GetKeyDown(KeyCode.Keypad3) || Input.GetKeyDown(KeyCode.Alpha3)) OnNumberClicked(3);
+                if (Input.GetKeyDown(KeyCode.Keypad4) || Input.GetKeyDown(KeyCode.Alpha4)) OnNumberClicked(4);
+                if (Input.GetKeyDown(KeyCode.Keypad5) || Input.GetKeyDown(KeyCode.Alpha5)) OnNumberClicked(5);
+                if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6)) OnNumberClicked(6);
+                if (Input.GetKeyDown(KeyCode.Keypad7) || Input.GetKeyDown(KeyCode.Alpha7)) OnNumberClicked(7);
+                if (Input.GetKeyDown(KeyCode.Keypad8) || Input.GetKeyDown(KeyCode.Alpha8)) OnNumberClicked(8); 
+                if (Input.GetKeyDown(KeyCode.Keypad9) || Input.GetKeyDown(KeyCode.Alpha9)) OnNumberClicked(9);
+                if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0)) {
                     if (!noteToggle)
                         Set(_selectedCell.row, _selectedCell.col, 0); 
                 }
@@ -187,7 +195,7 @@ namespace MySudoku
                 _viewNotes[_selectedCell.row * 9 + _selectedCell.col, number - 1] = !currentFlag;
                 _grid[_selectedCell.row, _selectedCell.col].ShowNote(number, !currentFlag);
             }
-            else Set(_selectedCell.row, _selectedCell.col, 9);
+            else Set(_selectedCell.row, _selectedCell.col, number);
         }
 
         public int sample = 1000;
@@ -205,8 +213,8 @@ namespace MySudoku
 
         private void Set(int row, int col, int num)
         {
-            _viewNotes.UpdateNotes(_sudoku.Puzzle, (row, col), _sudoku.Puzzle[row, col], num);
             _sudoku.Puzzle[row, col] = num;
+            _viewNotes.UpdateNotes(_sudoku.Puzzle, (row, col), _sudoku.Puzzle[row, col], num);     
             UpdateValues();
         }
 
