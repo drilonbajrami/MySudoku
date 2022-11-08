@@ -115,18 +115,19 @@ namespace MySudoku
                 //_sudoku.Puzzle.SetPuzzle("001957063000806070769130805007261350312495786056378000108609507090710608674583000");
                 //_sudoku.Puzzle.SetPuzzle("934060050006004923008900046800546007600010005500390062360401270470600500080000634");
                 //_sudoku.Puzzle.SetPuzzle("009030600036014089100869035090000800010000090068090170601903002972640300003020900");
-               //_sudoku.Puzzle.SetPuzzle("900204006006000008502068010130000000000300090000000602400005000005040020007000100");
-                _sudoku.Puzzle.SetPuzzle("000020008910000005000079120006004000005010000700000210050090302003001000000507040");
+                //_sudoku.Puzzle.SetPuzzle("900204006006000008502068010130000000000300090000000602400005000005040020007000100");
+                //_sudoku.Puzzle.SetPuzzle("000020008910000005000079120006004000005010000700000210050090302003001000000507040");
+                //_sudoku.Puzzle.SetPuzzle("400000938032094100095300240370609004529001673904703090957008300003900400240030709");
+                _sudoku.Puzzle.SetPuzzle("000030000020009016015000000100706040070500800000000001000000003050274000060010008");
                 _viewNotes.SetNotes(_sudoku.Puzzle);
                 
                 UpdateValues();
             }
             if(Input.GetKeyDown(KeyCode.A)) {
-                if (_sudoku.Puzzle.CandidateLines(_viewNotes)) {
-                    Debug.Log("Tried.");
-                }
+                if (_sudoku.Puzzle.NakedPair(_viewNotes))
+                    UpdateValues();
                 //StartCoroutine(Try(_viewNotes, _grid));
-                UpdateValues();
+                //UpdateValues();
             }
 
             if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {

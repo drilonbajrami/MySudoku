@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.Tilemaps;
 using UnityEngine;
@@ -73,17 +74,17 @@ namespace MySudoku
                     if (applicable) SudokuGenerator.CL++;
                     break;
                 case 3:
-                    applicable = sudoku.DoublePairs(notes);
-                    if (applicable) {
-                        SudokuGenerator.ML++;
-                        SudokuGenerator.MULTIPLE_LINES_USED = true;
-                    }
+                    applicable = sudoku.MultipleLines(notes);
+                    if (applicable) SudokuGenerator.ML++;
+
                     break;
                 case 4:
-                    applicable = sudoku.MultipleLines(notes);
+                    //applicable = sudoku.MultipleLines(notes);
+                    applicable = false;
                     break;
                 case 5:
                     applicable = sudoku.NakedPair(notes);
+                    if (applicable) SudokuGenerator.NP++;
                     break;
                 case 6:
                     applicable = sudoku.HiddenPair(notes);
@@ -268,7 +269,7 @@ namespace MySudoku
                                 if ((j < currentBoxRow || j > currentBoxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i]) {
                                     notes[j * 9 + col, i] = false;
                                     techniqueIsApplied = true;
-                                    cand.Add((j, row));
+                                    cand.Add((j, col));
                                 }
 
                             if (techniqueIsApplied) {
@@ -286,7 +287,7 @@ namespace MySudoku
             return false;
         }
 
-        public static bool DoublePairs(this int[,] sudoku, bool[,] notes)
+        public static bool MultipleLines(this int[,] sudoku, bool[,] notes)
         {
             // Process only the diagonal boxes (1, 5, 9)
             for (int box = 0; box < 9; box += 3) {
@@ -314,7 +315,7 @@ namespace MySudoku
 
                     StringBuilder s = new();
                     // Check if this technique is applicable on the row direction of the currently processed boxes/regions.
-                    if (DoublePairsApplicable(boxPerRow, out int toBoxR, out int row)) {
+                    if (IsMultipleLinesApplicable(boxPerRow, out int toBoxR, out int row)) {
                         s.Append($"MULTIPLE LINES: BOX {box + toBoxR} - Keep-ROW {row + box} for note {i + 1} -> removing from: ");
                         for (int r = 0; r < 3; r++) {
                             if (r != row)
@@ -328,7 +329,7 @@ namespace MySudoku
                     }
 
                     // Check if this technique is applicable on the column direction of the currently processed boxes/regions.
-                    if (DoublePairsApplicable(boxPerCol, out int toBoxC, out int col)) {
+                    if (IsMultipleLinesApplicable(boxPerCol, out int toBoxC, out int col)) {
                         s.Append($"MULTIPLE LINES: BOX {box + toBoxC} - Keep-COL {col + box} for note {i + 1} -> removing from: ");
                         for (int c = 0; c < 3; c++) {
                             if (c != col)
@@ -338,7 +339,6 @@ namespace MySudoku
                                 }
                         }
                         Debug.Log(s.ToString());
-                        SudokuGenerator.MULTIPLE_LINES_USED = true;
                         return true;
                     }
                 }
@@ -348,13 +348,13 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// Checks if the <see cref="DoublePairs(int[,], bool[,])"/> can be applied to the given boxes, on a row or column direction.
+        /// Checks if the <see cref="MultipleLines(int[,], bool[,])"/> can be applied to the given boxes, on a row or column direction.
         /// </summary>
         /// <param name="boxs">The boxes/regions to check for.</param>
         /// <param name="toBox">The box where there should be removal of a note.</param>
         /// <param name="directionToKeep">The row/column to keep, by removing the notes on the other two remaining rows/columns.</param>
         /// <returns>Whether the technique is applicable, and the box to edit the notes int and the row or column to keep the notes in.</returns>
-        private static bool DoublePairsApplicable(bool[,] boxs, out int toBox, out int directionToKeep)
+        private static bool IsMultipleLinesApplicable(bool[,] boxs, out int toBox, out int directionToKeep)
         {
             // 'p' and 'q' are for caching the indexes of the boxes that should not be changed,
             // in other words they are the same in terms of a note occurrence on the same rows/columns of these boxes.
@@ -400,90 +400,151 @@ namespace MySudoku
             else return false;
         }
 
-        public static bool MultipleLines(this int[,] sudoku, bool[,] notes)
-        {
-            return false;
-            //for (int row = 0; row < 9; row++)
-            //    for (int col = 0; col < 9; col++) {
-            //        // Process empty cells only.
-            //        if (sudoku[row, col] != 0) continue;
-
-            //        // Process each active note of that cell.
-            //        for (int i = 0; i < 9; i++) {
-            //            // If note is not active then skip to next one.
-            //            if (!notes[row * 9 + col, i]) continue;
-
-            //            // Track the flags of whether the current note appears both in a row and column.
-            //            bool inBox = false;
-            //            bool inBoxRow = false;
-            //            bool inBoxCol = false;
-            //            bool inRow = false;
-            //            bool inCol = false;
-
-            //            // Check if the current note appears on a neighbor cell within a row, column or box.
-            //            for (int j = 0; j < 9; j++) {
-            //                int boxRow = row - row % 3; // current box starting row (top left cell)
-            //                int boxCol = col - col % 3; // current box starting col (top left cell)
-            //                int nRow = boxRow + j / 3;  // box neighbor row
-            //                int nCol = boxCol + j % 3;  // box neighbor column
-
-            //                // Box
-            //                if ((row != nRow || col != nCol) && sudoku[nRow, nCol] == 0 && notes[nRow * 9 + nCol, i]) {
-            //                    if (!inBoxRow && row == nRow) inBoxRow = true;
-            //                    if (!inBoxCol && col == nCol) inBoxCol = true;
-            //                    if (!inBox && row != nRow && col != nCol) inBox = true;
-            //                }
-
-            //                // Row (j : col)
-            //                if (!inRow && (j < boxCol || j > boxCol + 2) && sudoku[row, j] == 0 && notes[row * 9 + j, i])
-            //                    inRow = true;
-
-            //                // Column (j : row)
-            //                if (!inCol && (j < boxRow || j > boxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i])
-            //                    inCol = true;
-
-            //                if (inBox && inBoxRow && inBoxCol && inRow && inCol) break;
-            //            }
-
-            //            if (inBox && inBoxRow && inBoxCol && inRow && inCol) continue;
-
-            //            if (!inRow && inBoxRow && (!inCol && (inBoxCol || inBox))) {
-            //                for (int j = 0; j < 9; j++) {
-            //                    int boxRow = row - row % 3; // current box starting row (top left cell)
-            //                    int boxCol = col - col % 3; // current box starting col (top left cell)
-            //                }
-
-            //            }
-
-            //            // case 1 : inRow(false) and inBoxRow(true) and inCol(false) 
-
-            //            //bool notePresent = false;
-            //            //if (inLineRow) {
-            //            //    int currentBoxRow = row - row % 3;
-            //            //    for (int j = 0; j < 9; j++)
-            //            //        if ((j < currentBoxRow || j > currentBoxRow + 2) && sudoku[j, col] == 0 && notes[j * 9 + col, i]) {
-            //            //            notes[j * 9 + col, i] = false;
-            //            //            notePresent = true;
-            //            //        }
-            //            //} else if (inLineCol) {
-            //            //    int currentBoxCol = col - col % 3;
-            //            //    for (int j = 0; j < 9; j++)
-            //            //        if ((j < currentBoxCol || j > currentBoxCol + 2) && sudoku[row, j] == 0 && notes[row * 9 + j, i]) {
-            //            //            notes[row * 9 + j, i] = false;
-            //            //            notePresent = true;
-            //            //        }
-            //            //}
-
-            //            //if (notePresent) return true;
-            //        }
-            //    }
-
-            //return false;
-        }
-
         public static bool NakedPair(this int[,] sudoku, bool[,] notes)
         {
+            for(int row = 0; row < 9; row++)
+                for(int col = 0; col < 9; col++) {
+                    if (!(sudoku[row, col] == 0)) continue;
+
+                    StringBuilder s = new StringBuilder();
+
+                    // Check if this cell contains a pair of candidates.
+                    if(HasNakedPair(notes, (row, col), out (int, int) nakedPair)) {                
+                        // Store this cell's box row and column coordinates.
+                        int boxRow = row - row % 3;
+                        int boxCol = col - col % 3;
+
+                        // Keep track if the technique has been applied.
+                        bool techniqueApplied = false;
+
+                        // Store coordinates for the possible naked pair cell candidates.
+                        (int r, int c) inBox = new(-1, -1);
+                        int inRowColumn = -1;
+                        int inColRow = -1;
+
+                        //Debug.Log($"Cell({row}, {col}) has naked pair [{nakedPair.Item1 + 1}, {nakedPair.Item2 + 1}]... Checking neighbours...");
+                        s.Append($"Cell({row}, {col}) has naked pair [{nakedPair.Item1 + 1}, {nakedPair.Item2 + 1}]... Checking neighbours...\n");
+
+                        // First check if there is already a naked pair candidate cell assigned for the box, row and column.
+                        // If no candidate cell assigned yet, then check if current cell is a naked pair candidate.
+                        // If yes, then check if the naked pair is identical to the main cell.
+                        // If yes than assign that cell's coordinates respective to its box, row or column.
+                        for (int k = 0; k < 9; k++) {
+                            if (inBox == (-1, -1) && HasNakedPair(notes, (boxRow + k / 3, boxCol + k % 3), out (int, int) nakedPairInBox))
+                                if (nakedPair == nakedPairInBox && (row, col) != (boxRow + k / 3, boxCol + k % 3)) { 
+                                    inBox = (boxRow + k / 3, boxCol + k % 3);
+                                    s.Append($"BOX Cell({boxRow + k / 3}, {boxCol + k % 3}) with naked pair [{nakedPairInBox.Item1 + 1}, {nakedPairInBox.Item2 + 1}].\n");
+                                }
+
+                            if (inRowColumn == -1 && HasNakedPair(notes, (row, k), out (int, int) nakedPairInRow))
+                                if (nakedPair == nakedPairInRow && (row, col) != (row, k)) {
+                                    inRowColumn = k;
+                                    s.Append($"ROW Cell({row}, {k}) with naked pair [{nakedPairInRow.Item1 + 1}, {nakedPairInRow.Item2 + 1}].\n");
+                                }
+                            if (inColRow == -1 && HasNakedPair(notes, (k, col), out (int, int) nakedPairInCol))
+                                if (nakedPair == nakedPairInCol && (row, col) != (k, col)) {
+                                    inColRow = k;
+                                    s.Append($"COL Cell({k}, {col}) with naked pair [{nakedPairInCol.Item1 + 1}, {nakedPairInCol.Item2 + 1}].\n");
+                                }
+                        }
+
+                        bool applicableInBox = inBox != (-1, -1);
+                        bool applicableInRow = inRowColumn != -1;
+                        bool applicableInCol = inColRow != -1;
+
+                        s.Append($"Applicable in box, row, col: {applicableInBox}, {applicableInRow}, {applicableInCol} \n");
+
+                        if (applicableInBox || applicableInRow || applicableInCol) {
+                            for(int k = 0; k < 9; k++) {
+                                if(applicableInBox) {
+                                    int kRow = boxRow + k / 3;
+                                    int kCol = boxCol + k % 3;
+                                    bool isNakedPairCellOrNotEmpty = (row, col) == (kRow, kCol) || inBox == (kRow, kCol) || sudoku[kRow, kCol] != 0;
+
+                                    if(!isNakedPairCellOrNotEmpty) {
+                                        if (notes[kRow * 9 + kCol, nakedPair.Item1]) {
+                                            s.Append($"BOX: Removed note {nakedPair.Item1 + 1} from cell({kRow}, {kCol}).\n");
+                                            notes[kRow * 9 + kCol, nakedPair.Item1] = false;
+                                            techniqueApplied = true;
+                                        }
+
+                                        if (notes[kRow * 9 + kCol, nakedPair.Item2]) {
+                                            s.Append($"BOX: Removed note {nakedPair.Item2 + 1} from cell({kRow}, {kCol}).\n");
+                                            notes[kRow * 9 + kCol, nakedPair.Item2] = false;
+                                            techniqueApplied = true;
+                                        }
+                                    }
+                                }
+
+                                if (applicableInRow) {
+                                    bool isNakedPairCellOrNotEmpty = col == k || inRowColumn == k || sudoku[row, k] != 0;
+
+                                    if (!isNakedPairCellOrNotEmpty) {
+                                        if (notes[row * 9 + k, nakedPair.Item1]) {
+                                            s.Append($"ROW: Removed note {nakedPair.Item1 + 1} from cell({row}, {k}).\n");
+                                            notes[row * 9 + k, nakedPair.Item1] = false;
+                                            techniqueApplied = true;
+                                        }
+
+                                        if (notes[row * 9 + k, nakedPair.Item2]) {
+                                            s.Append($"ROW: Removed note {nakedPair.Item2 + 1} from cell({row}, {k}).\n");
+                                            notes[row * 9 + k, nakedPair.Item2] = false;
+                                            techniqueApplied = true;
+                                        }
+                                    }
+                                }
+
+                                if (applicableInCol) {
+                                    bool isNakedPairCellOrNotEmpty = row == k || inColRow == k || sudoku[k, col] != 0;
+
+                                    if (!isNakedPairCellOrNotEmpty) {
+                                        if (notes[k * 9 + col, nakedPair.Item1]) {
+                                            s.Append($"COL: Removed note {nakedPair.Item1 + 1} from cell({k}, {col}).\n");
+                                            notes[k * 9 + col, nakedPair.Item1] = false;
+                                            techniqueApplied = true;
+                                        }
+
+                                        if (notes[k * 9 + col, nakedPair.Item2]) {
+                                            s.Append($"COL: Removed note {nakedPair.Item2 + 1} from cell({k}, {col}).\n");
+                                            notes[k * 9 + col, nakedPair.Item2] = false;
+                                            techniqueApplied = true;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (techniqueApplied) {
+                                Debug.Log(s.ToString());
+                                Debug.Log("------------------------------");
+                                return true;
+                            }
+                        }                        
+                    }
+                }
+
             return false;
+        }
+
+        /// <summary>
+        /// Checks if the given cell has a pair of candidates in it.
+        /// </summary>
+        /// <param name="notes">The notes of sudoku puzzle.</param>
+        /// <param name="index">Index of the cell to check for pairs.</param>
+        /// <param name="nakedPair">The naked pair in the cell if available.</param>
+        /// <returns>Ture if there are only two candidates in the cell, false if less or more than two candidates.</returns>
+        private static bool HasNakedPair(bool[,] notes, (int row,int col) index, out (int, int) nakedPair)
+        {
+            nakedPair = (-1, -1);
+
+            for (int i = 0; i < 9; i++) {
+                if (notes[index.row * 9 + index.col, i]) {
+                    if (nakedPair.Item1 == -1) nakedPair.Item1 = i;
+                    else if (nakedPair.Item2 == -1) nakedPair.Item2 = i;
+                    else return false;
+                }
+            }
+            
+            return nakedPair.Item1 != -1 && nakedPair.Item2 != -1;
         }
 
         public static bool HiddenPair(this int[,] sudoku, bool[,] notes)
@@ -570,9 +631,9 @@ namespace MySudoku
             1. Single Candidate(Naked Single) -   100 -> 100
             2. Single Position(Hidden Single)  -   100 -> 100
             Medium:
-            3. Candidate Lines  -   350 -> 200
-            4. Double Pairs     -   500 -> 250
-            5. Multiple Lines   -   700 -> 400
+            3. Candidate Lines(Pointing Pairs)  -   350 -> 200
+
+            5. MULTIPLE LINES   -   600 -> 300;
             Advanced:
             6. Naked Pair       -   750 -> 500
             7. Hidden Pair      -   1500 -> 1200
@@ -585,6 +646,9 @@ namespace MySudoku
             12. Naked Quad      -   5000 -> 4000
             13. Hidden Quad     -   7000 -> 5000
             14. Swordfish       -   8000 -> 6000    
+
+            4. Double Pairs     -   500 -> 250
+            5. Multiple Lines   -   700 -> 400
          */
     }
 

@@ -14,11 +14,11 @@ namespace MySudoku
     /// </summary>
     public class SudokuGenerator : MonoBehaviour
     {
-        public static bool MULTIPLE_LINES_USED = false;
         public static int NS = 0;
         public static int HS = 0;
         public static int CL = 0;
         public static int ML = 0;
+        public static int NP = 0;
 
         /// <summary>
         /// Seed for the random generator.
@@ -95,11 +95,10 @@ namespace MySudoku
                 }
             }
 
-            MULTIPLE_LINES_USED = false;
-            NS = HS = CL = ML = 0;
+            NS = HS = CL = ML = NP = 0;
             Array.Copy(notes, notesCopy, notes.Length);
             if (TrySolve(puzzle, solution, notesCopy)) {
-                if (!MULTIPLE_LINES_USED) goto startPoint;
+                if (NP == 0) goto startPoint;
             }
 
             Debug.Log($"Difficulty Score: {difficultyScore}");
@@ -107,6 +106,7 @@ namespace MySudoku
             Debug.Log($"Hidden Single: {HS} times.");
             Debug.Log($"Candidate Lines: {CL} times.");
             Debug.Log($"Multiple Lines: {ML} times.");
+            Debug.Log($"Naked Pairs: {NP}");
             GetPuzzle(puzzle).CopyToClipboard();
             return puzzle;
         }
