@@ -5,10 +5,22 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using SudokuTesting;
 
+using System.Reflection;
+
+
+
 namespace MySudoku
 {
     public class SudokuView : MonoBehaviour, IPointerClickHandler
     {
+        public static void ClearLog()
+        {
+            var assembly = Assembly.GetAssembly(typeof(UnityEditor.Editor));
+            var type = assembly.GetType("UnityEditor.LogEntries");
+            var method = type.GetMethod("Clear");
+            method.Invoke(new object(), null);
+        }
+
         #region Sudoku Fields
         /// <summary>
         /// The sudoku to show/draw.
@@ -99,6 +111,7 @@ namespace MySudoku
                 //_generator.GenerateSolution(_sudoku);
                 //SetGridValues(_sudoku.Solution);
                 //StartCoroutine(_generator.GeneratePuzzle(_sudoku, UpdateValues, waitSeconds, _grid, Difficulty.BEGGINER));
+                ClearLog();
                 RunGenerator();
             }
 
@@ -118,13 +131,14 @@ namespace MySudoku
                 //_sudoku.Puzzle.SetPuzzle("900204006006000008502068010130000000000300090000000602400005000005040020007000100");
                 //_sudoku.Puzzle.SetPuzzle("000020008910000005000079120006004000005010000700000210050090302003001000000507040");
                 //_sudoku.Puzzle.SetPuzzle("400000938032094100095300240370609004529001673904703090957008300003900400240030709");
-                _sudoku.Puzzle.SetPuzzle("000030000020009016015000000100706040070500800000000001000000003050274000060010008");
+                //_sudoku.Puzzle.SetPuzzle("000030000020009016015000000100706040070500800000000001000000003050274000060010008");
+                _sudoku.Puzzle.SetPuzzle("801006094300009080970080500547062030632000050198375246083620915065198000219500008");
                 _viewNotes.SetNotes(_sudoku.Puzzle);
                 
                 UpdateValues();
             }
             if(Input.GetKeyDown(KeyCode.A)) {
-                if (_sudoku.Puzzle.NakedPair(_viewNotes))
+                if (_sudoku.Puzzle.HiddenPairs(_viewNotes))
                     UpdateValues();
                 //StartCoroutine(Try(_viewNotes, _grid));
                 //UpdateValues();

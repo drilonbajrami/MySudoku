@@ -19,6 +19,7 @@ namespace MySudoku
         public static int CL = 0;
         public static int ML = 0;
         public static int NP = 0;
+        public static int HP = 0;
 
         /// <summary>
         /// Seed for the random generator.
@@ -84,7 +85,7 @@ namespace MySudoku
                 notes.UpdateNotes(puzzle, index, oldValue, 0);
                 Array.Copy(notes, notesCopy, notes.Length);
 
-                if ((Solve(0, 0, puzzle) == 1) && TrySolve(puzzle, solution, notesCopy)) {
+                if ((Solve(puzzle) == 1) && TrySolve(puzzle, solution, notesCopy)) {
                     difficultyScore += 100;
                 }
                 else {
@@ -95,10 +96,10 @@ namespace MySudoku
                 }
             }
 
-            NS = HS = CL = ML = NP = 0;
+            NS = HS = CL = ML = NP = HP = 0;
             Array.Copy(notes, notesCopy, notes.Length);
             if (TrySolve(puzzle, solution, notesCopy)) {
-                if (NP == 0) goto startPoint;
+                if (HP == 0) goto startPoint;
             }
 
             Debug.Log($"Difficulty Score: {difficultyScore}");
@@ -106,7 +107,8 @@ namespace MySudoku
             Debug.Log($"Hidden Single: {HS} times.");
             Debug.Log($"Candidate Lines: {CL} times.");
             Debug.Log($"Multiple Lines: {ML} times.");
-            Debug.Log($"Naked Pairs: {NP}");
+            Debug.Log($"Naked Pairs: {NP} times");
+            Debug.Log($"Hidden Pairs: {HP} times");
             GetPuzzle(puzzle).CopyToClipboard();
             return puzzle;
         }
@@ -138,7 +140,7 @@ namespace MySudoku
         }
 
         // returns 0, 1 or more than 1 depending on whether 0, 1 or more than 1 solutions are found
-        public int Solve(int row, int col, int[,] cells, int count = 0)
+        public int Solve(int[,] cells, int row = 0, int col = 0, int count = 0)
         {
             if (col == 9) {
                 col = 0;
@@ -146,7 +148,7 @@ namespace MySudoku
                     return 1 + count;
             }
             if (cells[row, col] != 0)  // skip filled cells
-                return Solve(row, col + 1, cells, count);
+                return Solve(cells, row, col + 1, count);
 
             // search for 2 solutions instead of 1
             // break, if 2 solutions are found
@@ -154,76 +156,13 @@ namespace MySudoku
                 if (cells.CanUseNumber(row, col, val)) {
                     cells[row, col] = val;
                     // add additional solutions
-                    count = Solve(row, col + 1, cells, count);
+                    count = Solve(cells, row, col + 1, count);
                 }
             }
 
             cells[row, col] = 0; // reset on backtrack
             return count;
         }
-
-        /// <summary>
-        /// Coroutine Sudoku Puzzle Generator
-        /// </summary>
-        //public IEnumerator GeneratePuzzle(Sudoku sudoku, Action action, float waitSeconds, Cell[,] grid, Difficulty difficulty)
-        //{
-        //    Array.Copy(sudoku.Solution, sudoku.Puzzle, sudoku.Solution.Length);
-
-        //    // Cache all sudoku grid cells by their indexes
-        //    List<(int row, int col)> cellIndexes = new();
-        //    for (int row = 0; row < 9; row++)
-        //        for (int col = 0; col < 9; col++) {
-        //            cellIndexes.Add((row, col));
-        //        }
-
-        //    int difficultyScore = 0;
-        //    (int lower, int upper) diffRange = SudokuTechniques.DifficultyMap[difficulty];
-        //    bool solvable = true;
-
-        //    int tries = 500;
-        //    int lastStableCount = 500;
-
-        //    while (/*difficultyScore < diffRange.upper ||*/  solvable || tries > 0) {
-        //        // Pick random index (cell) and store its current value
-        //        int randIndex = _randGenerator.Next(0, cellIndexes.Count);
-        //        (int row, int col) cellIndex = cellIndexes[randIndex];
-
-        //        //sudoku.SetValue(cellIndex, 0);
-
-        //        // Highlight the cells for visualization purposes and invoke ACTION
-        //        grid[cellIndex.row, cellIndex.col].Select(Color.magenta, null);
-        //        yield return waitSeconds != 0 ? new WaitForSeconds(waitSeconds * 2f / 3f) : (object)null;
-
-        //        action?.Invoke();
-
-        //        if (TrySolve(sudoku)) {
-        //            cellIndexes.RemoveAt(randIndex);
-        //            difficultyScore += 100;
-        //            //Debug.Log($"Difficulty now is at: {difficultyScore}");
-        //            grid[cellIndex.row, cellIndex.col].Select(Color.green, null);
-        //            lastStableCount = tries;
-        //            Debug.Log($"Number of tries: {tries}        STABLE");
-        //        }
-        //        else {
-        //            sudoku.SetValue(cellIndex, sudoku.Solution[cellIndex.row, cellIndex.col]);
-        //            grid[cellIndex.row, cellIndex.col].Select(Color.red, null);
-        //            solvable = false;
-        //            tries--;
-        //            Debug.Log($"Number of tries: {tries}");
-        //        }
-
-        //        // Highlight the cells for visualization purposes and invoke ACTION
-        //        action?.Invoke();
-
-        //        yield return waitSeconds != 0 ? new WaitForSeconds(waitSeconds / 3f) : (object)null;
-
-        //        grid[cellIndex.row, cellIndex.col].Deselect(null);
-        //    }
-
-        //    Debug.Log($"Latest stable appearance at {lastStableCount}");
-        //    Debug.Log($"Difficulty score: {difficultyScore}");
-        //    sudoku.PrintPuzzle();
-        //}
 
         #region Solution Generator
         /// <summary>
