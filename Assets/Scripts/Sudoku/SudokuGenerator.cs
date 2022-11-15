@@ -1,10 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
-using UnityEditor.Experimental.GraphView;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace MySudoku
@@ -14,12 +10,7 @@ namespace MySudoku
     /// </summary>
     public class SudokuGenerator : MonoBehaviour
     {
-        public static int NS = 0;
-        public static int HS = 0;
-        public static int CL = 0;
-        public static int ML = 0;
-        public static int NP = 0;
-        public static int HP = 0;
+        public static List<int> techniquesUsed = new() { 0, 0, 0, 0, 0, 0 };
 
         /// <summary>
         /// Seed for the random generator.
@@ -49,9 +40,26 @@ namespace MySudoku
             return sudoku;
         }
 
+        public string GetPuzzle(int[,] puzzle)
+        {
+            StringBuilder puz = new StringBuilder();
+            for (int row = 0; row < 9; row++)
+                for (int col = 0; col < 9; col++)
+                    puz.Append($"{puzzle[row, col]}");
+            return puz.ToString();
+        }
+
+        #region Puzzle Generator
+        /// <summary>
+        /// Generates a sudoku puzzle based on the given sudoku solution.
+        /// </summary>
+        /// <param name="solution">The sudoku solution.</param>
+        /// <param name="notes">Notes for the generated sudoku puzzle.</param>
+        /// <param name="difficultyScore">Overall difficulty score of the generated sudoku puzzle.</param>
+        /// <returns>Sudoku puzzle.</returns>
         public int[,] GeneratePuzzle(int[,] solution, out bool[,] notes, out int difficultyScore)
         {
-            startPoint:
+        startPoint:
             int[,] puzzle = new int[9, 9];
             notes = new bool[81, 9];
             bool[,] notesCopy = new bool[81, 9];
@@ -67,10 +75,10 @@ namespace MySudoku
                         notes[row * 9 + col, i] = notesCopy[row * 9 + col, i] = false;
                 }
             indexes.Shuffle(_randGenerator);
-            Queue<(int,int)> ind = new(indexes);
+            Queue<(int, int)> ind = new(indexes);
 
             difficultyScore = 0;
-            (int lower, int upper) difficultyScoreRange = SudokuTechniques.DifficultyMap[Difficulty.MEDIUM];
+            (int lower, int upper) difficultyScoreRange = SudokuTechniques.DifficultyMap[Difficulty.Medium];
 
             int tries = 81;
 
@@ -85,7 +93,7 @@ namespace MySudoku
                 notes.UpdateNotes(puzzle, index, oldValue, 0);
                 Array.Copy(notes, notesCopy, notes.Length);
 
-                if ((Solve(puzzle) == 1) && TrySolve(puzzle, solution, notesCopy)) {
+                if (IsUnique(puzzle) && TrySolve(puzzle, solution, notesCopy, logResult: false)) {
                     difficultyScore += 100;
                 }
                 else {
@@ -96,33 +104,31 @@ namespace MySudoku
                 }
             }
 
-            NS = HS = CL = ML = NP = HP = 0;
+            for (int i = 0; i < techniquesUsed.Count; i++)
+                techniquesUsed[i] = 0;
+
             Array.Copy(notes, notesCopy, notes.Length);
-            if (TrySolve(puzzle, solution, notesCopy)) {
-                if (HP == 0) goto startPoint;
+            if (TrySolve(puzzle, solution, notesCopy, logResult: false)) {
+                if (techniquesUsed[(int)Technique.HiddenPairs] == 0) goto startPoint;
             }
 
             Debug.Log($"Difficulty Score: {difficultyScore}");
-            Debug.Log($"Naked Single: {NS} times.");
-            Debug.Log($"Hidden Single: {HS} times.");
-            Debug.Log($"Candidate Lines: {CL} times.");
-            Debug.Log($"Multiple Lines: {ML} times.");
-            Debug.Log($"Naked Pairs: {NP} times");
-            Debug.Log($"Hidden Pairs: {HP} times");
+            for (int i = 0; i < techniquesUsed.Count; i++) {
+                Debug.Log($"Technique {(Technique)i} used {techniquesUsed[i]} times.");
+            }
+
             GetPuzzle(puzzle).CopyToClipboard();
             return puzzle;
         }
 
-        public string GetPuzzle(int[,] puzzle)
-        {
-            StringBuilder puz = new StringBuilder();
-            for (int row = 0; row < 9; row++)
-                for (int col = 0; col < 9; col++)
-                    puz.Append($"{puzzle[row, col]}");
-            return puz.ToString();
-        }
-
-        public bool TrySolve(int[,] puzzleTemplate, int[,] solution, bool[,] notesCopy)
+        /// <summary>
+        /// Tries to solve a sudoku puzzle with currently available sudoku techniques.
+        /// </summary>
+        /// <param name="puzzleTemplate">The sudoku puzzle.</param>
+        /// <param name="solution">The sudoku solution.</param>
+        /// <param name="notesCopy">The notes for the sudoku puzzle.</param>
+        /// <returns>Whether this sudoku puzzle can be solved with currently available techniques.</returns>
+        public bool TrySolve(int[,] puzzleTemplate, int[,] solution, bool[,] notesCopy, bool logResult)
         {
             int[,] puzzle = new int[9, 9];
             Array.Copy(puzzleTemplate, puzzle, puzzleTemplate.Length);
@@ -135,34 +141,49 @@ namespace MySudoku
                 solved = puzzle.IsIdenticalTo(solution);
             }
 
-            Debug.Log($"Solved: {solved}");
+            if (logResult) Debug.Log($"Solved: {solved}");
             return solved;
         }
 
-        // returns 0, 1 or more than 1 depending on whether 0, 1 or more than 1 solutions are found
-        public int Solve(int[,] cells, int row = 0, int col = 0, int count = 0)
+        /// <summary>
+        /// Checks if a sudoku puzzle has a unique solution or not.
+        /// </summary>
+        /// <param name="sudoku">Sudoku puzzle.</param>
+        /// <returns>Whether this sudoku is unique or not.</returns>
+        private bool IsUnique(int[,] sudoku) => Solve(sudoku) == 1;
+
+        /// <summary>
+        /// Returns the number of available solutions for a sudoku puzzle.
+        /// </summary>
+        /// <param name="sudoku">Sudoku puzzle to solve.</param>
+        /// <param name="row">Current row.</param>
+        /// <param name="col">Current column.</param>
+        /// <param name="count">Number of solutions.</param>
+        /// <returns>Number of solutions for this sudoku puzzle.</returns>
+        private int Solve(int[,] sudoku, int row = 0, int col = 0, int count = 0)
         {
             if (col == 9) {
                 col = 0;
-                if (++row == 9)
-                    return 1 + count;
+                if (++row == 9) return 1 + count;
             }
-            if (cells[row, col] != 0)  // skip filled cells
-                return Solve(cells, row, col + 1, count);
 
-            // search for 2 solutions instead of 1
-            // break, if 2 solutions are found
-            for (int val = 1; val <= 9 && count < 2; ++val) {
-                if (cells.CanUseNumber(row, col, val)) {
-                    cells[row, col] = val;
-                    // add additional solutions
-                    count = Solve(cells, row, col + 1, count);
+            // Skip cells that are not empty.
+            if (sudoku[row, col] != 0) return Solve(sudoku, row, col + 1, count);
+
+            // Search for 2 solutions instead of 1.
+            // Break, if 2 solutions are found
+            for (int val = 1; val <= 9 && count < 2; ++val) 
+                if (sudoku.CanUseNumber(row, col, val)) {
+                    sudoku[row, col] = val;
+                    // Add additional solutions if possible.
+                    count = Solve(sudoku, row, col + 1, count);
                 }
-            }
 
-            cells[row, col] = 0; // reset on backtrack
+            // Reset on backtrack.
+            sudoku[row, col] = 0; 
             return count;
         }
+        #endregion
 
         #region Solution Generator
         /// <summary>

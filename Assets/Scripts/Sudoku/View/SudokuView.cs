@@ -1,13 +1,9 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using SudokuTesting;
-
 using System.Reflection;
-
-
 
 namespace MySudoku
 {
@@ -100,8 +96,6 @@ namespace MySudoku
         /// </summary>
         private void Update()
         {
-            //if (Input.GetKeyDown(KeyCode.O)) foreach (Cell cell in _grid) cell.ToggleSums();
-
             if (Input.GetKeyDown(KeyCode.E)) _sudoku = _generator.Generate();
             //if (Input.GetKeyDown(KeyCode.T)) SetGridValues(_sudoku.Solution);
             //else if (Input.GetKeyDown(KeyCode.R)) SetGridValues(_sudoku.Puzzle);
@@ -118,32 +112,42 @@ namespace MySudoku
             if (Input.GetKeyDown(KeyCode.S)) {
                 bool[,] n = new bool[81, 9];
                 Array.Copy(_viewNotes, n, _viewNotes.Length);
-                _generator.TrySolve(_sudoku.Puzzle, _sudoku.Solution, n);
+                _generator.TrySolve(_sudoku.Puzzle, _sudoku.Solution, n, logResult: true);
             }
 
             if (Input.GetKeyDown(KeyCode.LeftShift)) {
                 _sudoku = new Sudoku();
                 //_sudoku.Puzzle.SetPuzzle("000020000768149235502060140210006904000000002809210300004053000000600000600472003");
                 //_sudoku.Puzzle.SetPuzzle("004006020007800910000000308018300200300789001009001060803000500045003600026500100");
-                //_sudoku.Puzzle.SetPuzzle("001957063000806070769130805007261350312495786056378000108609507090710608674583000");
+                _sudoku.Puzzle.SetPuzzle("032006100410000000000901000500090004060000071300020005000508000000000519057009860"); // Candidate Lines
                 //_sudoku.Puzzle.SetPuzzle("934060050006004923008900046800546007600010005500390062360401270470600500080000634");
                 //_sudoku.Puzzle.SetPuzzle("009030600036014089100869035090000800010000090068090170601903002972640300003020900");
                 //_sudoku.Puzzle.SetPuzzle("900204006006000008502068010130000000000300090000000602400005000005040020007000100");
                 //_sudoku.Puzzle.SetPuzzle("000020008910000005000079120006004000005010000700000210050090302003001000000507040");
-                //_sudoku.Puzzle.SetPuzzle("400000938032094100095300240370609004529001673904703090957008300003900400240030709");
+                //_sudoku.Puzzle.SetPuzzle("400000938032094100095300240370609004529001673904703090957008300003900400240030709"); // For naked pairs
                 //_sudoku.Puzzle.SetPuzzle("000030000020009016015000000100706040070500800000000001000000003050274000060010008");
-                _sudoku.Puzzle.SetPuzzle("801006094300009080970080500547062030632000050198375246083620915065198000219500008");
+                //_sudoku.Puzzle.SetPuzzle("801006094300009080970080500547062030632000050198375246083620915065198000219500008");
+                //_sudoku.Puzzle.SetPuzzle("070408029002000004854020007008374200020000000003261700000093612200000403130642070");
+                //_sudoku.Puzzle.SetPuzzle("720408030080000047401076802810739000000851000000264080209680413340000008168943275");
                 _viewNotes.SetNotes(_sudoku.Puzzle);
                 
                 UpdateValues();
             }
             if(Input.GetKeyDown(KeyCode.A)) {
-                if (_sudoku.Puzzle.HiddenPairs(_viewNotes))
+                ISudokuTechnique technique = new CandidateLines {
+                    LogConsole = true
+                };
+                if (technique.ApplyTechnique(_sudoku.Puzzle, _viewNotes))
                     UpdateValues();
                 //StartCoroutine(Try(_viewNotes, _grid));
                 //UpdateValues();
             }
 
+            HandleInput();
+        }
+
+        private void HandleInput()
+        {
             if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {
                 if (Input.GetKeyDown(KeyCode.Keypad1) || Input.GetKeyDown(KeyCode.Alpha1)) OnNumberClicked(1);
                 if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Alpha2)) OnNumberClicked(2);
@@ -152,53 +156,11 @@ namespace MySudoku
                 if (Input.GetKeyDown(KeyCode.Keypad5) || Input.GetKeyDown(KeyCode.Alpha5)) OnNumberClicked(5);
                 if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6)) OnNumberClicked(6);
                 if (Input.GetKeyDown(KeyCode.Keypad7) || Input.GetKeyDown(KeyCode.Alpha7)) OnNumberClicked(7);
-                if (Input.GetKeyDown(KeyCode.Keypad8) || Input.GetKeyDown(KeyCode.Alpha8)) OnNumberClicked(8); 
+                if (Input.GetKeyDown(KeyCode.Keypad8) || Input.GetKeyDown(KeyCode.Alpha8)) OnNumberClicked(8);
                 if (Input.GetKeyDown(KeyCode.Keypad9) || Input.GetKeyDown(KeyCode.Alpha9)) OnNumberClicked(9);
                 if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0)) {
                     if (!noteToggle)
-                        Set(_selectedCell.row, _selectedCell.col, 0); 
-                }
-            }
-        }
-
-        public IEnumerator Try(bool[,] notes, Cell[,] grid)
-        {
-            // Process only the diagonal boxes (1, 5, 9)
-            for (int box = 0; box < 9; box += 3) {
-                Debug.Log($"BOX ({box}, {box}):");
-
-                // Check for each note.
-                for (int i = 0; i < 9; i++) {
-
-                    Debug.Log($"    Note {i + 1}:");
-
-                    // Keep track of rows where this note is present in boxes.
-                    // boxPerRow[x, y] -> x -> box index && y -> row index.
-                    bool[,] boxPerRow = new bool[3, 3];
-
-                    // Keep track of columns where this note is present in boxes.
-                    // boxPerCol[x, y] -> x -> box index && y -> column index.
-                    bool[,] boxPerCol = new bool[3, 3];
-
-                    // d -> row or column index.
-                    // k -> index of element in row or column.
-                    for (int d = 0; d < 3; d++) {
-                        for (int k = 0; k < 9; k++) {
-                            Debug.Log($"        ROW ({d + box}, {k}) for {i + 1} => {notes[(d + box) * 9 + k, i]}");
-                            //if (sudoku[d + box, k] == 0)
-                            boxPerRow[k / 3, d] = boxPerRow[k / 3, d] || notes[(d + box) * 9 + k, i];
-
-                            Debug.Log($"        COL ({k}, {d + box}) for {i + 1} => {notes[k * 9 + d + box, i]}");
-                            //if (sudoku[k, d + box] == 0)
-                            boxPerCol[k / 3, d] = boxPerCol[k / 3, d] || notes[k * 9 + d + box, i];
-
-                            _grid[d + box, k].Focus(Color.green, true);
-                            _grid[k, d + box].Focus(Color.green, true);
-                            yield return new WaitForSeconds(0.025f);
-                            _grid[d + box, k].Focus(Color.green, false);
-                            _grid[k, d + box].Focus(Color.green, false);
-                        }
-                    }
+                        Set(_selectedCell.row, _selectedCell.col, 0);
                 }
             }
         }
@@ -214,6 +176,7 @@ namespace MySudoku
         }
 
         public int sample = 1000;
+
         public void RunGenerator()
         {
             _sudoku = new Sudoku();
