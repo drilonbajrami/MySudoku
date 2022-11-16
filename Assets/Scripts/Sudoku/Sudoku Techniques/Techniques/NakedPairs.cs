@@ -49,71 +49,71 @@ namespace MySudoku
                             if (notes[k * 9 + col, n] && sudoku[k, col] == 0) cells[k].Col.Add(n);
                         }
 
+                    (int a, int b) nakedPair = (-1, -1);
                     bool applied = false;
+
                     for (int i = 0; i < 8; i++) {
 
                         // Check if possible in box.
                         if (cells[i].Box.Count == 2)
                             for (int j = i + 1; j < 9; j++)
-                                if (HasPair(cells[i].Box, cells[j].Box)) {
-                                    (int a, int b) pair = (cells[i].Box[0], cells[i].Box[1]);
+                                if (HasPair(cells[i].Box, cells[j].Box, ref nakedPair)) {
                                     bool rowAvailable = i / 3 == j / 3;
                                     bool colAvailable = j - i == 3;
                                     // Go through each cell within box.
                                     for (int k = 0; k < 9; k++) {
-                                        if (k == i || k == j) continue; // Skip over cells i and j.
+                                        if (k == i || k == j) continue; // Skip over cells i and j.       
                                         int kIndex = (boxRow + k / 3) * 9 + boxCol + k % 3;
-
-                                        if (k != i && k != j) {
-                                            if (!applied) applied = notes[kIndex, pair.a] || notes[kIndex, pair.b];
-                                            notes[kIndex, pair.a] = false;
-                                            notes[kIndex, pair.b] = false;
-                                        }
+                                        if (!applied) applied = notes[kIndex, nakedPair.a] || notes[kIndex, nakedPair.b]; 
+                                        notes[kIndex, nakedPair.a] = false;
+                                        notes[kIndex, nakedPair.b] = false;
 
                                         // Row || Col
                                         if (rowAvailable || colAvailable) {     // Cell[u] Coords       // Cell[v] Coords
-                                            bool skipUVcells = rowAvailable ? ((k == boxCol + i % 3) || (k == boxCol + j % 3)) : ((k == boxRow + i / 3) || (k == boxRow + j / 3));
+                                            bool skipUVcells = rowAvailable ? ((k == boxCol + i % 3) || (k == boxCol + j % 3))
+                                                                            : ((k == boxRow + i / 3) || (k == boxRow + j / 3));
                                             if (skipUVcells) continue;
                                             int rcIndex = rowAvailable ? ((boxRow + i / 3) * 9 + k) : (k * 9 + boxCol + i % 3);
-                                            if (!applied) applied = notes[rcIndex, pair.a] || notes[rcIndex, pair.b];
-                                            notes[rcIndex, pair.a] = false;
-                                            notes[rcIndex, pair.b] = false;
+                                            if (!applied) applied = notes[rcIndex, nakedPair.a] || notes[rcIndex, nakedPair.b];
+                                            notes[rcIndex, nakedPair.a] = false;
+                                            notes[rcIndex, nakedPair.b] = false;
                                         }
                                     }
 
                                     if (applied) {
-                                        s.Append($"[{pair.a + 1}, {pair.b + 1}] found on: \n");
+                                        if (!LogConsole) return true;
+                                        s.Append($"[{nakedPair.a + 1}, {nakedPair.b + 1}] found on: \n");
                                         s.AppendLine($"Box ({boxRow}, {boxCol}) on cells ({boxRow + i / 3}, {boxCol + i % 3}) and ({boxRow + j / 3}, {boxCol + j % 3})");
                                         if (rowAvailable) s.AppendLine($"Row ({row}) as well.");
-                                        if (colAvailable) s.AppendLine($"Col ({col}) as well.");
+                                        else if (colAvailable) s.AppendLine($"Col ({col}) as well.");
                                         Debug.Log(s.ToString());
                                         return true;
                                     } // => log entries && return true;
                                 }
 
                         // Check if possible in row and column.
-                        if (cells[i].Row.Count == 2 || cells[i].Col.Count == 2) {
+                        if (cells[i].Row.Count == 2 || cells[i].Col.Count == 2)
                             for (int rank = 0; rank < 2; rank++)
-                                for (int j = i + 1; j < 9; j++)
-                                    if (rank == 0 ? HasPair(cells[i].Row, cells[j].Row) : HasPair(cells[i].Col, cells[j].Col)) {
-                                        (int a, int b) pair = rank == 0 ? (cells[i].Row[0], cells[i].Row[1]) : (cells[i].Col[0], cells[i].Col[1]);
+                                for (int j = i + 1; j < 9; j++) {
+                                    if (rank == 0 ? HasPair(cells[i].Row, cells[j].Row, ref nakedPair) : HasPair(cells[i].Col, cells[j].Col, ref nakedPair)) {
                                         for (int k = 0; k < 9; k++) {
                                             if (k == i || k == j) continue;
                                             int rcIndex = rank == 0 ? (row * 9 + k) : (k * 9 + col);
-                                            if (!applied) applied = notes[rcIndex, pair.a] || notes[rcIndex, pair.b];
-                                            notes[rcIndex, pair.a] = false;
-                                            notes[rcIndex, pair.b] = false;
+                                            if (!applied) applied = notes[rcIndex, nakedPair.a] || notes[rcIndex, nakedPair.b];
+                                            notes[rcIndex, nakedPair.a] = false;
+                                            notes[rcIndex, nakedPair.b] = false;
                                         }
 
                                         if (applied) {
-                                            s.Append($"[{pair.a + 1}, {pair.b + 1}] found on: \n");
+                                            if (!LogConsole) return true;
+                                            s.Append($"[{nakedPair.a + 1}, {nakedPair.b + 1}] found on: \n");
                                             s.AppendLine(i == 0 ? $"Row ({row}) on cells ({row}, {i}) and ({row}, {j})." :
-                                                                  $"Col ({col}) on cells ({i}, {col}) and ({j}, {col}).");
+                                                                          $"Col ({col}) on cells ({i}, {col}) and ({j}, {col}).");
                                             Debug.Log(s.ToString());
                                             return true;
                                         } // => log entries && return true;
                                     }
-                        }
+                                }
                     }
                 }
 
@@ -126,6 +126,17 @@ namespace MySudoku
         /// <param name="l1">First set.</param>
         /// <param name="l2">Second set.</param>
         /// <returns>Whether these two sets are identical or not.</returns>
-        private bool HasPair(List<int> l1, List<int> l2) => l1.Count == 2 && l1.Count == l2.Count && l1.All(l2.Contains);
+        private bool HasPair(List<int> l1, List<int> l2, ref (int, int) pair)
+        {
+            if (l1.Count == 2 && l2.Count == 2) {
+                var union = l1.Union(l2).ToList();
+                if (union.Count() == 2) {
+                    pair = (union[0], union[1]);
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

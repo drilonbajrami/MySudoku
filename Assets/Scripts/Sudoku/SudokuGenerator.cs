@@ -59,7 +59,7 @@ namespace MySudoku
         /// <returns>Sudoku puzzle.</returns>
         public int[,] GeneratePuzzle(int[,] solution, out bool[,] notes, out int difficultyScore)
         {
-        startPoint:
+            startPoint:
             int[,] puzzle = new int[9, 9];
             notes = new bool[81, 9];
             bool[,] notesCopy = new bool[81, 9];

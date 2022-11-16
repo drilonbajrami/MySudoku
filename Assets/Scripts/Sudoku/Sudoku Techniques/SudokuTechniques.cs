@@ -31,9 +31,9 @@ namespace MySudoku
         Beginner,
         Easy,
         Medium,
-        Tricky,
-        Fiendish,
-        Diabolical
+        Hard,
+        Extreme,
+        Evil
     }
 
     /// <summary>
@@ -45,12 +45,12 @@ namespace MySudoku
         /// Sudoku difficulties score map, with lower and upper ranges.
         /// </summary>
         public static Dictionary<Difficulty, (int lower, int upper)> DifficultyMap = new() {
-            { Difficulty.Beginner,   (3600, 4500)   },
-            { Difficulty.Easy,       (4300, 5500)   },
-            { Difficulty.Medium,     (5300, 6900)   },
-            { Difficulty.Tricky,     (6500, 9300)   },
-            { Difficulty.Fiendish,   (8300, 14000)  },
-            { Difficulty.Diabolical, (11000, 25000) }
+            { Difficulty.Beginner, (3600, 4500)   },
+            { Difficulty.Easy,     (4300, 5500)   },
+            { Difficulty.Medium,   (5300, 6900)   },
+            { Difficulty.Hard,     (6500, 9300)   },
+            { Difficulty.Extreme,  (8300, 14000)  },
+            { Difficulty.Evil,     (11000, 25000) }
         };
 
         /// <summary>
@@ -76,7 +76,8 @@ namespace MySudoku
             for (int i = 0; i < techniques.Count; i++)
                 if (techniques[i].ApplyTechnique(sudoku, notes)) {
                     SudokuGenerator.techniquesUsed[i]++;
-                    return true; }
+                    return true; 
+                }
             return false;
         }
 

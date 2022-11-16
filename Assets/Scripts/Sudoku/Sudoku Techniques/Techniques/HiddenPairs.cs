@@ -34,7 +34,7 @@ namespace MySudoku
                 new Repetition(6), new Repetition(7), new Repetition(8)
             };
 
-            StringBuilder s = new("Naked Pair ");
+            StringBuilder s = new("Hidden Pair ");
             for (int boxRow = 0; boxRow < 9; boxRow += 3)
                 for (int boxCol = 0; boxCol < 9; boxCol += 3) {
                     // Clear are previous data from the candidate's repetitions.
@@ -49,41 +49,43 @@ namespace MySudoku
                             if (notes[k * 9 + col, n] && sudoku[k, col] == 0) candidates[n].Col.Add(k);
                         }
 
+                    (int a, int b) cellPair = (-1, -1);
                     bool applied = false;
                     for (int i = 0; i < 8; i++) {
-
                         // Check if possible in box.
                         if (candidates[i].Box.Count == 2)
                             for (int j = i + 1; j < 9; j++)
-                                if (HasPair(candidates[i].Box, candidates[j].Box)) {
-                                    (int c1, int c2) pair = ((boxRow + candidates[i].Box[0] / 3) * 9 + boxCol + candidates[i].Box[0] % 3,
-                                                             (boxRow + candidates[i].Box[1] / 3) * 9 + boxCol + candidates[i].Box[1] % 3);
-
+                                if (HasPair(candidates[i].Box, candidates[j].Box, ref cellPair)) {
+                                    
+                                    (int a, int b) pair = ((boxRow + cellPair.a / 3) * 9 + boxCol + cellPair.a % 3,
+                                                           (boxRow + cellPair.b / 3) * 9 + boxCol + cellPair.b % 3);
                                     for (int n = 0; n < 9; n++) {
                                         if (n == i || n == j) continue;
-                                        if (!applied) applied = notes[pair.c1, n] || notes[pair.c2, n];
-                                        notes[pair.c1, n] = false;
-                                        notes[pair.c2, n] = false;
+                                        if (!applied) applied = notes[pair.a, n] || notes[pair.b, n];
+                                        notes[pair.a, n] = false;
+                                        notes[pair.b, n] = false;
                                     }
 
                                     if (applied) {
                                         if (!LogConsole) return true;
                                         s.Append($"[{i + 1}, {j + 1}] found on: \n");
                                         s.AppendLine($"Box ({boxRow}, {boxCol}) on cells " +
-                                            $"({boxRow + candidates[i].Box[0] / 3}, {boxCol + candidates[i].Box[0] % 3}) and " +
-                                            $"({boxRow + candidates[i].Box[1] / 3}, {boxCol + candidates[i].Box[0] % 3})");
+                                                     $"({boxRow + cellPair.a / 3}, {boxCol + cellPair.a % 3}) and " +
+                                                     $"({boxRow + cellPair.b / 3}, {boxCol + cellPair.b % 3})");
                                         Debug.Log(s.ToString());
                                         return true;
                                     } // => log entries && return true;
                                 }
 
                         // Check if possible in row or column.
-                        if (candidates[i].Row.Count == 2 || candidates[i].Col.Count == 2) {
+                        if (candidates[i].Row.Count == 2 || candidates[i].Col.Count == 2) 
                             for (int rank = 0; rank < 2; rank++)
                                 for (int j = i + 1; j < 9; j++)
-                                    if (rank == 0 ? HasPair(candidates[i].Row, candidates[j].Row) : HasPair(candidates[i].Col, candidates[j].Col)) {
-                                        int c1 = rank == 0 ? (row * 9 + candidates[i].Row[0]) : (candidates[i].Col[0] * 9 + col);
-                                        int c2 = rank == 0 ? (row * 9 + candidates[i].Row[1]) : (candidates[i].Col[1] * 9 + col);
+                                    if (rank == 0 ? HasPair(candidates[i].Row, candidates[j].Row, ref cellPair)
+                                                  : HasPair(candidates[i].Col, candidates[j].Col, ref cellPair)) {
+                                        // Apply technique.
+                                        int c1 = rank == 0 ? (row * 9 + cellPair.a) : (cellPair.a * 9 + col);
+                                        int c2 = rank == 0 ? (row * 9 + cellPair.b) : (cellPair.b * 9 + col);
                                         for (int n = 0; n < 9; n++) {
                                             if (n == i || n == j) continue;
                                             if (!applied) applied = notes[c1, n] || notes[c2, n];
@@ -100,7 +102,6 @@ namespace MySudoku
                                             return true;
                                         } // => log entries && return true;
                                     }
-                        }
                     }
                 }
 
@@ -113,6 +114,17 @@ namespace MySudoku
         /// <param name="l1">First set.</param>
         /// <param name="l2">Second set.</param>
         /// <returns>Whether these two sets are identical or not.</returns>
-        private bool HasPair(List<int> l1, List<int> l2) => l1.Count == 2 && l1.Count == l2.Count && l1.All(l2.Contains);
+        private bool HasPair(List<int> l1, List<int> l2, ref (int, int) pair)
+        {
+            if (l1.Count == 2 && l2.Count == 2) {
+                var union = l1.Union(l2).ToList();
+                if (union.Count() == 2) {
+                    pair = (union[0], union[1]);
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }
