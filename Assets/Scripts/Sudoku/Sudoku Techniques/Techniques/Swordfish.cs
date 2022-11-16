@@ -10,7 +10,7 @@ namespace MySudoku
     public class Swordfish : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 8000;
@@ -22,8 +22,9 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            cost = 0;
             return false;
         }
     }

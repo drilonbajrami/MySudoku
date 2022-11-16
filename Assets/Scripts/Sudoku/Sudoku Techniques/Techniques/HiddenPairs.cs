@@ -14,7 +14,7 @@ namespace MySudoku
     public class HiddenPairs : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 1500;
@@ -26,7 +26,7 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
             Repetition[] candidates = new Repetition[9] {
                 new Repetition(0), new Repetition(1), new Repetition(2),
@@ -34,6 +34,7 @@ namespace MySudoku
                 new Repetition(6), new Repetition(7), new Repetition(8)
             };
 
+            cost = 0;
             StringBuilder s = new("Hidden Pair ");
             for (int boxRow = 0; boxRow < 9; boxRow += 3)
                 for (int boxCol = 0; boxCol < 9; boxCol += 3) {
@@ -67,12 +68,15 @@ namespace MySudoku
                                     }
 
                                     if (applied) {
-                                        if (!LogConsole) return true;
-                                        s.Append($"[{i + 1}, {j + 1}] found on: \n");
-                                        s.AppendLine($"Box ({boxRow}, {boxCol}) on cells " +
-                                                     $"({boxRow + cellPair.a / 3}, {boxCol + cellPair.a % 3}) and " +
-                                                     $"({boxRow + cellPair.b / 3}, {boxCol + cellPair.b % 3})");
-                                        Debug.Log(s.ToString());
+                                        TimesUsed++;
+                                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                        if (LogConsole) {
+                                            s.Append($"[{i + 1}, {j + 1}] found on: \n");
+                                            s.AppendLine($"Box ({boxRow}, {boxCol}) on cells " +
+                                                         $"({boxRow + cellPair.a / 3}, {boxCol + cellPair.a % 3}) and " +
+                                                         $"({boxRow + cellPair.b / 3}, {boxCol + cellPair.b % 3})");
+                                            Debug.Log(s.ToString());
+                                        }
                                         return true;
                                     } // => log entries && return true;
                                 }
@@ -94,11 +98,14 @@ namespace MySudoku
                                         }
 
                                         if (applied) {
-                                            if (!LogConsole) return true;
-                                            s.Append($"[{i + 1}, {j + 1}] found on: \n");
-                                            s.AppendLine(rank == 0 ? $"Row ({row}) on cells ({row}, {candidates[i].Row[0]}) and ({row}, {candidates[i].Row[1]})." :
-                                                                     $"Col ({col}) on cells ({candidates[i].Col[0]}, {col}) and ({candidates[i].Col[1]}, {col}).");
-                                            Debug.Log(s.ToString());
+                                            TimesUsed++;
+                                            cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                            if (LogConsole) {
+                                                s.Append($"[{i + 1}, {j + 1}] found on: \n");
+                                                s.AppendLine(rank == 0 ? $"Row ({row}) on cells ({row}, {candidates[i].Row[0]}) and ({row}, {candidates[i].Row[1]})." :
+                                                                         $"Col ({col}) on cells ({candidates[i].Col[0]}, {col}) and ({candidates[i].Col[1]}, {col}).");
+                                                Debug.Log(s.ToString());
+                                            }
                                             return true;
                                         } // => log entries && return true;
                                     }

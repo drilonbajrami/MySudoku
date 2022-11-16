@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+using UnityEngine.U2D.IK;
 
 namespace MySudoku
 {
@@ -10,8 +12,6 @@ namespace MySudoku
     /// </summary>
     public class SudokuGenerator : MonoBehaviour
     {
-        public static List<int> techniquesUsed = new() { 0, 0, 0, 0, 0, 0 };
-
         /// <summary>
         /// Seed for the random generator.
         /// </summary>
@@ -26,7 +26,7 @@ namespace MySudoku
         /// Creates a sudoku.
         /// </summary>
         /// <returns>Sudoku with the solution and puzzle.< /returns>
-        public Sudoku Generate()
+        public Sudoku Generate(Difficulty difficulty)
         {
             if (_randGenerator == null) {
                 Debug.LogWarning("Random generator does not exist! Please add one.");
@@ -36,7 +36,7 @@ namespace MySudoku
             Sudoku sudoku = new();
             _randGenerator.SetSeed(_seed);
             sudoku.Solution = GenerateSolution();
-            sudoku.Puzzle = GeneratePuzzle(sudoku.Solution, out bool[,] notes, out int ds);
+            sudoku.Puzzle = GeneratePuzzle(sudoku.Solution, difficulty);
             return sudoku;
         }
 
@@ -57,11 +57,11 @@ namespace MySudoku
         /// <param name="notes">Notes for the generated sudoku puzzle.</param>
         /// <param name="difficultyScore">Overall difficulty score of the generated sudoku puzzle.</param>
         /// <returns>Sudoku puzzle.</returns>
-        public int[,] GeneratePuzzle(int[,] solution, out bool[,] notes, out int difficultyScore)
+        public int[,] GeneratePuzzle(int[,] solution, Difficulty difficulty)
         {
-            startPoint:
+            start:
             int[,] puzzle = new int[9, 9];
-            notes = new bool[81, 9];
+            bool[,] notes = new bool[81, 9];
             bool[,] notesCopy = new bool[81, 9];
 
             Array.Copy(solution, puzzle, solution.Length);
@@ -77,47 +77,55 @@ namespace MySudoku
             indexes.Shuffle(_randGenerator);
             Queue<(int, int)> ind = new(indexes);
 
-            difficultyScore = 0;
-            (int lower, int upper) difficultyScoreRange = SudokuTechniques.DifficultyMap[Difficulty.Medium];
-
-            int tries = 81;
-
+            int difficultyScore = 0;
+            (int lower, int upper) difficultyRange = SudokuTechniques.DifficultyMap[difficulty];
+            int difficultyCap = _randGenerator.Next(difficultyRange.lower, difficultyRange.upper);
+            
+            int tries = 40;
             List<(int row, int col)> emptyCellIndexes = new();
 
-            while (/*(difficultyScore < difficultyScoreRange.upper || */tries > 0) {
+            while (difficultyScore < difficultyCap && tries > 0) {
                 (int row, int col) index = ind.Dequeue();
                 int oldValue = puzzle[index.row, index.col];
 
                 // Set the current cell value to 0 and update notes.
                 puzzle[index.row, index.col] = 0;
-                notes.UpdateNotes(puzzle, index, oldValue, 0);
+                notes.Update(puzzle, index, oldValue, 0);
                 Array.Copy(notes, notesCopy, notes.Length);
 
-                if (IsUnique(puzzle) && TrySolve(puzzle, solution, notesCopy, logResult: false)) {
-                    difficultyScore += 100;
+                if (IsUnique(puzzle) && TrySolve(puzzle, solution, notesCopy, logResult: false, out int cost) && cost < difficultyRange.upper) {
+                    difficultyScore = cost;
                 }
                 else {
                     ind.Enqueue(index);
                     puzzle[index.row, index.col] = oldValue;
-                    notes.UpdateNotes(puzzle, index, 0, oldValue);
+                    notes.Update(puzzle, index, 0, oldValue);
                     tries--;
                 }
             }
 
-            for (int i = 0; i < techniquesUsed.Count; i++)
-                techniquesUsed[i] = 0;
+            if(difficultyScore < difficultyCap) goto start;
 
             Array.Copy(notes, notesCopy, notes.Length);
-            if (TrySolve(puzzle, solution, notesCopy, logResult: false)) {
-                if (techniquesUsed[(int)Technique.HiddenPairs] == 0) goto startPoint;
-            }
+            TrySolve(puzzle, solution, notesCopy, logResult: false, out int diff);
+            //if (TrySolve(puzzle, solution, notesCopy, logResult: false, )) {
+            //    if (techniquesUsed[(int)Technique.HiddenPairs] == 0) goto startPoint;
+            //}
 
+            #if UNITY_EDITOR
+            ConsoleLog.Clear();
+
+
+            Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");
             Debug.Log($"Difficulty Score: {difficultyScore}");
-            for (int i = 0; i < techniquesUsed.Count; i++) {
-                Debug.Log($"Technique {(Technique)i} used {techniquesUsed[i]} times.");
+            Debug.Log("Techniques: ");
+            for (int i = 0; i < SudokuTechniques.Techniques.Count; i++) {
+                Debug.Log($"{(Technique)i} used {SudokuTechniques.Techniques[i].TimesUsed} times.");
             }
 
             GetPuzzle(puzzle).CopyToClipboard();
+            #endif
+
             return puzzle;
         }
 
@@ -128,21 +136,27 @@ namespace MySudoku
         /// <param name="solution">The sudoku solution.</param>
         /// <param name="notesCopy">The notes for the sudoku puzzle.</param>
         /// <returns>Whether this sudoku puzzle can be solved with currently available techniques.</returns>
-        public bool TrySolve(int[,] puzzleTemplate, int[,] solution, bool[,] notesCopy, bool logResult)
+        public bool TrySolve(int[,] puzzleTemplate, int[,] solution, bool[,] notesCopy, bool logResult, out int difficultyCost)
         {
             int[,] puzzle = new int[9, 9];
             Array.Copy(puzzleTemplate, puzzle, puzzleTemplate.Length);
+            SudokuTechniques.ResetTechniqueUsageCount();
 
-            bool solved = false;
             bool solving = true;
+            difficultyCost = 0;
+            int cost;
 
             while (solving) {
-                solving = puzzle.ApplyTechniques(notesCopy);
-                solved = puzzle.IsIdenticalTo(solution);
+                cost = puzzle.ApplyTechniques(notesCopy);
+                solving = cost != 0;
+                if (solving) difficultyCost += cost;
+                if (puzzle.IsIdenticalTo(solution)) {
+                    if (logResult) Debug.Log($"Solved with difficulty cost of {difficultyCost}.");
+                    return true;
+                };
             }
-
-            if (logResult) Debug.Log($"Solved: {solved}");
-            return solved;
+           
+            return false;
         }
 
         /// <summary>

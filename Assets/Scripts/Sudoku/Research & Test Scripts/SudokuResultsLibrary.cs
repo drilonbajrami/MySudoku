@@ -47,14 +47,14 @@ public class SudokuResultsLibrary : MonoBehaviour
     /// </summary>
     private void CycleSudokuSolutions()
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-            LoadNextFile();
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-            LoadPreviousFile();
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-            _sudokuView.SetGridValues(GetNextSolution());
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-            _sudokuView.SetGridValues(GetPreviousSolution());
+        //if (Input.GetKeyDown(KeyCode.UpArrow))
+        //    LoadNextFile();
+        //else if (Input.GetKeyDown(KeyCode.DownArrow))
+        //    LoadPreviousFile();
+        //else if (Input.GetKeyDown(KeyCode.RightArrow))
+        //    _sudokuView.SetGridValues(GetNextSolution());
+        //else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        //    _sudokuView.SetGridValues(GetPreviousSolution());
     }
 
     /// <summary>

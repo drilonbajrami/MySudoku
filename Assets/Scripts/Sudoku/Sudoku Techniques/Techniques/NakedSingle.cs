@@ -8,7 +8,7 @@ namespace MySudoku
     public class NakedSingle : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 100;
@@ -20,8 +20,9 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            cost = 0;
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     // Process empty cells only.
@@ -46,12 +47,14 @@ namespace MySudoku
                     // If there was only one candidate then use its value.
                     if (candidate != 0) {
                         sudoku[row, col] = candidate;
-                        notes.UpdateNotes(sudoku, (row, col), 0, candidate);
+                        notes.Update(sudoku, (row, col), 0, candidate);
+                        TimesUsed++;
+                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
                         if (LogConsole) Debug.Log($"Naked Single: \n Cell ({row}, {col}) for {candidate}");
                         return true;
                     }
                 }
-
+            
             return false;
         }
     }

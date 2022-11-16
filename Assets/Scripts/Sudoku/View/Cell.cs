@@ -37,8 +37,6 @@ namespace MySudoku
         /// </summary>
         [SerializeField] private Notes _notesView;
 
-        public GridSums Sums;
-
         /// <summary>
         /// Caches the needed components of this cell game object.
         /// </summary>
@@ -80,12 +78,6 @@ namespace MySudoku
             else _notesView.Hide(number);
         }
 
-        ///// <summary>
-        ///// Hides the given number in the notes of this cell.
-        ///// </summary>
-        ///// <param name="number">The number to hide.</param>
-        //public void HideNote(int number) => _notes.Hide(number);
-
         /// <summary>
         /// Selects this cell by marking it and its neighbor cells.
         /// </summary>
@@ -113,10 +105,5 @@ namespace MySudoku
         /// <param name="condition"></param>
         public void Focus(Color focusedColor, bool condition)
             => _background.color = condition ? focusedColor : Color.white;
-
-        /// <summary>
-        /// Toggles on/off the sums.
-        /// </summary>
-        public void ToggleSums() => Sums.gameObject.SetActive(!Sums.gameObject.activeSelf);
     }
 }

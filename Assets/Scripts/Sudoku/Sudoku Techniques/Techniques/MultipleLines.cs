@@ -11,7 +11,7 @@ namespace MySudoku
     public class MultipleLines : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 600;
@@ -23,8 +23,9 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            cost = 0;
             StringBuilder s = new();
             // Process only the diagonal boxes (1, 5, 9)
             for (int box = 0; box < 9; box += 3) {
@@ -60,6 +61,8 @@ namespace MySudoku
                                 }
                         }
                         if (LogConsole) Debug.Log(s.ToString());
+                        TimesUsed++;
+                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
                         return true;
                     }
 
@@ -74,6 +77,8 @@ namespace MySudoku
                                 }
                         }
                         if (LogConsole) Debug.Log(s.ToString());
+                        TimesUsed++;
+                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
                         return true;
                     }
                 }

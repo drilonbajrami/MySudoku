@@ -10,7 +10,7 @@ namespace MySudoku
     public class HiddenSingle : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 100;
@@ -22,8 +22,9 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            cost = 0;
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     // Process empty cells only.
@@ -54,7 +55,9 @@ namespace MySudoku
                             // Check if the current note is still a hidden single when processing all neighbor cells.
                             if (isHiddenSingle && j == 8) {
                                 sudoku[row, col] = i + 1;
-                                notes.UpdateNotes(sudoku, (row, col), 0, i + 1);
+                                notes.Update(sudoku, (row, col), 0, i + 1);
+                                TimesUsed++;
+                                cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
                                 if (LogConsole) Debug.Log($"HIDDEN SINGLE: Cell ({row}, {col}) for {i + 1}: {(isHiddenInBox ? "B" : "")} {(isHiddenInRow ? "R" : "")} {(isHiddenInCol ? "C" : "")}");
                                 return true;
                             }

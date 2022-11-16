@@ -11,7 +11,7 @@ namespace MySudoku
     public static class SudokuExtension
     {
         /// <summary>
-        /// Check if the given number can be placed in the specified row and column of the sudoku.
+        /// Check if the given number can be placed in the specified cell of the sudoku.
         /// </summary>
         /// <param name="sudoku">The sudoku grid.</param>
         /// <param name="row">The row.</param>

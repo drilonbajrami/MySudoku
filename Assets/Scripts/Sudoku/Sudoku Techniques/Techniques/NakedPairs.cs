@@ -14,7 +14,7 @@ namespace MySudoku
     public class NakedPairs : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 750;
@@ -26,7 +26,7 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
             Repetition[] cells = new Repetition[9] {
                 new Repetition(0), new Repetition(1), new Repetition(2),
@@ -34,6 +34,7 @@ namespace MySudoku
                 new Repetition(6), new Repetition(7), new Repetition(8)
             };
 
+            cost = 0;
             StringBuilder s = new("Naked Pair ");
             for (int boxRow = 0; boxRow < 9; boxRow += 3)
                 for (int boxCol = 0; boxCol < 9; boxCol += 3) {
@@ -81,12 +82,15 @@ namespace MySudoku
                                     }
 
                                     if (applied) {
-                                        if (!LogConsole) return true;
-                                        s.Append($"[{nakedPair.a + 1}, {nakedPair.b + 1}] found on: \n");
-                                        s.AppendLine($"Box ({boxRow}, {boxCol}) on cells ({boxRow + i / 3}, {boxCol + i % 3}) and ({boxRow + j / 3}, {boxCol + j % 3})");
-                                        if (rowAvailable) s.AppendLine($"Row ({row}) as well.");
-                                        else if (colAvailable) s.AppendLine($"Col ({col}) as well.");
-                                        Debug.Log(s.ToString());
+                                        if (LogConsole) {
+                                            s.Append($"[{nakedPair.a + 1}, {nakedPair.b + 1}] found on: \n");
+                                            s.AppendLine($"Box ({boxRow}, {boxCol}) on cells ({boxRow + i / 3}, {boxCol + i % 3}) and ({boxRow + j / 3}, {boxCol + j % 3})");
+                                            if (rowAvailable) s.AppendLine($"Row ({row}) as well.");
+                                            else if (colAvailable) s.AppendLine($"Col ({col}) as well.");
+                                            Debug.Log(s.ToString());
+                                        }
+                                        TimesUsed++;
+                                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
                                         return true;
                                     } // => log entries && return true;
                                 }
@@ -104,12 +108,15 @@ namespace MySudoku
                                             notes[rcIndex, nakedPair.b] = false;
                                         }
 
-                                        if (applied) {
-                                            if (!LogConsole) return true;
-                                            s.Append($"[{nakedPair.a + 1}, {nakedPair.b + 1}] found on: \n");
-                                            s.AppendLine(i == 0 ? $"Row ({row}) on cells ({row}, {i}) and ({row}, {j})." :
-                                                                          $"Col ({col}) on cells ({i}, {col}) and ({j}, {col}).");
-                                            Debug.Log(s.ToString());
+                                        if (applied) {                                  
+                                            TimesUsed++;
+                                            cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                            if (LogConsole) {
+                                                s.Append($"[{nakedPair.a + 1}, {nakedPair.b + 1}] found on: \n");
+                                                s.AppendLine(i == 0 ? $"Row ({row}) on cells ({row}, {i}) and ({row}, {j})." :
+                                                                      $"Col ({col}) on cells ({i}, {col}) and ({j}, {col}).");
+                                                Debug.Log(s.ToString());
+                                            }
                                             return true;
                                         } // => log entries && return true;
                                     }

@@ -8,7 +8,7 @@ namespace MySudoku
     public class Notes : MonoBehaviour
     {
         /// <summary>
-        /// The rect transform of the numbers game objects.
+        /// The rect transform of the candidates game objects.
         /// </summary>
         [SerializeField] private RectTransform[] _numbers;
 
@@ -39,16 +39,6 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// Shows the given numbers in the notes.
-        /// </summary>
-        /// <param name="numbers">The numbers to show.</param>
-        public void Show(int[] numbers)
-        {
-            foreach (int number in numbers)
-                Show(number);
-        }
-
-        /// <summary>
         /// Hides the given number in the notes.
         /// </summary>
         /// <param name="number">The number to hide.</param>
@@ -56,16 +46,6 @@ namespace MySudoku
         {
             if (0 < number && number < 10)
                 _numbers[number - 1].gameObject.SetActive(false);
-        }
-
-        /// <summary>
-        /// Hides the given numbers in the notes.
-        /// </summary>
-        /// <param name="numbers">The numbers to hide.</param>
-        public void Hide(int[] numbers)
-        {
-            foreach (int number in numbers)
-                Hide(number);
         }
     }
 }

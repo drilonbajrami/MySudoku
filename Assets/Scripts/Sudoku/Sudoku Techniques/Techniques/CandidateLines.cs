@@ -12,7 +12,7 @@ namespace MySudoku
     public class CandidateLines : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 350;
@@ -24,8 +24,9 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            cost = 0;
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     // Process empty cells only.
@@ -77,13 +78,16 @@ namespace MySudoku
                             }
 
                             if (techniqueIsApplied) {
-                                if (!LogConsole) return true;
-                                StringBuilder s = new("CANDIDATE LINES: \n");
-                                s.AppendLine(rowAvailable ? $"Candidate [{i + 1}] on Row({row}) removed from cells: " :
-                                                            $"Candidate [{i + 1}] on Col({col}) removed from cells: ");
-                                for (int x = 0; x < cand.Count; x++)
-                                    s.Append($"({cand[x].row}, {cand[x].col}){(x == cand.Count - 1 ? "." : ", ")}");
-                                Debug.Log(s.ToString());
+                                TimesUsed++;
+                                cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                if (LogConsole) {
+                                    StringBuilder s = new("CANDIDATE LINES: \n");
+                                    s.AppendLine(rowAvailable ? $"Candidate [{i + 1}] on Row({row}) removed from cells: " :
+                                                                $"Candidate [{i + 1}] on Col({col}) removed from cells: ");
+                                    for (int x = 0; x < cand.Count; x++)
+                                        s.Append($"({cand[x].row}, {cand[x].col}){(x == cand.Count - 1 ? "." : ", ")}");
+                                    Debug.Log(s.ToString());
+                                }
                                 return true;
                             }
                         }

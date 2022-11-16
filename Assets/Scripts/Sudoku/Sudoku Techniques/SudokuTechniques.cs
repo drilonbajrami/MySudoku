@@ -7,20 +7,20 @@ namespace MySudoku
     /// </summary>
     public enum Technique
     {
-        NakedSingle    = 0,
-        HiddenSingle   = 1,
-        CandidateLines = 2,
-        MultipleLines  = 3,
-        NakedPairs     = 4,
-        HiddenPairs    = 5,
-        NakedTriples   = 6,
-        HiddenTriples  = 7,
-        XWing          = 8,
-        YWing          = 9,
-        ForcingChains  = 10,
-        NakedQuads     = 11,
-        HiddenQuads    = 12,
-        Swordfish      = 13
+        Naked_Single    = 0,
+        Hidden_Single   = 1,
+        Candidate_Lines = 2,
+        Multiple_Lines  = 3,
+        Naked_Pairs     = 4,
+        Hidden_Pairs    = 5,
+        Naked_Triples   = 6,
+        Hidden_Triples  = 7,
+        X_Wing          = 8,
+        Y_Wing          = 9,
+        Forcing_Chains  = 10,
+        Naked_Quads     = 11,
+        Hidden_Quads    = 12,
+        Swordfish       = 13
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ namespace MySudoku
         /// <summary>
         /// List of available sudoku techniques to use.
         /// </summary>
-        public static List<ISudokuTechnique> techniques = new() {
+        public static List<ISudokuTechnique> Techniques = new() {
             new NakedSingle(),
             new HiddenSingle(),
             new CandidateLines(),
@@ -71,14 +71,15 @@ namespace MySudoku
         /// <param name="sudoku">The sudoku puzzle.</param>
         /// <param name="notes">The notes for the sudoku puzzle.</param>
         /// <returns>Whether it can apply one of the available sudoku techniques or not.</returns>
-        public static bool ApplyTechniques(this int[,] sudoku, bool[,] notes)
+        public static int ApplyTechniques(this int[,] sudoku, bool[,] notes)
         {
-            for (int i = 0; i < techniques.Count; i++)
-                if (techniques[i].ApplyTechnique(sudoku, notes)) {
-                    SudokuGenerator.techniquesUsed[i]++;
-                    return true; 
+            for (int i = 0; i < Techniques.Count; i++)
+                if (Techniques[i].ApplyTechnique(sudoku, notes, out int cost)) {
+                    //SudokuGenerator.techniquesUsed[i]++;
+                    return cost; 
                 }
-            return false;
+
+            return 0;
         }
 
         /// <summary>
@@ -86,8 +87,8 @@ namespace MySudoku
         /// </summary>
         public static void ToggleConsoleLog()
         {
-            for (int i = 0; i < techniques.Count; i++)
-                techniques[i].LogConsole = !techniques[i].LogConsole;
+            for (int i = 0; i < Techniques.Count; i++)
+                Techniques[i].LogConsole = !Techniques[i].LogConsole;
         }
 
         /// <summary>
@@ -95,8 +96,8 @@ namespace MySudoku
         /// </summary>
         public static void ResetTechniqueUsageCount()
         {
-            for (int i = 0; i < techniques.Count; i++)
-                techniques[i].TimesUsed = 0;
+            for (int i = 0; i < Techniques.Count; i++)
+                Techniques[i].TimesUsed = 0;
         }
     }
 }

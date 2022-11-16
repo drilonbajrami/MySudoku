@@ -14,7 +14,7 @@ namespace MySudoku
     public class NakedTriples : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 2000;
@@ -26,7 +26,7 @@ namespace MySudoku
         public bool LogConsole { get; set; } = false;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes)
+        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
             Repetition[] cells = new Repetition[9] {
                 new Repetition(0), new Repetition(1), new Repetition(2),
@@ -34,6 +34,7 @@ namespace MySudoku
                 new Repetition(6), new Repetition(7), new Repetition(8)
             };
 
+            cost = 0;
             for (int boxRow = 0; boxRow < 9; boxRow += 3)
                 for (int boxCol = 0; boxCol < 9; boxCol += 3) {
                     // Clear are previous data from the candidate's repetitions.
