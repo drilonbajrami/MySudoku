@@ -28,10 +28,11 @@ namespace MySudoku
         /// <inheritdoc/>
         public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            int numberOfSets = 3;
             Repetition[] cells = new Repetition[9] {
-                new Repetition(0), new Repetition(1), new Repetition(2),
-                new Repetition(3), new Repetition(4), new Repetition(5),
-                new Repetition(6), new Repetition(7), new Repetition(8)
+                new Repetition(0, numberOfSets), new Repetition(1, numberOfSets), new Repetition(2, numberOfSets),
+                new Repetition(3, numberOfSets), new Repetition(4, numberOfSets), new Repetition(5, numberOfSets),
+                new Repetition(6, numberOfSets), new Repetition(7, numberOfSets), new Repetition(8, numberOfSets)
             };
 
             cost = 0;
@@ -45,9 +46,9 @@ namespace MySudoku
 
                     for (int k = 0; k < 9; k++) // Cell's index as [k].
                         for (int n = 0; n < 9; n++) { // Candidate's index as [i].
-                            if (notes[(boxRow + k / 3) * 9 + boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) cells[k].Box.Add(n);
-                            if (notes[row * 9 + k, n] && sudoku[row, k] == 0) cells[k].Row.Add(n);
-                            if (notes[k * 9 + col, n] && sudoku[k, col] == 0) cells[k].Col.Add(n);
+                            if (notes[(boxRow + k / 3) * 9 + boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) cells[k].Repetitions[0].Add(n);
+                            if (notes[row * 9 + k, n] && sudoku[row, k] == 0) cells[k].Repetitions[1].Add(n);
+                            if (notes[k * 9 + col, n] && sudoku[k, col] == 0) cells[k].Repetitions[2].Add(n);
                         }
 
                     (int a, int b) nakedPair = (-1, -1);
@@ -56,9 +57,9 @@ namespace MySudoku
                     for (int i = 0; i < 8; i++) {
 
                         // Check if possible in box.
-                        if (cells[i].Box.Count == 2)
+                        if (cells[i].Repetitions[0].Count == 2)
                             for (int j = i + 1; j < 9; j++)
-                                if (HasPair(cells[i].Box, cells[j].Box, ref nakedPair)) {
+                                if (HasPair(cells[i].Repetitions[0], cells[j].Repetitions[0], ref nakedPair)) {
                                     bool rowAvailable = i / 3 == j / 3;
                                     bool colAvailable = j - i == 3;
                                     // Go through each cell within box.
@@ -96,10 +97,11 @@ namespace MySudoku
                                 }
 
                         // Check if possible in row and column.
-                        if (cells[i].Row.Count == 2 || cells[i].Col.Count == 2)
+                        if (cells[i].Repetitions[1].Count == 2 || cells[i].Repetitions[2].Count == 2)
                             for (int rank = 0; rank < 2; rank++)
                                 for (int j = i + 1; j < 9; j++) {
-                                    if (rank == 0 ? HasPair(cells[i].Row, cells[j].Row, ref nakedPair) : HasPair(cells[i].Col, cells[j].Col, ref nakedPair)) {
+                                    if (rank == 0 ? HasPair(cells[i].Repetitions[1], cells[j].Repetitions[1], ref nakedPair) 
+                                                  : HasPair(cells[i].Repetitions[2], cells[j].Repetitions[2], ref nakedPair)) {
                                         for (int k = 0; k < 9; k++) {
                                             if (k == i || k == j) continue;
                                             int rcIndex = rank == 0 ? (row * 9 + k) : (k * 9 + col);

@@ -62,8 +62,11 @@ namespace MySudoku
             new CandidateLines(),
             new MultipleLines(),
             new NakedPairs(),
-            new HiddenPairs()
+            new HiddenPairs(),
+            new NakedTriples(),
+            new HiddenTriples()
         };
+        // a
 
         /// <summary>
         /// Tries to apply one of the available sudoku techniques for this sudoku puzzle.

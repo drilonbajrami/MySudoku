@@ -25,31 +25,36 @@ namespace MySudoku
         /// </summary>
         public int Index { get; private set; }
 
+        public List<List<int>> Repetitions { get; private set; }
+
         /// <summary>
         /// Indexes of cells/candidates within a box.
         /// </summary>
-        public List<int> Box { get; private set; }
+        //public List<int> Box { get; private set; }
 
         /// <summary>
         /// Indexes of cells/candidates within a row.
         /// </summary>
-        public List<int> Row { get; private set; }
+        //public List<int> Row { get; private set; }
 
         /// <summary>
         /// Indexes of cells/candidates within a column.
         /// </summary>
-        public List<int> Col { get; private set; }
+        //public List<int> Col { get; private set; }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="index">Index of the cell or candidate.</param>
-        public Repetition(int index)
+        public Repetition(int index, int numberOfSets)
         {
             Index = index;
-            Box = new List<int>();
-            Row = new List<int>();
-            Col = new List<int>();
+            Repetitions = new List<List<int>>(numberOfSets);
+            for (int i = 0; i < numberOfSets; i++)
+                Repetitions.Add(new List<int>());
+            //Box = new List<int>();
+            //Row = new List<int>();
+            //Col = new List<int>();
         }
 
         /// <summary>
@@ -57,9 +62,11 @@ namespace MySudoku
         /// </summary>
         public void ClearAll()
         {
-            Box.Clear();
-            Row.Clear();
-            Col.Clear();
+            for (int i = 0; i < Repetitions.Count; i++)
+                Repetitions[i].Clear();
+            //Box.Clear();
+            //Row.Clear();
+            //Col.Clear();
         }
     }
 }

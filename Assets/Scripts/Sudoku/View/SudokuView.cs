@@ -79,7 +79,7 @@ namespace MySudoku
         /// <summary>
         /// Draws the sudoku grid and fills it with the current solution loaded in the sudoku results library.
         /// </summary>
-        //private void Start() => DrawSudoku();
+        private void Start() => DrawSudoku();
 
         /// <summary>
         /// Test methods...
@@ -89,6 +89,28 @@ namespace MySudoku
             if (Input.GetKeyDown(KeyCode.Space))
                 noteToggle.isOn = !noteToggle.isOn;
 
+            if (Input.GetKeyDown(KeyCode.LeftShift)) {
+                Sudoku s = new Sudoku();
+                //s.Puzzle.SetPuzzle("032006100410000000000901000500090004060000071300020005000508000000000519057009860"); // Candidate Lines
+                //s.Puzzle.SetPuzzle("400000938032094100095300240370609004529001673904703090957008300003900400240030709"); // Naked pairs
+                //s.Puzzle.SetPuzzle("720408030080000047401076802810739000000851000000264080209680413340000008168943275"); // Hidden pairs
+                //s.Puzzle.SetPuzzle("294513006600842319300697254000056000040080060000470000730164005900735001400928637"); // Naked Triples
+                s.Puzzle.SetPuzzle("000001030231090000065003100678924300103050006000136700009360570006019843300000000"); // Hidden Triples
+                //s.Puzzle.SetPuzzle("070408029002000004854020007008374200020000000003261700000093612200000403130642070");
+                //s.Puzzle.SetPuzzle("600802735702356940300407062100975024200183079079624003400560207067240300920738406");
+                SetSudoku(s);
+                FillAndUpdateNotes();
+            }
+
+            if (Input.GetKeyDown(KeyCode.A)) {
+                ISudokuTechnique technique = new HiddenTriples {
+                    LogConsole = true
+                };
+                if (technique.ApplyTechnique(_puzzleCopy, _viewNotes, out int cost)) {
+                    UpdateGridViewNotes();
+                }
+            }
+
             HandleInput();
         }
 
@@ -96,6 +118,9 @@ namespace MySudoku
         public void GenerateEasySudoku() => SetSudoku(_generator.Generate(Difficulty.Easy));
         public void GenerateMediumSudoku() => SetSudoku(_generator.Generate(Difficulty.Medium));
         public void GenerateHardSudoku() => SetSudoku(_generator.Generate(Difficulty.Hard));
+        public void GenerateExtremeSudoku() => SetSudoku(_generator.Generate(Difficulty.Extreme));
+        public void GenerateEvilSudoku() => SetSudoku(_generator.Generate(Difficulty.Evil));
+
 
         public void OnNoteEditToggleClicked(bool on)
         {
@@ -109,6 +134,7 @@ namespace MySudoku
         /// <param name="sudoku"></param>
         public void SetSudoku(Sudoku sudoku)
         {
+            if (sudoku == null) return;
             _sudoku = sudoku;
             Array.Copy(sudoku.Puzzle, _puzzleCopy, sudoku.Puzzle.Length);
             UpdateGridViewValues();
@@ -385,20 +411,3 @@ namespace MySudoku
         #endregion
     }
 }
-
-/* Testing
-        if (Input.GetKeyDown(KeyCode.LeftShift)) {
-            _sudoku = new Sudoku();
-            //_sudoku.Puzzle.SetPuzzle("032006100410000000000901000500090004060000071300020005000508000000000519057009860"); // Candidate Lines
-            //_sudoku.Puzzle.SetPuzzle("400000938032094100095300240370609004529001673904703090957008300003900400240030709"); // Naked pairs
-            //_sudoku.Puzzle.SetPuzzle("720408030080000047401076802810739000000851000000264080209680413340000008168943275"); // Hidden pairs
-            _sudoku.Puzzle.SetPuzzle("294513006600842319300697254000056000040080060000470000730164005900735001400928637"); // Naked Triples
-            _sudoku.Puzzle.SetPuzzle("070408029002000004854020007008374200020000000003261700000093612200000403130642070");
-            _sudoku.Puzzle.SetPuzzle("600802735702356940300407062100975024200183079079624003400560207067240300920738406");
-
-
-            _viewNotes.SetNotes(_sudoku.Puzzle);
-
-            UpdateValues();
-        }
-*/

@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Tilemaps;
-using UnityEngine.U2D.IK;
 
 namespace MySudoku
 {
@@ -22,6 +20,9 @@ namespace MySudoku
         /// </summary>
         [SerializeField] RandomGenerator _randGenerator;
 
+        [Range(30, 360)]
+        public float maxGenerationDurationInSeconds = 60f;
+
         /// <summary>
         /// Creates a sudoku.
         /// </summary>
@@ -37,6 +38,7 @@ namespace MySudoku
             _randGenerator.SetSeed(_seed);
             sudoku.Solution = GenerateSolution();
             sudoku.Puzzle = GeneratePuzzle(sudoku.Solution, difficulty);
+            if (sudoku.Puzzle == null) return null;
             return sudoku;
         }
 
@@ -59,6 +61,13 @@ namespace MySudoku
         /// <returns>Sudoku puzzle.</returns>
         public int[,] GeneratePuzzle(int[,] solution, Difficulty difficulty)
         {
+#if UNITY_EDITOR
+            ConsoleLog.Clear();
+#endif
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+            Debug.Log($"Started generation at: {DateTime.Now}");
+
             start:
             int[,] puzzle = new int[9, 9];
             bool[,] notes = new bool[81, 9];
@@ -104,26 +113,27 @@ namespace MySudoku
                 }
             }
 
+            if (stopwatch.ElapsedMilliseconds / 1000f > maxGenerationDurationInSeconds) {
+                Debug.Log("Took too long to generate puzzle");
+                return null;
+            }
+
             if(difficultyScore < difficultyCap) goto start;
 
             Array.Copy(notes, notesCopy, notes.Length);
             TrySolve(puzzle, solution, notesCopy, logResult: false, out int diff);
-            //if (TrySolve(puzzle, solution, notesCopy, logResult: false, )) {
-            //    if (techniquesUsed[(int)Technique.HiddenPairs] == 0) goto startPoint;
-            //}
+            //if (SudokuTechniques.Techniques[(int)Technique.Hidden_Triples].TimesUsed == 0) goto start;
 
             #if UNITY_EDITOR
-            ConsoleLog.Clear();
-
-
+            //ConsoleLog.Clear();
             Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");
             Debug.Log($"Difficulty Score: {difficultyScore}");
             Debug.Log("Techniques: ");
-            for (int i = 0; i < SudokuTechniques.Techniques.Count; i++) {
-                Debug.Log($"{(Technique)i} used {SudokuTechniques.Techniques[i].TimesUsed} times.");
-            }
-
+            for (int i = 0; i < SudokuTechniques.Techniques.Count; i++)
+                Debug.Log($"    {(Technique)i} used {SudokuTechniques.Techniques[i].TimesUsed} times.");
             GetPuzzle(puzzle).CopyToClipboard();
+            stopwatch.Stop();
+            Debug.Log($"Sduoku puzzle generated in {stopwatch.ElapsedMilliseconds / 1000f} seconds");
             #endif
 
             return puzzle;

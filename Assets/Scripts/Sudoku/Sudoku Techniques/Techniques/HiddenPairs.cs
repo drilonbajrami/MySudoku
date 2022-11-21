@@ -28,10 +28,11 @@ namespace MySudoku
         /// <inheritdoc/>
         public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            int numberOfSets = 3;
             Repetition[] candidates = new Repetition[9] {
-                new Repetition(0), new Repetition(1), new Repetition(2),
-                new Repetition(3), new Repetition(4), new Repetition(5),
-                new Repetition(6), new Repetition(7), new Repetition(8)
+                new Repetition(0, numberOfSets), new Repetition(1, numberOfSets), new Repetition(2, numberOfSets),
+                new Repetition(3, numberOfSets), new Repetition(4, numberOfSets), new Repetition(5, numberOfSets),
+                new Repetition(6, numberOfSets), new Repetition(7, numberOfSets), new Repetition(8, numberOfSets)
             };
 
             cost = 0;
@@ -45,18 +46,18 @@ namespace MySudoku
 
                     for (int n = 0; n < 9; n++) // Candidate's index as [i].
                         for (int k = 0; k < 9; k++) { // Cell's index as [k].
-                            if (notes[(boxRow + k / 3) * 9 + boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) candidates[n].Box.Add(k);
-                            if (notes[row * 9 + k, n] && sudoku[row, k] == 0) candidates[n].Row.Add(k);
-                            if (notes[k * 9 + col, n] && sudoku[k, col] == 0) candidates[n].Col.Add(k);
+                            if (notes[(boxRow + k / 3) * 9 + boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) candidates[n].Repetitions[0].Add(k);
+                            if (notes[row * 9 + k, n] && sudoku[row, k] == 0) candidates[n].Repetitions[1].Add(k);
+                            if (notes[k * 9 + col, n] && sudoku[k, col] == 0) candidates[n].Repetitions[2].Add(k);
                         }
 
                     (int a, int b) cellPair = (-1, -1);
                     bool applied = false;
                     for (int i = 0; i < 8; i++) {
                         // Check if possible in box.
-                        if (candidates[i].Box.Count == 2)
+                        if (candidates[i].Repetitions[0].Count == 2)
                             for (int j = i + 1; j < 9; j++)
-                                if (HasPair(candidates[i].Box, candidates[j].Box, ref cellPair)) {
+                                if (HasPair(candidates[i].Repetitions[0], candidates[j].Repetitions[0], ref cellPair)) {
                                     
                                     (int a, int b) pair = ((boxRow + cellPair.a / 3) * 9 + boxCol + cellPair.a % 3,
                                                            (boxRow + cellPair.b / 3) * 9 + boxCol + cellPair.b % 3);
@@ -82,11 +83,11 @@ namespace MySudoku
                                 }
 
                         // Check if possible in row or column.
-                        if (candidates[i].Row.Count == 2 || candidates[i].Col.Count == 2) 
+                        if (candidates[i].Repetitions[1].Count == 2 || candidates[i].Repetitions[2].Count == 2) 
                             for (int rank = 0; rank < 2; rank++)
                                 for (int j = i + 1; j < 9; j++)
-                                    if (rank == 0 ? HasPair(candidates[i].Row, candidates[j].Row, ref cellPair)
-                                                  : HasPair(candidates[i].Col, candidates[j].Col, ref cellPair)) {
+                                    if (rank == 0 ? HasPair(candidates[i].Repetitions[1], candidates[j].Repetitions[1], ref cellPair)
+                                                  : HasPair(candidates[i].Repetitions[2], candidates[j].Repetitions[2], ref cellPair)) {
                                         // Apply technique.
                                         int c1 = rank == 0 ? (row * 9 + cellPair.a) : (cellPair.a * 9 + col);
                                         int c2 = rank == 0 ? (row * 9 + cellPair.b) : (cellPair.b * 9 + col);
@@ -102,8 +103,8 @@ namespace MySudoku
                                             cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
                                             if (LogConsole) {
                                                 s.Append($"[{i + 1}, {j + 1}] found on: \n");
-                                                s.AppendLine(rank == 0 ? $"Row ({row}) on cells ({row}, {candidates[i].Row[0]}) and ({row}, {candidates[i].Row[1]})." :
-                                                                         $"Col ({col}) on cells ({candidates[i].Col[0]}, {col}) and ({candidates[i].Col[1]}, {col}).");
+                                                s.AppendLine(rank == 0 ? $"Row ({row}) on cells ({row}, {candidates[i].Repetitions[1][0]}) and ({row}, {candidates[i].Repetitions[1][1]})." :
+                                                                         $"Col ({col}) on cells ({candidates[i].Repetitions[2][0]}, {col}) and ({candidates[i].Repetitions[2][1]}, {col}).");
                                                 Debug.Log(s.ToString());
                                             }
                                             return true;
