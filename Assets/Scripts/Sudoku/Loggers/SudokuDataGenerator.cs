@@ -24,8 +24,9 @@ namespace MySudoku
         public void WriteData(string data)
         {
             DataSaver.WriteNewLine(data);
-            Debug.Log($"Generated puzzle number: {numOfGenerations - numOfGenerationsLeft}");
+            if (!DataSaver.saveData) return;
             numOfGenerationsLeft--;
+            Debug.Log($"Puzzles left to generate: {numOfGenerationsLeft}");
         }
 
         public void StartGenerations()

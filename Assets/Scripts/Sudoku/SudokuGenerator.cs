@@ -151,8 +151,8 @@ namespace MySudoku
             //printOut.Append($"Sudoku puzzle {difficulty} difficulty generated in {stopwatch.Elapsed.TotalMilliseconds} ms | ({stopwatch.Elapsed.TotalSeconds} seconds)\n");
             double elapsedTime = stopwatch.Elapsed.TotalMilliseconds;
 
-            Debug.Log($"Sudoku puzzle {difficulty} difficulty generated within {elapsedTime} ms OR ({elapsedTime / 1000f} seconds)");
-            Debug.Log($"With total elapsed time by the BacktrackSolver of {recursiveElapsedTime} ms, ~ {recursiveElapsedTime / elapsedTime * 100:0.00}% of total elapsed time.");
+            //Debug.Log($"Sudoku puzzle {difficulty} difficulty generated within {elapsedTime} ms OR ({elapsedTime / 1000f} seconds)");
+            //Debug.Log($"With total elapsed time by the BacktrackSolver of {recursiveElapsedTime} ms, ~ {recursiveElapsedTime / elapsedTime * 100:0.00}% of total elapsed time.");
             _recursiveSolverLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime},{recursiveElapsedTime}");
 
             _difficulyScoreAndTechniquesLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime}," +
