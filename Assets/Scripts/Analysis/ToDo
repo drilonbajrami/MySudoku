@@ -1,0 +1,41 @@
+Sudoku Generator Algorithm
+
+Generate(Difficulty difficulty)
+    // Generate Solution
+    // Generate Puzzle
+
+GeneratePuzzle(Solution, Difficulty)
+    Store:
+        Puzzle,
+        Notes,
+        Copy of Notes,
+
+    Cache all sudoku grid cells indexes (List of indexes)
+    Set the notes and copy of notes to false for each cell as well
+    Shuffle the indexes list and add them into a queue
+
+    Get difficulty and set the difficulty cap at random within range of selected difficulty
+
+    ** Keeping track of tries = 40 ** -> So to not crash the generator!
+
+    Do:
+    while (difficultyScore < difficultyCap && tries > 0) {
+        index = ind.Dequeue();
+        int oldValue = puzzle[index.row, index.col];
+        
+        // Set the current cell value to 0 and update notes, and copy it to the notes copy
+        puzzle[index.row, index.col] = 0;
+        notes.Update(puzzle, index, oldValue, 0);
+        Array.Copy(notes, notesCopy, notes.Length); // Actually quicker than notesCopy = notes.Copy();
+
+        //
+        if (IsUnique(puzzle) && TrySolve(puzzle, solution, notesCopy, logResult: false, out int cost) && cost < difficultyRange.upper) {
+            difficultyScore = cost;
+        }
+        else {
+            ind.Enqueue(index);
+            puzzle[index.row, index.col] = oldValue;
+            notes.Update(puzzle, index, 0, oldValue);
+            tries--;
+        }
+    }
