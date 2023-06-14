@@ -1,4 +1,5 @@
 using UnityEngine;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace MySudoku
 {
@@ -24,6 +25,7 @@ namespace MySudoku
         /// <inheritdoc/>
         public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
         {
+            //Stopwatch sw = Stopwatch.StartNew();
             cost = 0;
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
@@ -59,6 +61,7 @@ namespace MySudoku
                                 TimesUsed++;
                                 cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
                                 if (LogConsole) Debug.Log($"HIDDEN SINGLE: Cell ({row}, {col}) for {i + 1}: {(isHiddenInBox ? "B" : "")} {(isHiddenInRow ? "R" : "")} {(isHiddenInCol ? "C" : "")}");
+                                //Debug.Log($"Hidden Single Technique applied in {sw.Elapsed.TotalMilliseconds} ms");
                                 return true;
                             }
                             else if (!isHiddenSingle) break; // Skip for current note if it is not a hidden single.

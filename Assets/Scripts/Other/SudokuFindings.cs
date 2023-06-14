@@ -2,14 +2,8 @@ using MySudoku;
 
 namespace SudokuTesting
 {
-    public static class Sudokutils
+    public static class SudokuFindings
     {
-        /// <summary>
-        /// Calculates different sums of the solution numbers within the grid.
-        /// </summary>
-        public static void CalculateSums(Cell[,] _grid)
-        {
-        }
         #region Findings
         // Column & Row = 6 up to 24
         // Cross = 15 up to 35

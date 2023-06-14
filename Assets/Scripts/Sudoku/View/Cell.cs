@@ -20,33 +20,22 @@ namespace MySudoku
         /// <summary>
         /// Rect transform of this game object.
         /// </summary>
-        public RectTransform RectTransform { get; private set; }
+        [field: SerializeField] public RectTransform RectTransform { get; private set; }
 
         /// <summary>
         /// Cell background.
         /// </summary>
-        private Image _background;
+        [SerializeField] private Image _background;
 
         /// <summary>
         /// Text representation of this cell's digit.
         /// </summary>
-        private TMP_Text _text;
+        [SerializeField] private TMP_Text _numberText;
 
         /// <summary>
         /// The notes for this cell.
         /// </summary>
         [SerializeField] private Notes _notesView;
-
-        /// <summary>
-        /// Caches the needed components of this cell game object.
-        /// </summary>
-        private void Awake()
-        {
-            RectTransform = GetComponent<RectTransform>();
-            _background = GetComponent<Image>();
-            _text = GetComponentInChildren<TMP_Text>();
-            _notesView = GetComponentInChildren<Notes>();
-        }
 
         /// <summary>
         /// Initializes any necessary components for this cell.
@@ -65,7 +54,7 @@ namespace MySudoku
         {
             Number = num;
             _notesView.gameObject.SetActive(num == 0);
-            _text.text = num == 0 ? "" : num.ToString();
+            _numberText.text = num == 0 ? "" : $"{num}";
         }
 
         /// <summary>
@@ -81,7 +70,6 @@ namespace MySudoku
         /// <summary>
         /// Selects this cell by marking it and its neighbor cells.
         /// </summary>
-        /// <param name="highlightNeighbors"></param>
         public void Select(Color selectedColor, Action<bool> highlightNeighbors)
         {
             _background.color = selectedColor;
@@ -91,7 +79,6 @@ namespace MySudoku
         /// <summary>
         /// Deselects this cell by umarking it and its neighbor cells.
         /// </summary>
-        /// <param name="highlightNeighbors"></param>
         public void Deselect(Action<bool> highlightNeighbors)
         {
             _background.color = Color.white;
@@ -99,11 +86,9 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// 
+        /// Highlights this cell if focus is set to true.
         /// </summary>
-        /// <param name="focusedColor"></param>
-        /// <param name="condition"></param>
-        public void Focus(Color focusedColor, bool condition)
-            => _background.color = condition ? focusedColor : Color.white;
+        public void SetFocus(Color highlightColor, bool focus)
+            => _background.color = focus ? highlightColor : Color.white;
     }
 }

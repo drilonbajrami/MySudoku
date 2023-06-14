@@ -66,21 +66,18 @@ namespace MySudoku
             new NakedTriples(),
             new HiddenTriples()
         };
-        // a
 
         /// <summary>
         /// Tries to apply one of the available sudoku techniques for this sudoku puzzle.
         /// </summary>
         /// <param name="sudoku">The sudoku puzzle.</param>
         /// <param name="notes">The notes for the sudoku puzzle.</param>
-        /// <returns>Whether it can apply one of the available sudoku techniques or not.</returns>
+        /// <returns>The cost of the applied technique if possible, otherwise returns 0.</returns>
         public static int ApplyTechniques(this int[,] sudoku, bool[,] notes)
         {
             for (int i = 0; i < Techniques.Count; i++)
-                if (Techniques[i].ApplyTechnique(sudoku, notes, out int cost)) {
-                    //SudokuGenerator.techniquesUsed[i]++;
+                if (Techniques[i].ApplyTechnique(sudoku, notes, out int cost))
                     return cost; 
-                }
 
             return 0;
         }

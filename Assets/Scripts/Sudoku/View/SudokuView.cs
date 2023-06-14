@@ -37,7 +37,7 @@ namespace MySudoku
         /// </summary>
         [SerializeField] private Image _borderPrefab;
         /// <summary>
-        /// The size of for each cell in the sudoku grid view.
+        /// The size of each cell in the sudoku grid view.
         /// </summary>
         [SerializeField] private float _cellSize = 100f;
         /// <summary>
@@ -121,7 +121,6 @@ namespace MySudoku
         public void GenerateExtremeSudoku() => SetSudoku(_generator.Generate(Difficulty.Extreme));
         public void GenerateEvilSudoku() => SetSudoku(_generator.Generate(Difficulty.Evil));
 
-
         public void OnNoteEditToggleClicked(bool on)
         {
             _onText.SetActive(on);
@@ -136,8 +135,7 @@ namespace MySudoku
         {
             if (sudoku == null) return;
             _sudoku = sudoku;
-            Array.Copy(sudoku.Puzzle, _puzzleCopy, sudoku.Puzzle.Length);
-            UpdateGridViewValues();
+            ResetPuzzle();
         }
 
         public void ResetPuzzle()
@@ -149,7 +147,6 @@ namespace MySudoku
         /// <summary>
         /// Sets the grid values based on the given sudoku puzzle.
         /// </summary>
-        /// <param name="sudokuGrid">The sudoku grid to get the values from.</param>
         public void UpdateGridViewValues()
         {
             for (int row = 0; row < 9; row++)
@@ -350,13 +347,13 @@ namespace MySudoku
             int boxCol = box % 3 * 3;
 
             for (int i = 0; i < 9; i++) {
-                if (i != _selectedCell.row) _grid[i, _selectedCell.col].Focus(_focusedCellColor, on);
-                if (i != _selectedCell.col) _grid[_selectedCell.row, i].Focus(_focusedCellColor, on);
+                if (i != _selectedCell.row) _grid[i, _selectedCell.col].SetFocus(_focusedCellColor, on);
+                if (i != _selectedCell.col) _grid[_selectedCell.row, i].SetFocus(_focusedCellColor, on);
 
                 int r = i / 3;
                 int c = i % 3;
                 if (boxRow + r != _selectedCell.row && boxCol + c != _selectedCell.col)
-                    _grid[boxRow + r, boxCol + c].Focus(_focusedCellColor, on);
+                    _grid[boxRow + r, boxCol + c].SetFocus(_focusedCellColor, on);
 
                 for (int j = 0; j < 9; j++)
                     if (_grid[_selectedCell.row, _selectedCell.col].Number == _grid[i, j].Number

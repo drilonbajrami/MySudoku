@@ -1509,4 +1509,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bfb7cec4811ab440b7e2312bc1104ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <RectTransform>k__BackingField: {fileID: 6576017576985251849}
+  _background: {fileID: 468424042554874862}
+  _numberText: {fileID: 3539626497737691634}
   _notesView: {fileID: 6216831912263626432}

@@ -34,6 +34,7 @@ namespace MySudoku
         /// <returns>Whether the given number is present or not, in the box of the sudoku.</returns>
         public static bool HasNumberInBox(this int[,] sudoku, int row, int col, int num)
         {
+            // boxRow & boxCol is always the top left cell of a box.
             int boxRow = row - row % 3;
             int boxCol = col - col % 3;
             for (int r = 0; r < 3; r++)
@@ -44,7 +45,7 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// Checks if this sudoku grid contains the given number in the given column.
+        /// Checks if this sudoku grid contains the given number in the given column index.
         /// </summary>
         /// <param name="sudoku">The sudoku grid.</param>
         /// <param name="col">The column.</param>
@@ -59,7 +60,7 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// Checks if this sudoku grid contains the given number in the given row.
+        /// Checks if this sudoku grid contains the given number in the given row index.
         /// </summary>
         /// <param name="sudoku">The sudoku grid.</param>
         /// <param name="row">The row.</param>
@@ -105,6 +106,11 @@ namespace MySudoku
             }
         }
 
+        /// <summary>
+        /// Fills the sudoku grid with the given sudoku puzzle as a string of 81 characters (numbers).
+        /// </summary>
+        /// <param name="grid">Sudoku grid.</param>
+        /// <param name="puzzle">The sudoku puzzle.</param>
         public static void SetPuzzle(this int[,] grid, string puzzle)
         {
             for (int row = 0; row < 9; row++) {

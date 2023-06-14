@@ -1,7 +1,5 @@
 #if (UNITY_EDITOR)
 using System.Reflection;
-using UnityEditor;
-
 
 /// <summary>
 /// Console Log class.

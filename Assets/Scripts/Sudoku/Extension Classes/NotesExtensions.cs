@@ -21,7 +21,7 @@ namespace MySudoku
         public static void Update(this bool[,] notes, int[,] sudoku, (int row, int col) cellIndex, int removedValue, int placedValue)
         {
             bool isZero = placedValue == 0;
-            int noteIndex = isZero ? removedValue - 1 : placedValue - 1;
+            int noteIndex = (isZero ? removedValue : placedValue) - 1;
 
             for (int i = 0; i < 9; i++) {
                 // Disable all notes in this cell if the new value is not zero.
@@ -59,7 +59,7 @@ namespace MySudoku
 
         /// <summary>
         /// Updates the sudoku notes based on the changed cell, its box, row and column.
-        /// Does not update notes if a already filled cell is cleared.
+        /// Does not update notes if an already filled cell is cleared.
         /// </summary>
         /// <param name="notes">The notes to update.</param>
         /// <param name="cellIndex">The index of the edited cell.</param>
