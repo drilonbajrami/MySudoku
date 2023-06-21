@@ -29,6 +29,7 @@ namespace MySudoku
 
         public SudokuDataGenerator _difficulyScoreAndTechniquesLogger;
         public SudokuDataGenerator _recursiveSolverLogger;
+        public SudokuDataGenerator _backtrackerAnalysis;
 
         /// <summary>
         /// Creates a sudoku.
@@ -65,7 +66,7 @@ namespace MySudoku
         /// <param name="notes">Notes for the generated sudoku puzzle.</param>
         /// <param name="difficultyScore">Overall difficulty score of the generated sudoku puzzle.</param>
         /// <returns>Sudoku puzzle.</returns>
-        public int[,] GeneratePuzzle(int[,] solution, Difficulty difficulty)
+        public int[,] GeneratePuzzleA(int[,] solution, Difficulty difficulty)
         {
 #if UNITY_EDITOR
             //ConsoleLog.Clear();
@@ -144,7 +145,7 @@ namespace MySudoku
             //TrySolve(puzzle, solution, notesCopy, logResult: false, out int diff);
             //if (SudokuTechniques.Techniques[(int)Technique.Hidden_Triples].TimesUsed == 0) goto start;
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
             //StringBuilder printOut = new StringBuilder();
             //ConsoleLog.Clear();
 
@@ -164,7 +165,9 @@ namespace MySudoku
                 $"{ SudokuTechniques.Techniques[5].TimesUsed}," +
                 $"{ SudokuTechniques.Techniques[6].TimesUsed}," +
                 $"{ SudokuTechniques.Techniques[7].TimesUsed}");
+
             
+
             // Difficulty Logging
             //Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");
             //Debug.Log($"Difficulty Score: {difficultyScore}");
@@ -186,103 +189,116 @@ namespace MySudoku
         }
         #endregion
 
-        //        public int[,] GeneratePuzzle(int[,] solution, Difficulty difficulty)
-        //        {
-        //#if UNITY_EDITOR
-        //            ConsoleLog.Clear();
-        //#endif
-        //            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        //            stopwatch.Start();
-        //            Debug.Log($"Started generation at: {DateTime.Now}");
+        public int[,] GeneratePuzzle(int[,] solution, Difficulty difficulty)
+        {
+            //ConsoleLog.Clear();
+            Stopwatch stopwatch = new();
+            Stopwatch recursiveTimer = new();
 
-        //            bool generatePuzzle = true;
-        //            int[,] puzzle = new int[9, 9];
-        //            bool[,] notes = new bool[81, 9];
+            // Create an array for the puzzle, notes and note's copy.
+            int[,] puzzle = new int[9, 9];
+            bool[,] notes = new bool[81, 9];
+            bool[,] notesCopy = new bool[81, 9];
 
-        //            // Set the difficulty score threshold/cap for this puzzle, based on the chosen difficulty.
-        //            (int lower, int upper) difficultyRange = SudokuTechniques.DifficultyMap[difficulty];
-        //            int difficultyScore = 0;
-        //            int difficultyCap = 0;
+            // Flag for exiting while loop if puzzle has been generated.
+            bool keepGenerating = true;
 
-        //            while (generatePuzzle) {
-        //                // Create an array for the puzzle, notes and note's copy.
-        //                puzzle = new int[9, 9];
-        //                notes = new bool[81, 9];
-        //                bool[,] notesCopy = new bool[81, 9];
+            // Set the difficulty score threshold/cap for this puzzle, based on the chosen difficulty.
+            (int lower, int upper) difficultyRange = SudokuTechniques.DifficultyMap[difficulty];
+            int difficultyScore = 0;
+            int difficultyScoreCeiling = 0;
 
-        //                // Copy the solution into the puzzle.
-        //                Array.Copy(solution, puzzle, solution.Length);
+            //int tryCount = 0;
 
-        //                // Cache all sudoku grid cells by their indexes and clear the notes.
-        //                List<(int row, int col)> indexes = new();
-        //                for (int row = 0; row < 9; row++)
-        //                    for (int col = 0; col < 9; col++) {
-        //                        indexes.Add((row, col));
-        //                        for (int i = 0; i < 9; i++)
-        //                            notes[row * 9 + col, i] = notesCopy[row * 9 + col, i] = false;
-        //                    }
+            double recursiveElapsedTime = 0;
+            int backtrackCount = 0;
+            int backtrackFailCount = 0;
 
-        //                // Shuffle the indexes and add them into a queue.
-        //                indexes.Shuffle(_randGenerator);
-        //                Queue<(int, int)> ind = new(indexes);
+            // Start trying to generate puzzle.
+            while (keepGenerating) {
+                stopwatch = Stopwatch.StartNew();
+                //tryCount++;
+                recursiveElapsedTime = 0;
+                backtrackCount = 0;
+                backtrackFailCount = 0;
+                // Cache all sudoku grid cells by their indexes and clear the notes.
+                // And copy the solution to the puzzle array.
+                List<(int row, int col)> indexes = new();
+                for (int row = 0; row < 9; row++)
+                    for (int col = 0; col < 9; col++) {
+                        puzzle[row, col] = solution[row, col];
+                        indexes.Add((row, col));
+                        for (int i = 0; i < 9; i++)
+                            notes[row * 9 + col, i] = notesCopy[row * 9 + col, i] = false;
+                    }
 
-        //                // Set the difficulty score threshold/cap for this puzzle, based on the chosen difficulty.
-        //                difficultyScore = 0;
-        //                difficultyCap = _randGenerator.Next(difficultyRange.lower, difficultyRange.upper);
+                // Shuffle the indexes and add them into a queue.
+                indexes.Shuffle(_randGenerator);
+                Queue<(int, int)> ind = new(indexes);
 
-        //                int tries = 40;
-        //                List<(int row, int col)> emptyCellIndexes = new();
+                // Set the difficulty score threshold/cap for this puzzle, based on the chosen difficulty.
+                difficultyScore = 0;
+                difficultyScoreCeiling = _randGenerator.Next(difficultyRange.lower, difficultyRange.upper);
 
-        //                while (difficultyScore < difficultyCap && tries > 0) {
-        //                    (int row, int col) index = ind.Dequeue();
-        //                    int oldValue = puzzle[index.row, index.col];
+                int tries = 40;
 
-        //                    // Set the current cell value to 0 and update notes.
-        //                    puzzle[index.row, index.col] = 0;
-        //                    notes.Update(puzzle, index, oldValue, 0);
-        //                    Array.Copy(notes, notesCopy, notes.Length);
+                //Debug.Log($"Starting New Puzzle Generation - Try {tryCount}");
+                while (difficultyScore < difficultyScoreCeiling && tries > 0) {
+                    // Pick next index, store current value and update puzzle and notes
+                    (int row, int col) index = ind.Dequeue();
+                    int oldValue = puzzle[index.row, index.col];
+                    puzzle[index.row, index.col] = 0;
+                    notes.Update(puzzle, index, oldValue, 0);
+                    Array.Copy(notes, notesCopy, notes.Length);
 
-        //                    if (IsUnique(puzzle) && TrySolve(puzzle, solution, notesCopy, logResult: false, out int cost) && cost < difficultyRange.upper) {
-        //                        difficultyScore = cost;
-        //                    }
-        //                    else {
-        //                        ind.Enqueue(index);
-        //                        puzzle[index.row, index.col] = oldValue;
-        //                        notes.Update(puzzle, index, 0, oldValue);
-        //                        tries--;
-        //                    }
-        //                }
+                    if (TechniqueSolver(puzzle, solution, notesCopy, logResult: false, out int cost)) {
+                        difficultyScore = cost;
+                    }
+                    else {
+                        ind.Enqueue(index);
+                        puzzle[index.row, index.col] = oldValue;
+                        notes.Update(puzzle, index, 0, oldValue);
+                        tries--;
+                    }
 
-        //                if (stopwatch.ElapsedMilliseconds / 1000f > maxGenerationDurationInSeconds) {
-        //                    Debug.Log("Took too long to generate puzzle");
-        //                    return null;
-        //                }
+                    if (difficultyScore > difficultyScoreCeiling | stopwatch.ElapsedMilliseconds / 1000f > maxGenerationDurationInSeconds) {
+                        //Debug.Log($"Generation Try {tryCount} - Took too long to generate puzzle");
+                        break;
+                    }
+                }
 
-        //                if (difficultyScore >= difficultyCap) {
-        //                    generatePuzzle = false;
-        //                    Array.Copy(notes, notesCopy, notes.Length);
-        //                    TrySolve(puzzle, solution, notesCopy, logResult: false, out int diff);
-        //                    //if (SudokuTechniques.Techniques[(int)Technique.Hidden_Triples].TimesUsed == 0)
-        //                    //{
-        //                    //    generatePuzzle = true;
-        //                    //}
-        //                }
-        //            }
+                keepGenerating = difficultyScore < difficultyScoreCeiling || !IsUnique(puzzle);
+            }
 
-        //#if UNITY_EDITOR
-        //            //ConsoleLog.Clear();
-        //            Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");
-        //            Debug.Log($"Difficulty Score: {difficultyScore}");
-        //            Debug.Log("Techniques: ");
-        //            for (int i = 0; i < SudokuTechniques.Techniques.Count; i++)
-        //                Debug.Log($"    {(Technique)i} used {SudokuTechniques.Techniques[i].TimesUsed} times.");
-        //            GetPuzzle(puzzle).CopyToClipboard();
-        //            stopwatch.Stop();
-        //            Debug.Log($"Sudoku puzzle generated in {stopwatch.ElapsedMilliseconds / 1000f} seconds");
-        //#endif
+#if UNITY_EDITOR
 
-        //            return puzzle;
-        //        }
+            double elapsedTime = stopwatch.Elapsed.TotalMilliseconds;
+            //ConsoleLog.Clear();
+            //Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");
+            //Debug.Log($"Difficulty Score: {difficultyScore}");
+            //Debug.Log("Techniques: ");
+            //for (int i = 0; i < SudokuTechniques.Techniques.Count; i++)
+            //    Debug.Log($"    {(Technique)i} used {SudokuTechniques.Techniques[i].TimesUsed} times.");
+            //GetPuzzle(puzzle).CopyToClipboard();
+            //stopwatch.Stop();
+            //Debug.Log($"Sudoku puzzle generated in {stopwatch.ElapsedMilliseconds / 1000f} seconds");
+
+            _backtrackerAnalysis.WriteData($"{difficulty},{difficultyScore},{elapsedTime},{backtrackCount},{backtrackFailCount}");
+
+            _recursiveSolverLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime},{recursiveElapsedTime}");
+
+            _difficulyScoreAndTechniquesLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime}," +
+                $"{SudokuTechniques.Techniques[0].TimesUsed}," +
+                $"{SudokuTechniques.Techniques[1].TimesUsed}," +
+                $"{SudokuTechniques.Techniques[2].TimesUsed}," +
+                $"{SudokuTechniques.Techniques[3].TimesUsed}," +
+                $"{SudokuTechniques.Techniques[4].TimesUsed}," +
+                $"{SudokuTechniques.Techniques[5].TimesUsed}," +
+                $"{SudokuTechniques.Techniques[6].TimesUsed}," +
+                $"{SudokuTechniques.Techniques[7].TimesUsed}");
+#endif
+            return puzzle;
+        }
 
         #region Sudoku Solver
         /// <summary>
@@ -353,6 +369,40 @@ namespace MySudoku
             sudoku[row, col] = 0;
             return count;
         }
+
+        private int StateBacktrackSolver(int[,] sudoku, bool[,] notes, (int row, int col) editedCell, int removedNumber, int row = 0, int col = 0, int count = 0)
+        {
+            // If the edited cell has only one note after , then stop, the solution will still be unqiue
+
+            // Else, try filling every possible note in it, and then go through its column and row, see if filling it
+            // will lets any other cells within that row or col, without any notes, otherwise impossible to solve it
+
+
+            // Given state should be unique already
+            // The given number (cell) that is edited should be the main focus now
+            // And the row and column of edited cell
+
+            // Check the possible options in the edited cell
+            // Try out each options and 
+
+            //Start Solving
+
+            //    - Current State of Puzzle
+            //    - Notes for current state of puzzle
+            //    - Copy of notes (to be edited during solving)
+            //
+            //    - Check the changed cell (row and column indexes)
+            //    - Check the removed value of that cell index
+            //
+            //    - Check all combinations for that cell (possible notes)
+            //    - Maybe do only the row and column for the edited cell?
+
+            //    Try the first option in the cell
+
+
+            return 0;
+        }
+
         #endregion
 
         #region Solution Generator

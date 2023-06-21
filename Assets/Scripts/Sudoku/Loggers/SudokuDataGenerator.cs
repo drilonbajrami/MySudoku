@@ -19,14 +19,18 @@ namespace MySudoku
         private Coroutine generationCoroutine;
         public DataSaver DataSaver { get; private set; }
 
-        void Awake() => DataSaver = GetComponent<DataSaver>();
+        void Awake()
+        {
+            DataSaver = GetComponent<DataSaver>();
+        }
 
         public void WriteData(string data)
         {
             DataSaver.WriteNewLine(data);
             if (!DataSaver.saveData) return;
+       
             numOfGenerationsLeft--;
-            Debug.Log($"Puzzles left to generate: {numOfGenerationsLeft}");
+            if (IsGenerating) { Debug.Log($"Puzzles left to generate: {numOfGenerationsLeft}"); }
         }
 
         public void StartGenerations()
@@ -43,13 +47,15 @@ namespace MySudoku
                 generator.Generate(difficulty);
                 yield return null; // Yield to the next frame
             }
+
+            IsGenerating = false;
         }
 
         // Add a method to stop the generation coroutine if needed
         public void StopGenerations()
         {
+            IsGenerating = false;
             if (generationCoroutine != null) {
-                IsGenerating = false;
                 StopCoroutine(generationCoroutine);
                 DataSaver.CloseDatabse(); // Close the database if the generation was interrupted
             }

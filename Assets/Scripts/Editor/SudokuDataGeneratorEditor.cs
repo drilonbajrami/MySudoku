@@ -21,8 +21,5 @@ public class SudokuDataGeneratorEditor : Editor
 
         if(dataGenerator.IsGenerating && GUILayout.Button("Stop Generating"))
             dataGenerator.StopGenerations();
-
-        if (GUILayout.Button("Clear Current Data"))
-            dataGenerator.DataSaver.ClearExistingData();
     }
 }

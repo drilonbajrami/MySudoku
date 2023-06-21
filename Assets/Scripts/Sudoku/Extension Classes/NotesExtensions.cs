@@ -23,20 +23,32 @@ namespace MySudoku
             bool isZero = placedValue == 0;
             int noteIndex = (isZero ? removedValue : placedValue) - 1;
 
+            (int row, int col) boxCoords = new(cellIndex.row - cellIndex.row % 3, cellIndex.col - cellIndex.col % 3);
+
+            int cellIndexInNotes = cellIndex.row * 9 + cellIndex.col;
+
+            //List<(int row, int col)> indexes = new List<(int row, int col)>();
+
             for (int i = 0; i < 9; i++) {
                 // Disable all notes in this cell if the new value is not zero.
                 if (!isZero) notes[cellIndex.row * 9 + cellIndex.col, i] = false;
 
-                // Row
-                notes[i * 9 + cellIndex.col, noteIndex] = isZero && sudoku.CanUseNumber(i, cellIndex.col, noteIndex + 1);
-
-                // Column
-                notes[cellIndex.row * 9 + i, noteIndex] = isZero && sudoku.CanUseNumber(cellIndex.row, i, noteIndex + 1);
-
                 // Box 3x3
-                int row = cellIndex.row - cellIndex.row % 3 + i / 3;
-                int col = cellIndex.col - cellIndex.col % 3 + i % 3;
+                int row = boxCoords.row + i / 3;
+                int col = boxCoords.col + i % 3;
+
+                // All cells within the box, and the edited cell itself.
                 notes[row * 9 + col, noteIndex] = isZero && sudoku.CanUseNumber(row, col, noteIndex + 1);
+
+                // Row cells, only the ones outside of the box.
+                if (i < boxCoords.row || i > boxCoords.row + 2) {
+                    notes[i * 9 + cellIndex.col, noteIndex] = isZero && sudoku.CanUseNumber(i, cellIndex.col, noteIndex + 1);
+                }
+
+                // Column cells, only the ones outside of the box.
+                if (i < boxCoords.col || i > boxCoords.col + 2) {
+                    notes[cellIndex.row * 9 + i, noteIndex] = isZero && sudoku.CanUseNumber(cellIndex.row, i, noteIndex + 1);
+                }
             }
         }
 

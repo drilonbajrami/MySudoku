@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Text.RegularExpressions;
 
 namespace MySudoku
 {
@@ -71,6 +72,10 @@ namespace MySudoku
 
         public Difficulty diff;
 
+        [SerializeField] string _currentPuzzle;
+
+        public string enterPuzzle;
+
         /// <summary>
         /// Caches the rect transform component of this game object.
         /// </summary>
@@ -88,19 +93,6 @@ namespace MySudoku
         {
             if (Input.GetKeyDown(KeyCode.Space))
                 noteToggle.isOn = !noteToggle.isOn;
-
-            if (Input.GetKeyDown(KeyCode.LeftShift)) {
-                Sudoku s = new Sudoku();
-                //s.Puzzle.SetPuzzle("032006100410000000000901000500090004060000071300020005000508000000000519057009860"); // Candidate Lines
-                //s.Puzzle.SetPuzzle("400000938032094100095300240370609004529001673904703090957008300003900400240030709"); // Naked pairs
-                //s.Puzzle.SetPuzzle("720408030080000047401076802810739000000851000000264080209680413340000008168943275"); // Hidden pairs
-                //s.Puzzle.SetPuzzle("294513006600842319300697254000056000040080060000470000730164005900735001400928637"); // Naked Triples
-                s.Puzzle.SetPuzzle("000001030231090000065003100678924300103050006000136700009360570006019843300000000"); // Hidden Triples
-                //s.Puzzle.SetPuzzle("070408029002000004854020007008374200020000000003261700000093612200000403130642070");
-                //s.Puzzle.SetPuzzle("600802735702356940300407062100975024200183079079624003400560207067240300920738406");
-                SetSudoku(s);
-                FillAndUpdateNotes();
-            }
 
             if (Input.GetKeyDown(KeyCode.A)) {
                 ISudokuTechnique technique = new HiddenTriples {
@@ -135,6 +127,7 @@ namespace MySudoku
         {
             if (sudoku == null) return;
             _sudoku = sudoku;
+            _currentPuzzle = _sudoku.PrintPuzzle();
             ResetPuzzle();
         }
 
@@ -200,6 +193,20 @@ namespace MySudoku
             UpdateGridViewNotes();
         }
 
+        public void EnterPuzzle()
+        {
+            if (enterPuzzle.Length == 81 && Regex.IsMatch(enterPuzzle, @"^\d+$")) {
+                Sudoku s = new Sudoku();
+                s.Puzzle.SetPuzzle(enterPuzzle);
+                SetSudoku(s);
+                FillAndUpdateNotes();
+            }
+            else
+                Debug.LogWarning("Could not enter the given puzzle. The given puzzle does not contain 81 characters and/or not all characters are numbers.");
+        }
+
+        public void CopyPuzzleToClipboard() => _currentPuzzle.CopyToClipboard();
+        
         #region Sudoku Draw Methods
         /// <summary>
         /// Draws the sudoku grid.
@@ -401,7 +408,7 @@ namespace MySudoku
                 _viewNotes[_selectedCell.row * 9 + _selectedCell.col, number - 1] = !currentFlag;
                 _grid[_selectedCell.row, _selectedCell.col].ShowNote(number, !currentFlag);
             }
-            else if (_sudoku.Puzzle[_selectedCell.row, _selectedCell.col] == 0) {
+            else/* if (_sudoku.Puzzle[_selectedCell.row, _selectedCell.col] == 0)*/ {
                 Set(_selectedCell.row, _selectedCell.col, number);
             }
         }

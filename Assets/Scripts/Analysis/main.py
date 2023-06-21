@@ -72,7 +72,7 @@ def PlotDifficultyScoreVersusGenerationTime():
 # python -c 'from main import PlotGenerationTimeVersusRecursiveSolverTime; PlotGenerationTimeVersusRecursiveSolverTime()'
 def PlotGenerationTimeVersusRecursiveSolverTime():
     # Read the CSV file
-    data = pd.read_csv('Data/Version1.0/SudokuGeneratorV1.0-RecursiveSolver.csv')
+    data = pd.read_csv('Data/Version1.0/SudokuGeneratorV1.0-RecursiveSolverAfter.csv')
 
     # Filter the data based on 'Time (ms)'
     # filtered_data = data[data['Time (ms)'] < 3000]
@@ -121,7 +121,7 @@ def PlotGenerationTimeVersusRecursiveSolverTime():
 # python -c 'from main import PlotGenerationTimeVersusRecursiveSolverTimeAverage; PlotGenerationTimeVersusRecursiveSolverTimeAverage()'
 def PlotGenerationTimeVersusRecursiveSolverTimeAverage():
     # Read the CSV file
-    data = pd.read_csv('Data/Version1.0/SudokuGeneratorV1.0-RecursiveSolver.csv')
+    data = pd.read_csv('Data/Version1.0/SudokuGeneratorV1.0-RecursiveSolverAfter.csv')
 
     # Group data by difficulty score and calculate the average percentage for each difficulty score
     grouped_data = data.groupby('Difficulty Score').apply(lambda x: np.mean(x['Recursive Solver Time (ms)'] / x['Time (ms)']) * 100)
@@ -137,7 +137,7 @@ def PlotGenerationTimeVersusRecursiveSolverTimeAverage():
         ('Beginner', (3600, 4500), 'blue'),
         ('Easy', (4300, 5500), 'green'),
         ('Medium', (5300, 6900), 'orange'),
-        ('Hard', (6500, 9300), 'purple'),
+        #('Hard', (6500, 9300), 'purple'),
     ]
 
     for name, (start, end), color in highlight_ranges:

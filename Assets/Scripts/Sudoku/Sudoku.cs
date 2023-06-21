@@ -65,7 +65,7 @@ namespace MySudoku
                 for (int col = 0; col < 9; col++)
                     puz.Append($"{Puzzle[row, col]}");
 
-            UnityEngine.Debug.Log(puz.ToString());
+            //UnityEngine.Debug.Log(puz.ToString());
             return puz.ToString();
         }
     }

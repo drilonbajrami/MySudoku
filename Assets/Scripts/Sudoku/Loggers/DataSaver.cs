@@ -54,11 +54,4 @@ public class DataSaver : MonoBehaviour
         csvWriter.WriteLine(newLine);
         csvWriter.Flush();
     }
-
-    public void ClearExistingData()
-    {
-        if(csvWriter == null) return;
-        csvWriter.BaseStream.SetLength(0);
-        csvWriter.Flush();
-    }
 }
