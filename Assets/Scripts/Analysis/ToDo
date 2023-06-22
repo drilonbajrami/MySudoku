@@ -1,41 +1,54 @@
 Sudoku Generator Algorithm
 
-Generate(Difficulty difficulty)
-    // Generate Solution
-    // Generate Puzzle
+BacktrackSolver
 
-GeneratePuzzle(Solution, Difficulty)
-    Store:
-        Puzzle,
-        Notes,
-        Copy of Notes,
+Pass in Solution
+Pass in Notes
+Pass in Copy of Notes
 
-    Cache all sudoku grid cells indexes (List of indexes)
-    Set the notes and copy of notes to false for each cell as well
-    Shuffle the indexes list and add them into a queue
+// Given state should be unique already
+// The given number (cell) that is edited should be the main focus now
+// And the row and column of edited cell
 
-    Get difficulty and set the difficulty cap at random within range of selected difficulty
+// Check the possible options in the edited cell
+// Try out each options and 
 
-    ** Keeping track of tries = 40 ** -> So to not crash the generator!
+//Start Solving
 
-    Do:
-    while (difficultyScore < difficultyCap && tries > 0) {
-        index = ind.Dequeue();
-        int oldValue = puzzle[index.row, index.col];
-        
-        // Set the current cell value to 0 and update notes, and copy it to the notes copy
-        puzzle[index.row, index.col] = 0;
-        notes.Update(puzzle, index, oldValue, 0);
-        Array.Copy(notes, notesCopy, notes.Length); // Actually quicker than notesCopy = notes.Copy();
+//    - Current State of Puzzle
+//    - Notes for current state of puzzle
+//    - Copy of notes (to be edited during solving)
+//
+//    - Check the changed cell (row and column indexes)
+//    - Check the removed value of that cell index
+//
+//    - Check all combinations for that cell (possible notes)
+//    - Maybe do only the row and column for the edited cell?
+    
+//    Try the first option in the cell
 
-        //
-        if (IsUnique(puzzle) && TrySolve(puzzle, solution, notesCopy, logResult: false, out int cost) && cost < difficultyRange.upper) {
-            difficultyScore = cost;
-        }
-        else {
-            ind.Enqueue(index);
-            puzzle[index.row, index.col] = oldValue;
-            notes.Update(puzzle, index, 0, oldValue);
-            tries--;
-        }
-    }
+295743861431865900876192543387459216612387495549216738763534189928671354154938600
+
+
+ChatGPT on my Question:
+
+Question:
+I have made a sudoku generator,
+I have a solver that uses human techniques:
+Naked Single, Hidden Single, Candidate Lines, Multiple Lines, Naked Pairs, Hidden Pairs, Naked Triples and Hidden Triples. 
+
+When I start a generation procedure
+I have a filled in grid of sudoku, then I start removing a number each time and try to solve it with my technique solver, and the generation is based on a difficulty score that is determined by the number of techniques used and types of techniques.
+
+Is it possible that with this I will always generate sudoku puzzles with unique solutions?
+
+Answer:
+The method you described for generating Sudoku puzzles has a high likelihood of producing puzzles with unique solutions, but it does not guarantee it in every case. The uniqueness of a Sudoku solution depends on the combination of the filled-in grid, the removal of numbers, and the solving techniques used.
+
+By starting with a filled-in grid and gradually removing numbers while checking for a unique solution using your solving techniques, you are increasing the probability of generating puzzles with unique solutions. The more techniques you employ and the more complex the techniques, the higher the chance of uniqueness.
+
+However, there is still a possibility that, due to the initial grid configuration and the sequence of number removals, you may encounter situations where multiple solutions exist or where the solving techniques are unable to identify all possible solutions. This can occur if the initial grid has symmetries or if the removal of numbers creates patterns that allow for different solutions.
+
+To improve the probability of generating puzzles with unique solutions, you can employ additional techniques such as symmetry breaking or adding constraints during the generation process. These techniques can help ensure the uniqueness of the solution or increase the difficulty of the puzzle.
+
+Overall, while your method increases the chances of generating puzzles with unique solutions, it is still possible to encounter cases where multiple solutions exist. To ensure strict uniqueness, additional steps and techniques may be necessary.

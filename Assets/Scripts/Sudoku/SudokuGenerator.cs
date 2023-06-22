@@ -24,12 +24,15 @@ namespace MySudoku
         /// <summary>
         /// Threshold for a generation duration, if it exceeds this amount then we cancel it and start a new one.
         /// </summary>
-        [Range(30, 360)]
-        public float maxGenerationDurationInSeconds = 60f;
+        [Range(5, 30)]
+        public double maxGenerationDurationInSeconds = 5;
 
+        [Range(5, 30)]
+        public int maxNumOfTriesToGenerate = 5;
+
+        // Data Loggers
         public SudokuDataGenerator _difficulyScoreAndTechniquesLogger;
         public SudokuDataGenerator _recursiveSolverLogger;
-        public SudokuDataGenerator _backtrackerAnalysis;
 
         /// <summary>
         /// Creates a sudoku.
@@ -63,8 +66,7 @@ namespace MySudoku
         /// Generates a sudoku puzzle based on the given sudoku solution.
         /// </summary>
         /// <param name="solution">The sudoku solution.</param>
-        /// <param name="notes">Notes for the generated sudoku puzzle.</param>
-        /// <param name="difficultyScore">Overall difficulty score of the generated sudoku puzzle.</param>
+        /// <param name="difficulty">Difficulty of the generated sudoku puzzle.</param>
         /// <returns>Sudoku puzzle.</returns>
         public int[,] GeneratePuzzle(int[,] solution, Difficulty difficulty)
         {
@@ -85,19 +87,14 @@ namespace MySudoku
             int difficultyScore = 0;
             int difficultyScoreCeiling = 0;
 
-            //int tryCount = 0;
-
+            int triesPerPuzzleGeneration = maxNumOfTriesToGenerate;
             double recursiveElapsedTime = 0;
-            int backtrackCount = 0;
-            int backtrackFailCount = 0;
 
             // Start trying to generate puzzle.
             while (keepGenerating) {
-                stopwatch = Stopwatch.StartNew();
-                //tryCount++;
+                stopwatch.Restart();
                 recursiveElapsedTime = 0;
-                backtrackCount = 0;
-                backtrackFailCount = 0;
+
                 // Cache all sudoku grid cells by their indexes and clear the notes.
                 // And copy the solution to the puzzle array.
                 List<(int row, int col)> indexes = new();
@@ -114,13 +111,10 @@ namespace MySudoku
                 Queue<(int, int)> ind = new(indexes);
 
                 // Set the difficulty score threshold/cap for this puzzle, based on the chosen difficulty.
-                difficultyScore = 0;
                 difficultyScoreCeiling = _randGenerator.Next(difficultyRange.lower, difficultyRange.upper);
+                difficultyScore = 0;
 
-                int tries = 40;
-
-                //Debug.Log($"Starting New Puzzle Generation - Try {tryCount}");
-                while (difficultyScore < difficultyScoreCeiling && tries > 0) {
+                while (difficultyScore < difficultyScoreCeiling && ind.Count > 17) {
                     // Pick next index, store current value and update puzzle and notes
                     (int row, int col) index = ind.Dequeue();
                     int oldValue = puzzle[index.row, index.col];
@@ -128,36 +122,40 @@ namespace MySudoku
                     notes.Update(puzzle, index, oldValue, 0);
                     Array.Copy(notes, notesCopy, notes.Length);
 
-                    if (TechniqueSolver(puzzle, solution, notesCopy, logResult: false, out int cost)) {
+                    if (TechniqueSolver(puzzle, solution, notesCopy, logResult: false, out int cost) && cost < difficultyRange.upper)
                         difficultyScore = cost;
-                    }
                     else {
                         ind.Enqueue(index);
                         puzzle[index.row, index.col] = oldValue;
                         notes.Update(puzzle, index, 0, oldValue);
-                        tries--;
                     }
 
-                    if (difficultyScore > difficultyScoreCeiling || stopwatch.ElapsedMilliseconds / 1000f > maxGenerationDurationInSeconds) {
-                        //Debug.Log($"Generation Try {tryCount} - Took too long to generate puzzle");
-                        break;
-                    }
+                    if (stopwatch.Elapsed.TotalSeconds > maxGenerationDurationInSeconds) return null;
                 }
 
-                keepGenerating = difficultyScore < difficultyScoreCeiling || !IsUnique(puzzle);
+                keepGenerating = difficultyScore < difficultyScoreCeiling || (difficultyScore < difficultyRange.lower || difficultyScore > difficultyRange.upper);
+
+                if (!keepGenerating) {
+                    recursiveTimer.Restart();
+                    keepGenerating = !IsUnique(puzzle);
+                    recursiveTimer.Stop();
+                    stopwatch.Stop();
+                    recursiveElapsedTime = recursiveTimer.Elapsed.TotalMilliseconds;
+                }
+
+                if (triesPerPuzzleGeneration < 0) {
+                    //Debug.LogWarning($"----------FAILURE---------- | Ceiling: {difficultyScoreCeiling}");
+                    return null;
+                }
+
+                triesPerPuzzleGeneration--;
             }
 
             #if UNITY_EDITOR
 
+            //Debug.Log($"----------SUCCESS---------- | Score: {difficultyScore} Ceiling: {difficultyScoreCeiling} - [{difficultyRange.lower}, {difficultyRange.upper}]");
             double elapsedTime = stopwatch.Elapsed.TotalMilliseconds;
-            //ConsoleLog.Clear();
-            //Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");
-            //Debug.Log($"Difficulty Score: {difficultyScore}");
-            //Debug.Log("Techniques: ");
-            //for (int i = 0; i < SudokuTechniques.Techniques.Count; i++)
-            //    Debug.Log($"    {(Technique)i} used {SudokuTechniques.Techniques[i].TimesUsed} times.");
-            //GetPuzzle(puzzle).CopyToClipboard();
-            _backtrackerAnalysis.WriteData($"{difficulty},{difficultyScore},{elapsedTime},{backtrackCount},{backtrackFailCount}");
+            //Debug.Log($"Recursive Time Log: Total Elapse vs Recursive Elapsed: {elapsedTime}, {recursiveElapsedTime}");
             _recursiveSolverLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime},{recursiveElapsedTime}");
             _difficulyScoreAndTechniquesLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime}," +
                 $"{SudokuTechniques.Techniques[0].TimesUsed}," +
@@ -168,7 +166,15 @@ namespace MySudoku
                 $"{SudokuTechniques.Techniques[5].TimesUsed}," +
                 $"{SudokuTechniques.Techniques[6].TimesUsed}," +
                 $"{SudokuTechniques.Techniques[7].TimesUsed}");
-            #endif
+
+            //ConsoleLog.Clear();
+            //Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");
+            //Debug.Log($"Difficulty Score: {difficultyScore}");
+            //Debug.Log("Techniques: ");
+            //for (int i = 0; i < SudokuTechniques.Techniques.Count; i++)
+            //    Debug.Log($"    {(Technique)i} used {SudokuTechniques.Techniques[i].TimesUsed} times.");
+            //GetPuzzle(puzzle).CopyToClipboard();
+#endif
 
             return puzzle;
         }

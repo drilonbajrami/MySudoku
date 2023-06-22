@@ -512,10 +512,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _seed: 0
   _randGenerator: {fileID: 404054171}
-  maxGenerationDurationInSeconds: 40
+  maxGenerationDurationInSeconds: 10
+  maxNumOfTriesToGenerate: 10
   _difficulyScoreAndTechniquesLogger: {fileID: 649856847}
   _recursiveSolverLogger: {fileID: 1453157322}
-  _backtrackerAnalysis: {fileID: 1329737167}
 --- !u!114 &404054171
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1633,8 +1633,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f8a644318d57f14b8d81bd287366cf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  folderPath: Scripts/Analysis/Data/Version1.0
-  csvFileName: SudokuGeneratorV1.0
+  folderPath: Scripts/Analysis/Data/Version3.0
+  csvFileName: SudokuGeneratorV3.0
   saveData: 0
   headerColumns:
   - Difficulty
@@ -1757,7 +1757,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &783637789
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1774,10 +1774,10 @@ RectTransform:
   m_Father: {fileID: 565428784}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 0, y: -295.83334}
+  m_SizeDelta: {x: 200, y: 54.166668}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &783637790
 MonoBehaviour:
@@ -3660,8 +3660,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f8a644318d57f14b8d81bd287366cf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  folderPath: Scripts/Analysis/Data/Version1.0
-  csvFileName: SudokuGeneratorV1.0-RecursiveSolver
+  folderPath: Scripts/Analysis/Data/Version3.0
+  csvFileName: SudokuGeneratorV3.0-RecursiveSolver
   saveData: 0
   headerColumns:
   - Difficulty
