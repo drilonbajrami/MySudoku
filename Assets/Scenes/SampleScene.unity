@@ -1633,7 +1633,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f8a644318d57f14b8d81bd287366cf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  folderPath: Scripts/Analysis/Data/Version3.0
+  folderPath: Scripts/Analysis/Data
   csvFileName: SudokuGeneratorV3.0
   saveData: 0
   headerColumns:
@@ -3171,75 +3171,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1 &1329737166
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1329737169}
-  - component: {fileID: 1329737168}
-  - component: {fileID: 1329737167}
-  m_Layer: 5
-  m_Name: Backtracker Runs & Fails Count Logger
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1329737167
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1329737166}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f8ced541cca38b489a40dfe0bf6a958, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  generator: {fileID: 404054170}
-  difficulty: 0
-  numOfGenerations: 100
---- !u!114 &1329737168
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1329737166}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f8a644318d57f14b8d81bd287366cf4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  folderPath: Scripts/Analysis/Data/Version1.0
-  csvFileName: SudokuGeneratorV1.0-BacktrackAnalysis
-  saveData: 0
-  headerColumns:
-  - Difficulty
-  - Difficulty Score
-  - Time (ms)
-  - Backtrack Count
-  - Backtrack Fail Count
---- !u!4 &1329737169
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1329737166}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1331487922
 GameObject:
   m_ObjectHideFlags: 0
@@ -3660,7 +3591,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f8a644318d57f14b8d81bd287366cf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  folderPath: Scripts/Analysis/Data/Version3.0
+  folderPath: Scripts/Analysis/Data
   csvFileName: SudokuGeneratorV3.0-RecursiveSolver
   saveData: 0
   headerColumns:
