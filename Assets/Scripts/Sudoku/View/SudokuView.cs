@@ -3,9 +3,30 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
+using Unity.Mathematics;
 
 namespace MySudoku
 {
+
+    /* Grid Dimensions Template
+	- 4 (tb) thick borders
+	- 6 (sb) slim borders
+	- 9 (cs) cell size
+
+    Row & Col spacing:
+	    x0 = tb + 1/2 * cs
+	    x1 = tb + sb + 3/2 * cs
+	    x2 = tb + 2sb + 5/2 * cs
+
+	    x3 = 2tb + 2sb + 7/2 * cs
+	    x4 = 2tb + 3sb + 9/2 * cs
+	    x5 = 2tb + 4sb + 11/2 * cs
+
+	    x6 = 3tb + 4sb + 13/2 * cs
+	    x7 = 3tb + 5sb + 15/2 * cs
+	    x8 = 3tb + 6sb + 17/2 * cs
+ */
+
     public class SudokuView : MonoBehaviour, IPointerClickHandler
     {
         #region Sudoku Fields
@@ -33,18 +54,18 @@ namespace MySudoku
         /// Cell prefab.
         /// </summary>
         [SerializeField] private Cell _cellPrefab;
-        /// <summary>
-        /// Grid border prefab.
-        /// </summary>
-        [SerializeField] private Image _borderPrefab;
-        /// <summary>
-        /// The size of each cell in the sudoku grid view.
-        /// </summary>
+
+        private float _totalGridSize;
         [SerializeField] private float _cellSize = 100f;
-        /// <summary>
-        /// The thickness of the borders/lines of the sudoku grid view.
-        /// </summary>
-        [Range(1f, 10f)][SerializeField] private float _borderThickness = 6f;
+        [SerializeField] private float _thickBorder = 12f;
+        [SerializeField] private float _slimBorder = 3f;
+
+        private float _cachedCellSize;
+        private float _cachedThickBorder;
+        private float _cachedSlimBorder;
+
+        public bool LayoutSettingsChanged { get; private set; } = false;
+
         /// <summary>
         /// Color for a selected cell in the sudoku grid.
         /// </summary>
@@ -79,12 +100,19 @@ namespace MySudoku
         /// <summary>
         /// Caches the rect transform component of this game object.
         /// </summary>
-        private void Awake() => _rectTransform = GetComponent<RectTransform>();
+        private void Awake()
+        {
+            _rectTransform = GetComponent<RectTransform>();
+            _cachedCellSize = _cellSize;
+            _cachedThickBorder = _thickBorder;
+            _cachedSlimBorder = _slimBorder;
+            DrawSudoku();
+        }
 
         /// <summary>
         /// Draws the sudoku grid and fills it with the current solution loaded in the sudoku results library.
         /// </summary>
-        private void Start() => DrawSudoku();
+        //private void Start() => DrawSudoku();
 
         /// <summary>
         /// Test methods...
@@ -213,84 +241,35 @@ namespace MySudoku
         /// </summary>
         public void DrawSudoku()
         {
-            ClearGrid();
-            DrawCells();
-            DrawBorders();
-        }
-
-        /// <summary>
-        /// Draws the sudoku grid cells.
-        /// </summary>
-        private void DrawCells()
-        {
-            RectTransform cells = new GameObject("Cells").AddComponent<RectTransform>();
-            cells.SetParent(transform);
-            cells.anchoredPosition = Vector2.zero;
-            float gridTopLeftPos = _cellSize * 4.5f - _cellSize * 0.5f;
+            _totalGridSize = 4 * _thickBorder + 6 * _slimBorder + 9 * _cellSize;
+            _rectTransform.sizeDelta = new Vector2(_totalGridSize, _totalGridSize);
 
             for (int row = 0; row < 9; row++) {
                 for (int col = 0; col < 9; col++) {
-                    Vector3 position = new Vector3(-gridTopLeftPos + col * _cellSize, gridTopLeftPos - row * _cellSize, 0);
-                    _grid[row, col] = Instantiate(_cellPrefab, cells);
+                    float x = (col / 3 + 1) * _thickBorder + (col % 3 + col / 3 * 2) * _slimBorder + (col + 0.5f) * _cellSize;
+                    float y = (row / 3 + 1) * _thickBorder + (row % 3 + row / 3 * 2) * _slimBorder + (row + 0.5f) * _cellSize;
+                    Vector2 position = new Vector3(x - _totalGridSize / 2f, _totalGridSize / 2f - y);
+
+                    if (_grid[row, col] == null)
+                        _grid[row, col] = Instantiate(_cellPrefab, transform);
+
                     _grid[row, col].RectTransform.sizeDelta = new Vector2(_cellSize, _cellSize);
                     _grid[row, col].RectTransform.anchoredPosition = position;
                     _grid[row, col].Initialize();
                 }
             }
+
+            _cachedCellSize = _cellSize;
+            _cachedThickBorder = _thickBorder;
+            _cachedSlimBorder = _slimBorder;
+            LayoutSettingsChanged = false;
         }
 
-        /// <summary>
-        /// Draws the sudoku grid broders/lines.
-        /// </summary>
-        private void DrawBorders()
-        {
-            RectTransform borders = new GameObject("Borders").AddComponent<RectTransform>();
-            borders.SetParent(transform);
-            borders.anchoredPosition = Vector2.zero;
-
-            float thickBorder = _borderThickness * _cellSize / 100f;
-            float slimBorder = _borderThickness / 4f * _cellSize / 100f;
-            float borderLength = _cellSize * 9 + thickBorder;
-
-            // Draw Borders
-            for (int i = 0; i < 10; i++) {
-                Image horizontalBorder = Instantiate(_borderPrefab, transform);
-                Image verticalBorder = Instantiate(_borderPrefab, transform);
-                horizontalBorder.rectTransform.anchoredPosition = new Vector2(0, -_cellSize * 4.5f + i * _cellSize);
-                verticalBorder.rectTransform.anchoredPosition = new Vector2(_cellSize * 4.5f - i * _cellSize, 0);
-
-                if (i % 3 == 0) {
-                    horizontalBorder.rectTransform.sizeDelta = new Vector2(borderLength, thickBorder);
-                    verticalBorder.rectTransform.sizeDelta = new Vector2(thickBorder, borderLength);
-                    horizontalBorder.rectTransform.SetParent(borders.transform);
-                    verticalBorder.rectTransform.SetParent(borders.transform);
-                }
-                else {
-                    horizontalBorder.rectTransform.sizeDelta = new Vector2(borderLength, slimBorder);
-                    verticalBorder.rectTransform.sizeDelta = new Vector2(slimBorder, borderLength);
-                    horizontalBorder.color = new Color(200 / 255f, 200 / 255f, 200 / 255f);
-                    verticalBorder.color = new Color(200 / 255f, 200 / 255f, 200 / 255f);
-                    horizontalBorder.rectTransform.SetParent(borders.transform);
-                    verticalBorder.rectTransform.SetParent(borders.transform);
-                    horizontalBorder.gameObject.transform.SetAsFirstSibling();
-                    verticalBorder.gameObject.transform.SetAsFirstSibling();
-                }
-            }
-
-            _rectTransform.sizeDelta = new Vector2(borderLength, borderLength);
-        }
-
-        /// <summary>
-        /// Clears the grid of all cells game objects.
-        /// </summary>
-        private void ClearGrid()
-        {
-            for (int row = 0; row < 9; row++)
-                for (int col = 0; col < 9; col++) {
-                    if (_grid[row, col] == null) return;
-                    Destroy(_grid[row, col].gameObject);
-                }
-        }
+        public void OnValidate()
+            => LayoutSettingsChanged = _cachedCellSize != _cellSize || 
+                                       _cachedThickBorder != _thickBorder || 
+                                       _cachedSlimBorder != _slimBorder;
+        
         #endregion
 
         #region Click Handling Methods

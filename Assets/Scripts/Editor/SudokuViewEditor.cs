@@ -18,6 +18,14 @@ namespace MySudoku
         {
             base.OnInspectorGUI();
 
+            if(view.LayoutSettingsChanged) {
+                EditorGUILayout.Space(5);
+                if (GUILayout.Button("Update Grid View"))
+                    view.DrawSudoku();
+            }
+
+            EditorGUILayout.Space(5);
+
             if (GUILayout.Button("Copy Puzzle to Clipboard"))
                 view.CopyPuzzleToClipboard();
 
