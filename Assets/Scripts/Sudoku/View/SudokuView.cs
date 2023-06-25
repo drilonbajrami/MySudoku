@@ -250,8 +250,11 @@ namespace MySudoku
                     float y = (row / 3 + 1) * _thickBorder + (row % 3 + row / 3 * 2) * _slimBorder + (row + 0.5f) * _cellSize;
                     Vector2 position = new Vector3(x - _totalGridSize / 2f, _totalGridSize / 2f - y);
 
-                    if (_grid[row, col] == null)
+                    if (_grid[row, col] == null) {
                         _grid[row, col] = Instantiate(_cellPrefab, transform);
+                        _grid[row, col].Index = (row, col);
+                        _grid[row, col].OnClicked += OnCellClicked;
+                    }
 
                     _grid[row, col].RectTransform.sizeDelta = new Vector2(_cellSize, _cellSize);
                     _grid[row, col].RectTransform.anchoredPosition = position;
@@ -273,6 +276,13 @@ namespace MySudoku
         #endregion
 
         #region Click Handling Methods
+
+        private void OnCellClicked((int row, int col) index)
+        {
+            _selectedCell = index;
+            Debug.Log($"Clicked Cell - [{index.row},{index.col}]");
+        }
+
         /// <summary>
         /// Handles clicks on the sudoku grid.
         /// </summary>

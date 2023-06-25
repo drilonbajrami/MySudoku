@@ -156,16 +156,16 @@ namespace MySudoku
             //Debug.Log($"----------SUCCESS---------- | Score: {difficultyScore} Ceiling: {difficultyScoreCeiling} - [{difficultyRange.lower}, {difficultyRange.upper}]");
             double elapsedTime = stopwatch.Elapsed.TotalMilliseconds;
             //Debug.Log($"Recursive Time Log: Total Elapse vs Recursive Elapsed: {elapsedTime}, {recursiveElapsedTime}");
-            _recursiveSolverLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime},{recursiveElapsedTime}");
-            _difficulyScoreAndTechniquesLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime}," +
-                $"{SudokuTechniques.Techniques[0].TimesUsed}," +
-                $"{SudokuTechniques.Techniques[1].TimesUsed}," +
-                $"{SudokuTechniques.Techniques[2].TimesUsed}," +
-                $"{SudokuTechniques.Techniques[3].TimesUsed}," +
-                $"{SudokuTechniques.Techniques[4].TimesUsed}," +
-                $"{SudokuTechniques.Techniques[5].TimesUsed}," +
-                $"{SudokuTechniques.Techniques[6].TimesUsed}," +
-                $"{SudokuTechniques.Techniques[7].TimesUsed}");
+            //_recursiveSolverLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime},{recursiveElapsedTime}");
+            //_difficulyScoreAndTechniquesLogger.WriteData($"{difficulty},{difficultyScore},{elapsedTime}," +
+            //    $"{SudokuTechniques.Techniques[0].TimesUsed}," +
+            //    $"{SudokuTechniques.Techniques[1].TimesUsed}," +
+            //    $"{SudokuTechniques.Techniques[2].TimesUsed}," +
+            //    $"{SudokuTechniques.Techniques[3].TimesUsed}," +
+            //    $"{SudokuTechniques.Techniques[4].TimesUsed}," +
+            //    $"{SudokuTechniques.Techniques[5].TimesUsed}," +
+            //    $"{SudokuTechniques.Techniques[6].TimesUsed}," +
+            //    $"{SudokuTechniques.Techniques[7].TimesUsed}");
 
             //ConsoleLog.Clear();
             //Debug.Log($"Selected difficulty: {difficulty} with score range [{difficultyRange.lower}, {difficultyRange.upper}] and score cap {difficultyCap}");

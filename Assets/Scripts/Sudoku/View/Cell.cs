@@ -12,6 +12,16 @@ namespace MySudoku
     /// </summary>
     public class Cell : MonoBehaviour
     {
+        private (int row, int col) _index;
+
+        public (int row, int col) Index {
+            get => _index;
+            set {
+                _index = value;
+                gameObject.name = $"[{_index.row},{_index.col}]";
+            }
+        }
+
         /// <summary>
         /// The number this cell contains.
         /// </summary>
@@ -22,6 +32,12 @@ namespace MySudoku
         /// </summary>
         [field: SerializeField] public RectTransform RectTransform { get; private set; }
 
+        [SerializeField] private Button _button;
+
+        public event Action<(int row, int col)> OnClicked;
+
+        public void OnClick() => OnClicked?.Invoke(_index);
+        
         /// <summary>
         /// Cell background.
         /// </summary>
