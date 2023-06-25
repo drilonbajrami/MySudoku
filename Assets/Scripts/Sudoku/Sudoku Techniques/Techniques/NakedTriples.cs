@@ -14,7 +14,7 @@ namespace MySudoku
     public class NakedTriples : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; } = 0;
+        public int TimesUsed { get; private set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 2000;
@@ -24,6 +24,9 @@ namespace MySudoku
 
         /// <inheritdoc/>
         public bool LogConsole { get; set; } = false;
+
+        /// <inheritdoc/>
+        public void ResetUseCount() => TimesUsed = 0;
 
         /// <inheritdoc/>
         public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)

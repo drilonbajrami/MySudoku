@@ -11,7 +11,7 @@ namespace MySudoku
         /// <summary>
         /// Keep track of the ties this technique has been used.
         /// </summary>
-        public int TimesUsed { get; set; }
+        public int TimesUsed { get; }
 
         /// <summary>
         /// The cost of this technique on its first use.
@@ -27,6 +27,11 @@ namespace MySudoku
         /// Should this technique log its process on the console.
         /// </summary>
         public bool LogConsole { get; set; }
+
+        /// <summary>
+        /// Resets the usage count for this technique.
+        /// </summary>
+        public void ResetUseCount();
 
         /// <summary>
         /// Checks if this technique can be applied.

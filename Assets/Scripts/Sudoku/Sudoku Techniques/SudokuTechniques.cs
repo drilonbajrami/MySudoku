@@ -97,7 +97,7 @@ namespace MySudoku
         public static void ResetTechniqueUsageCount()
         {
             for (int i = 0; i < Techniques.Count; i++)
-                Techniques[i].TimesUsed = 0;
+                Techniques[i].ResetUseCount();
         }
     }
 }

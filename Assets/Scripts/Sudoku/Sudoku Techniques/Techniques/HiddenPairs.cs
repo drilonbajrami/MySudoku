@@ -14,7 +14,7 @@ namespace MySudoku
     public class HiddenPairs : ISudokuTechnique
     {
         /// <inheritdoc/>
-        public int TimesUsed { get; set; } = 0;
+        public int TimesUsed { get; private set; } = 0;
 
         /// <inheritdoc/>
         public int FirstUseCost => 1500;
@@ -24,6 +24,9 @@ namespace MySudoku
 
         /// <inheritdoc/>
         public bool LogConsole { get; set; } = false;
+
+        /// <inheritdoc/>
+        public void ResetUseCount() => TimesUsed = 0;
 
         /// <inheritdoc/>
         public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
@@ -130,6 +133,16 @@ namespace MySudoku
                     pair = (union[0], union[1]);
                     return true;
                 }
+            }
+
+            return false;
+        }
+
+        private bool HasPairNew(List<int> l1, List<int> l2, ref (int, int) pair)
+        {
+            if (l1.Count == 2 && l2.Count == 2 && l1.Intersect(l2).Count() == 2) {
+                pair = (l1[0], l1[1]);
+                return true;
             }
 
             return false;
