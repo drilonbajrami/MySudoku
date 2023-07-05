@@ -4,15 +4,13 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
 using Unity.Mathematics;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace MySudoku
 {
 
     /* Grid Dimensions Template
-	- 4 (tb) thick borders
-	- 6 (sb) slim borders
-	- 9 (cs) cell size
-
     Row & Col spacing:
 	    x0 = tb + 1/2 * cs
 	    x1 = tb + sb + 3/2 * cs
@@ -27,7 +25,7 @@ namespace MySudoku
 	    x8 = 3tb + 6sb + 17/2 * cs
  */
 
-    public class SudokuView : MonoBehaviour, IPointerClickHandler
+    public class SudokuView : MonoBehaviour
     {
         #region Sudoku Fields
         /// <summary>
@@ -41,6 +39,8 @@ namespace MySudoku
         private readonly Cell[,] _grid = new Cell[9, 9];
 
         private int[,] _puzzleCopy = new int[9, 9];
+
+        private Dictionary<(int row, int col), List<(int row, int col)>> _neihgboursPerIndex;
 
         /// <summary>
         /// The rect transform of the sudoku view.
@@ -66,20 +66,15 @@ namespace MySudoku
 
         public bool LayoutSettingsChanged { get; private set; } = false;
 
-        /// <summary>
-        /// Color for a selected cell in the sudoku grid.
-        /// </summary>
-        [SerializeField] private Color _selectedCellColor;
-        /// <summary>
-        /// Color for focused cells in the sudoku grid.
-        /// </summary>
-        [SerializeField] private Color _focusedCellColor;
+        public bool hoveringEnabled = true;
+        public bool secondHoveringEnabled = false;
         #endregion
 
         /// <summary>
         /// Cache the selected cell index in the grid.
         /// </summary>
-        private (int row, int col) _selectedCell = (-1, -1);
+        private (int row, int col) _selectedCellIndex = (-1, -1);
+        private readonly (int, int) _nullCellIndex = (-1, -1);
 
         [Space(10)]
         [Header("Other settings")]
@@ -91,8 +86,6 @@ namespace MySudoku
         public GameObject _onText;
         public GameObject _offText;
 
-        public Difficulty diff;
-
         [SerializeField] string _currentPuzzle;
 
         public string enterPuzzle;
@@ -103,16 +96,12 @@ namespace MySudoku
         private void Awake()
         {
             _rectTransform = GetComponent<RectTransform>();
+            _neihgboursPerIndex = new();
             _cachedCellSize = _cellSize;
             _cachedThickBorder = _thickBorder;
             _cachedSlimBorder = _slimBorder;
             DrawSudoku();
         }
-
-        /// <summary>
-        /// Draws the sudoku grid and fills it with the current solution loaded in the sudoku results library.
-        /// </summary>
-        //private void Start() => DrawSudoku();
 
         /// <summary>
         /// Test methods...
@@ -129,6 +118,10 @@ namespace MySudoku
                 if (technique.ApplyTechnique(_puzzleCopy, _viewNotes, out int cost)) {
                     UpdateGridViewNotes();
                 }
+            }
+
+            if(Input.GetMouseButtonDown(0)) {
+               
             }
 
             HandleInput();
@@ -206,6 +199,30 @@ namespace MySudoku
                 }
         }
 
+        private List<(int row, int col)> GetNeighbourIndexesFor((int row, int col) index)
+        {
+            List<(int row, int col)> indexes = new();
+            (int row, int col) boxCoords = new(index.row - index.row % 3, index.col - index.col % 3);
+
+            for (int i = 0; i < 9; i++) {
+                // Box 3x3
+                int row = boxCoords.row + i / 3;
+                int col = boxCoords.col + i % 3;
+                if (row != index.row || col != index.col)
+                    indexes.Add((row, col));
+
+                // Row cells, only the ones outside of the box.
+                if (i < boxCoords.row || i > boxCoords.row + 2)
+                    indexes.Add((i, index.col));
+
+                // Column cells, only the ones outside of the box.
+                if (i < boxCoords.col || i > boxCoords.col + 2)
+                    indexes.Add((index.row, i));
+            }
+
+            return indexes;
+        }
+
         /// <summary>
         /// Sets cell value.
         /// </summary>
@@ -254,6 +271,8 @@ namespace MySudoku
                         _grid[row, col] = Instantiate(_cellPrefab, transform);
                         _grid[row, col].Index = (row, col);
                         _grid[row, col].OnClicked += OnCellClicked;
+                        _grid[row, col].OnHovered += OnCellHovered;
+                        _neihgboursPerIndex.Add((row, col), GetNeighbourIndexesFor((row, col)));
                     }
 
                     _grid[row, col].RectTransform.sizeDelta = new Vector2(_cellSize, _cellSize);
@@ -268,10 +287,8 @@ namespace MySudoku
             LayoutSettingsChanged = false;
         }
 
-        public void OnValidate()
-            => LayoutSettingsChanged = _cachedCellSize != _cellSize || 
-                                       _cachedThickBorder != _thickBorder || 
-                                       _cachedSlimBorder != _slimBorder;
+        public void OnValidate() 
+            => LayoutSettingsChanged = _cachedCellSize != _cellSize || _cachedThickBorder != _thickBorder || _cachedSlimBorder != _slimBorder;
         
         #endregion
 
@@ -279,16 +296,96 @@ namespace MySudoku
 
         private void OnCellClicked((int row, int col) index)
         {
-            _selectedCell = index;
-            Debug.Log($"Clicked Cell - [{index.row},{index.col}]");
+            if(_selectedCellIndex == _nullCellIndex) {
+                _selectedCellIndex = index;
+                foreach ((int row, int col) nIndex in _neihgboursPerIndex[index])
+                    _grid[nIndex.row, nIndex.col].UpdateColorAsNeighbourSelected();
+            }
+            else if(_selectedCellIndex == index) {
+                _selectedCellIndex = _nullCellIndex;
+                _grid[index.row, index.col].ResetColorSelection();
+                foreach ((int row, int col) nIndex in _neihgboursPerIndex[index])
+                    _grid[nIndex.row, nIndex.col].ResetColorSelection();
+            }
+            else { 
+                foreach ((int row, int col) nIndex in _neihgboursPerIndex[_selectedCellIndex]) {
+                    if (nIndex != index)
+                        _grid[nIndex.row, nIndex.col].ResetColorSelection();
+                }
+                    
+
+                _grid[_selectedCellIndex.row, _selectedCellIndex.col].ResetColorSelection();
+
+                foreach ((int row, int col) nIndex in _neihgboursPerIndex[index])
+                    _grid[nIndex.row, nIndex.col].UpdateColorAsNeighbourSelected();
+
+                _grid[index.row, index.col].ReverseColorSelection();
+
+                _selectedCellIndex = index;
+            }
+        }
+
+        private void OnCellHovered((int row, int col) index, bool onPointerEnter)
+        {
+            if(!hoveringEnabled) return;
+
+            foreach ((int row, int col) nIndex in _neihgboursPerIndex[index]) {
+                if (onPointerEnter && secondHoveringEnabled) _grid[nIndex.row, nIndex.col].UpdateColorAsNeighbourHovered();
+                else _grid[nIndex.row, nIndex.col].ReverseColorSelection();
+            }
+        }
+        #endregion
+
+        #region Keyboard Input Handling
+        /// <summary>
+        /// Handles input for any number key pressed (Keypad or Alpha number key).
+        /// </summary>
+        private void HandleInput()
+        {
+            if (_selectedCellIndex.row != -1 && _selectedCellIndex.col != -1 && Input.anyKeyDown) {
+                if (Input.GetKeyDown(KeyCode.Keypad1) || Input.GetKeyDown(KeyCode.Alpha1)) OnNumberKeyPressed(1);
+                if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Alpha2)) OnNumberKeyPressed(2);
+                if (Input.GetKeyDown(KeyCode.Keypad3) || Input.GetKeyDown(KeyCode.Alpha3)) OnNumberKeyPressed(3);
+                if (Input.GetKeyDown(KeyCode.Keypad4) || Input.GetKeyDown(KeyCode.Alpha4)) OnNumberKeyPressed(4);
+                if (Input.GetKeyDown(KeyCode.Keypad5) || Input.GetKeyDown(KeyCode.Alpha5)) OnNumberKeyPressed(5);
+                if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6)) OnNumberKeyPressed(6);
+                if (Input.GetKeyDown(KeyCode.Keypad7) || Input.GetKeyDown(KeyCode.Alpha7)) OnNumberKeyPressed(7);
+                if (Input.GetKeyDown(KeyCode.Keypad8) || Input.GetKeyDown(KeyCode.Alpha8)) OnNumberKeyPressed(8);
+                if (Input.GetKeyDown(KeyCode.Keypad9) || Input.GetKeyDown(KeyCode.Alpha9)) OnNumberKeyPressed(9);
+                if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Backspace)) OnNumberKeyPressed(0);
+            }
         }
 
         /// <summary>
-        /// Handles clicks on the sudoku grid.
+        /// Updates the cell's value to the pressed key number if there is a selected cell.
         /// </summary>
-        /// <param name="eventData">Pointer event data to process.</param>
-        public void OnPointerClick(PointerEventData eventData)
-            => HandleClickedCell(GetClickedCellIndex(eventData.pressPosition));
+        /// <param name="number">Number to set.</param>
+        private void OnNumberKeyPressed(int number)
+        {
+            if (noteToggle.isOn && number != 0) {
+                // If cell is already filled then do nothing.
+                if (_puzzleCopy[_selectedCellIndex.row, _selectedCellIndex.col] != 0) return;
+
+                // Toggle note.
+                bool currentFlag = _viewNotes[_selectedCellIndex.row * 9 + _selectedCellIndex.col, number - 1];
+                _viewNotes[_selectedCellIndex.row * 9 + _selectedCellIndex.col, number - 1] = !currentFlag;
+                _grid[_selectedCellIndex.row, _selectedCellIndex.col].ShowNote(number, !currentFlag);
+            }
+            else/* if (_sudoku.Puzzle[_selectedCell.row, _selectedCell.col] == 0)*/ {
+                Set(_selectedCellIndex.row, _selectedCellIndex.col, number);
+            }
+        }
+        #endregion
+    }
+}
+
+/* OBSOLETE CODE
+        ///// <summary>
+        ///// Handles clicks on the sudoku grid.
+        ///// </summary>
+        ///// <param name="eventData">Pointer event data to process.</param>
+        //public void OnPointerClick(PointerEventData eventData)
+        //    => HandleClickedCell(GetClickedCellIndex(eventData.pressPosition));
 
         /// <summary>
         /// Gets the clicked cell row and column index.
@@ -360,47 +457,4 @@ namespace MySudoku
                         else _grid[i, j].Deselect(null);
             }
         }
-        #endregion
-
-        #region Keyboard Input Handling
-        /// <summary>
-        /// Handles input for any number key pressed (Keypad or Alpha number key).
-        /// </summary>
-        private void HandleInput()
-        {
-            if (_selectedCell.row != -1 && _selectedCell.col != -1 && Input.anyKeyDown) {
-                if (Input.GetKeyDown(KeyCode.Keypad1) || Input.GetKeyDown(KeyCode.Alpha1)) OnNumberKeyPressed(1);
-                if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Alpha2)) OnNumberKeyPressed(2);
-                if (Input.GetKeyDown(KeyCode.Keypad3) || Input.GetKeyDown(KeyCode.Alpha3)) OnNumberKeyPressed(3);
-                if (Input.GetKeyDown(KeyCode.Keypad4) || Input.GetKeyDown(KeyCode.Alpha4)) OnNumberKeyPressed(4);
-                if (Input.GetKeyDown(KeyCode.Keypad5) || Input.GetKeyDown(KeyCode.Alpha5)) OnNumberKeyPressed(5);
-                if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6)) OnNumberKeyPressed(6);
-                if (Input.GetKeyDown(KeyCode.Keypad7) || Input.GetKeyDown(KeyCode.Alpha7)) OnNumberKeyPressed(7);
-                if (Input.GetKeyDown(KeyCode.Keypad8) || Input.GetKeyDown(KeyCode.Alpha8)) OnNumberKeyPressed(8);
-                if (Input.GetKeyDown(KeyCode.Keypad9) || Input.GetKeyDown(KeyCode.Alpha9)) OnNumberKeyPressed(9);
-                if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Backspace)) OnNumberKeyPressed(0);
-            }
-        }
-
-        /// <summary>
-        /// Updates the cell's value to the pressed key number if there is a selected cell.
-        /// </summary>
-        /// <param name="number">Number to set.</param>
-        private void OnNumberKeyPressed(int number)
-        {
-            if (noteToggle.isOn && number != 0) {
-                // If cell is already filled then do nothing.
-                if (_puzzleCopy[_selectedCell.row, _selectedCell.col] != 0) return;
-
-                // Toggle note.
-                bool currentFlag = _viewNotes[_selectedCell.row * 9 + _selectedCell.col, number - 1];
-                _viewNotes[_selectedCell.row * 9 + _selectedCell.col, number - 1] = !currentFlag;
-                _grid[_selectedCell.row, _selectedCell.col].ShowNote(number, !currentFlag);
-            }
-            else/* if (_sudoku.Puzzle[_selectedCell.row, _selectedCell.col] == 0)*/ {
-                Set(_selectedCell.row, _selectedCell.col, number);
-            }
-        }
-        #endregion
-    }
-}
+ */

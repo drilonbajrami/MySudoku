@@ -1,16 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace MySudoku
 {
     /// <summary>
     /// Represents a cell in the sudoku grid.
     /// </summary>
-    public class Cell : MonoBehaviour
+    public class Cell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         private (int row, int col) _index;
 
@@ -32,9 +31,8 @@ namespace MySudoku
         /// </summary>
         [field: SerializeField] public RectTransform RectTransform { get; private set; }
 
-        [SerializeField] private Button _button;
-
         public event Action<(int row, int col)> OnClicked;
+        public event Action<(int row, int col), bool> OnHovered;
 
         public void OnClick() => OnClicked?.Invoke(_index);
         
@@ -53,11 +51,42 @@ namespace MySudoku
         /// </summary>
         [SerializeField] private Notes _notesView;
 
+        private Color _lastUsedColor;
+
+        [Space(10)]
+        [Header("Cell UI Colors:")]
+        [SerializeField] private Color _normalColor;
+        [SerializeField] private Color _selectedColor;
+        [SerializeField] private Color _neighbourSelectedColor;
+        [SerializeField] private Color _sameNumberSelectedColor;
+        [SerializeField] private Color _hoveredColor;
+        [SerializeField] private Color _neighbourHoveredColor;
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _background.color = _hoveredColor;
+            OnHovered?.Invoke(Index, true);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            ReverseColorSelection();
+            OnHovered?.Invoke(Index, false);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            UpdateColorAsSelected();
+            OnClicked?.Invoke(Index);
+        }
+
         /// <summary>
         /// Initializes any necessary components for this cell.
         /// </summary>
         public void Initialize()
         {
+            _lastUsedColor = _normalColor;
+            _background.color = _normalColor;
             _notesView.Initialize(RectTransform.sizeDelta.x);
             _notesView.gameObject.SetActive(Number == 0);
         }
@@ -83,28 +112,41 @@ namespace MySudoku
             else _notesView.Hide(number);
         }
 
-        /// <summary>
-        /// Selects this cell by marking it and its neighbor cells.
-        /// </summary>
-        public void Select(Color selectedColor, Action<bool> highlightNeighbors)
+
+        #region Selection UI Color Handling
+
+        public void UpdateColorAsSelected()
         {
-            _background.color = selectedColor;
-            highlightNeighbors?.Invoke(true);
+            _lastUsedColor = _selectedColor;
+            _background.color = _selectedColor;
         }
 
-        /// <summary>
-        /// Deselects this cell by umarking it and its neighbor cells.
-        /// </summary>
-        public void Deselect(Action<bool> highlightNeighbors)
+        public void UpdateColorAsNeighbourSelected()
         {
-            _background.color = Color.white;
-            highlightNeighbors?.Invoke(false);
+            _lastUsedColor = _neighbourSelectedColor;
+            _background.color = _neighbourSelectedColor;
+        }
+        
+        public void UpdateColorAsSameNumber()
+        {
+            _lastUsedColor = _sameNumberSelectedColor;
+            _background.color = _sameNumberSelectedColor;
         }
 
-        /// <summary>
-        /// Highlights this cell if focus is set to true.
-        /// </summary>
-        public void SetFocus(Color highlightColor, bool focus)
-            => _background.color = focus ? highlightColor : Color.white;
+        public void UpdateColorAsNeighbourHovered()
+        {
+            _background.color = _neighbourHoveredColor;
+        }
+        
+        public void ResetColorSelection()
+        {
+            _lastUsedColor = _normalColor;
+            _background.color = _normalColor;
+        }
+
+        public void ReverseColorSelection()
+            => _background.color = _lastUsedColor;
+        
+        #endregion
     }
 }
