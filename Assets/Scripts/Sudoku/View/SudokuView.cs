@@ -40,7 +40,18 @@ namespace MySudoku
 
         private int[,] _puzzleCopy = new int[9, 9];
 
-        private Dictionary<(int row, int col), List<(int row, int col)>> _neihgboursPerIndex;
+        private Dictionary<(int row, int col), List<(int row, int col)>> _neighboursPerIndex;
+
+        private Dictionary<int, List<(int row, int col)>> _numbersInGrid = new() { { 1, new List<(int row, int col)>() },
+                                        { 2, new List<(int row, int col)>() },
+                                        { 3, new List<(int row, int col)>() },
+                                        { 4, new List<(int row, int col)>() },
+                                        { 5, new List<(int row, int col)>() },
+                                        { 6, new List<(int row, int col)>() },
+                                        { 7, new List<(int row, int col)>() },
+                                        { 8, new List<(int row, int col)>() },
+                                        { 9, new List<(int row, int col)>() },
+            };
 
         /// <summary>
         /// The rect transform of the sudoku view.
@@ -66,8 +77,8 @@ namespace MySudoku
 
         public bool LayoutSettingsChanged { get; private set; } = false;
 
-        public bool hoveringEnabled = true;
-        public bool secondHoveringEnabled = false;
+        public bool allowNeighbourHovering = false;
+        public bool allowNeighbourHoveringPostSelection = false;
         #endregion
 
         /// <summary>
@@ -96,7 +107,7 @@ namespace MySudoku
         private void Awake()
         {
             _rectTransform = GetComponent<RectTransform>();
-            _neihgboursPerIndex = new();
+            _neighboursPerIndex = new();
             _cachedCellSize = _cellSize;
             _cachedThickBorder = _thickBorder;
             _cachedSlimBorder = _slimBorder;
@@ -118,10 +129,6 @@ namespace MySudoku
                 if (technique.ApplyTechnique(_puzzleCopy, _viewNotes, out int cost)) {
                     UpdateGridViewNotes();
                 }
-            }
-
-            if(Input.GetMouseButtonDown(0)) {
-               
             }
 
             HandleInput();
@@ -155,8 +162,15 @@ namespace MySudoku
         public void ResetPuzzle()
         {
             Array.Copy(_sudoku.Puzzle, _puzzleCopy, _sudoku.Puzzle.Length);
+            //ClearNumbersInGridDictionary();
             UpdateGridViewValues();
         }
+
+        private void ClearNumbersInGridDictionary()
+        {
+            foreach(var numberInGrid in _numbersInGrid)
+                _numbersInGrid.Clear();
+        }        
 
         /// <summary>
         /// Sets the grid values based on the given sudoku puzzle.
@@ -166,10 +180,14 @@ namespace MySudoku
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     _grid[row, col].SetNum(_puzzleCopy[row, col]);
+
                     for (int n = 0; n < 9; n++) {
                         _grid[row, col].ShowNote(n + 1, false);
                         _viewNotes[row * 9 + col, n] = false;
                     }
+
+                    if (_puzzleCopy[row, col] != 0)
+                        _numbersInGrid[_puzzleCopy[row, col]].Add((row, col));
                 }
         }
 
@@ -241,7 +259,7 @@ namespace MySudoku
         public void EnterPuzzle()
         {
             if (enterPuzzle.Length == 81 && Regex.IsMatch(enterPuzzle, @"^\d+$")) {
-                Sudoku s = new Sudoku();
+                Sudoku s = new();
                 s.Puzzle.SetPuzzle(enterPuzzle);
                 SetSudoku(s);
                 FillAndUpdateNotes();
@@ -252,7 +270,6 @@ namespace MySudoku
 
         public void CopyPuzzleToClipboard() => _currentPuzzle.CopyToClipboard();
         
-        #region Sudoku Draw Methods
         /// <summary>
         /// Draws the sudoku grid.
         /// </summary>
@@ -267,17 +284,20 @@ namespace MySudoku
                     float y = (row / 3 + 1) * _thickBorder + (row % 3 + row / 3 * 2) * _slimBorder + (row + 0.5f) * _cellSize;
                     Vector2 position = new Vector3(x - _totalGridSize / 2f, _totalGridSize / 2f - y);
 
-                    if (_grid[row, col] == null) {
-                        _grid[row, col] = Instantiate(_cellPrefab, transform);
-                        _grid[row, col].Index = (row, col);
-                        _grid[row, col].OnClicked += OnCellClicked;
-                        _grid[row, col].OnHovered += OnCellHovered;
-                        _neihgboursPerIndex.Add((row, col), GetNeighbourIndexesFor((row, col)));
+                    Cell cell = _grid[row, col];
+
+                    if (cell == null) {
+                        cell = Instantiate(_cellPrefab, transform);
+                        cell.Index = (row, col);
+                        cell.OnClicked += OnCellClicked;
+                        cell.OnHovered += OnCellHovered;
+                        _neighboursPerIndex.Add((row, col), GetNeighbourIndexesFor((row, col)));
                     }
 
-                    _grid[row, col].RectTransform.sizeDelta = new Vector2(_cellSize, _cellSize);
-                    _grid[row, col].RectTransform.anchoredPosition = position;
-                    _grid[row, col].Initialize();
+                    cell.RectTransform.sizeDelta = new Vector2(_cellSize, _cellSize);
+                    cell.RectTransform.anchoredPosition = position;
+                    cell.Initialize();
+                    _grid[row, col] = cell;
                 }
             }
 
@@ -289,8 +309,6 @@ namespace MySudoku
 
         public void OnValidate() 
             => LayoutSettingsChanged = _cachedCellSize != _cellSize || _cachedThickBorder != _thickBorder || _cachedSlimBorder != _slimBorder;
-        
-        #endregion
 
         #region Click Handling Methods
 
@@ -298,25 +316,25 @@ namespace MySudoku
         {
             if(_selectedCellIndex == _nullCellIndex) {
                 _selectedCellIndex = index;
-                foreach ((int row, int col) nIndex in _neihgboursPerIndex[index])
+                foreach ((int row, int col) nIndex in _neighboursPerIndex[index])
                     _grid[nIndex.row, nIndex.col].UpdateColorAsNeighbourSelected();
             }
             else if(_selectedCellIndex == index) {
                 _selectedCellIndex = _nullCellIndex;
                 _grid[index.row, index.col].ResetColorSelection();
-                foreach ((int row, int col) nIndex in _neihgboursPerIndex[index])
+                foreach ((int row, int col) nIndex in _neighboursPerIndex[index])
                     _grid[nIndex.row, nIndex.col].ResetColorSelection();
             }
-            else { 
-                foreach ((int row, int col) nIndex in _neihgboursPerIndex[_selectedCellIndex]) {
+            else {
+
+                _grid[_selectedCellIndex.row, _selectedCellIndex.col].ResetColorSelection();
+                foreach ((int row, int col) nIndex in _neighboursPerIndex[_selectedCellIndex]) {
                     if (nIndex != index)
                         _grid[nIndex.row, nIndex.col].ResetColorSelection();
                 }
                     
 
-                _grid[_selectedCellIndex.row, _selectedCellIndex.col].ResetColorSelection();
-
-                foreach ((int row, int col) nIndex in _neihgboursPerIndex[index])
+                foreach ((int row, int col) nIndex in _neighboursPerIndex[index])
                     _grid[nIndex.row, nIndex.col].UpdateColorAsNeighbourSelected();
 
                 _grid[index.row, index.col].ReverseColorSelection();
@@ -327,10 +345,11 @@ namespace MySudoku
 
         private void OnCellHovered((int row, int col) index, bool onPointerEnter)
         {
-            if(!hoveringEnabled) return;
+            // If a cell is already selected and neighbourHovering is allowed then continue otherwise don't do neighbourHovering.
+            if (_selectedCellIndex != _nullCellIndex && !allowNeighbourHoveringPostSelection) return;
 
-            foreach ((int row, int col) nIndex in _neihgboursPerIndex[index]) {
-                if (onPointerEnter && secondHoveringEnabled) _grid[nIndex.row, nIndex.col].UpdateColorAsNeighbourHovered();
+            foreach ((int row, int col) nIndex in _neighboursPerIndex[index]) {
+                if (onPointerEnter && allowNeighbourHovering) _grid[nIndex.row, nIndex.col].UpdateColorAsNeighbourHovered();
                 else _grid[nIndex.row, nIndex.col].ReverseColorSelection();
             }
         }

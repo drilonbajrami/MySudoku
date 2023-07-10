@@ -22,7 +22,7 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// The number this cell contains.
+        /// The number the cell should display.
         /// </summary>
         public int Number { get; private set; } = 0;
 
@@ -30,6 +30,7 @@ namespace MySudoku
         /// Rect transform of this game object.
         /// </summary>
         [field: SerializeField] public RectTransform RectTransform { get; private set; }
+
 
         public event Action<(int row, int col)> OnClicked;
         public event Action<(int row, int col), bool> OnHovered;
@@ -85,8 +86,7 @@ namespace MySudoku
         /// </summary>
         public void Initialize()
         {
-            _lastUsedColor = _normalColor;
-            _background.color = _normalColor;
+            _background.color = _lastUsedColor = _normalColor;
             _notesView.Initialize(RectTransform.sizeDelta.x);
             _notesView.gameObject.SetActive(Number == 0);
         }
@@ -116,33 +116,19 @@ namespace MySudoku
         #region Selection UI Color Handling
 
         public void UpdateColorAsSelected()
-        {
-            _lastUsedColor = _selectedColor;
-            _background.color = _selectedColor;
-        }
-
+            => _background.color = _lastUsedColor = _selectedColor;
+        
         public void UpdateColorAsNeighbourSelected()
-        {
-            _lastUsedColor = _neighbourSelectedColor;
-            _background.color = _neighbourSelectedColor;
-        }
+            => _background.color = _lastUsedColor = _neighbourSelectedColor;
         
         public void UpdateColorAsSameNumber()
-        {
-            _lastUsedColor = _sameNumberSelectedColor;
-            _background.color = _sameNumberSelectedColor;
-        }
+            => _background.color = _lastUsedColor = _sameNumberSelectedColor;
 
-        public void UpdateColorAsNeighbourHovered()
-        {
-            _background.color = _neighbourHoveredColor;
-        }
-        
+        public void UpdateColorAsNeighbourHovered() 
+            => _background.color = _neighbourHoveredColor;
+
         public void ResetColorSelection()
-        {
-            _lastUsedColor = _normalColor;
-            _background.color = _normalColor;
-        }
+            => _background.color = _lastUsedColor = _normalColor;
 
         public void ReverseColorSelection()
             => _background.color = _lastUsedColor;

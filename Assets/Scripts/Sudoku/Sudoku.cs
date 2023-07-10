@@ -7,52 +7,37 @@ namespace MySudoku
     /// </summary>
     public class Sudoku
     {
-        /// <summary>
-        /// The difficulty of this sudoku puzzle.
-        /// </summary>
+        public const int MIN_NUM_OF_CLUES = 17;
+
         public Difficulty Difficulty { get; private set; }
 
-        /// <summary>
-        /// Sudoku puzzle.
-        /// </summary>
-        public int[,] Puzzle { get; set; } = new int[9, 9] {
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-        };
+        public int[,] Solution { get; private set; }
 
-        /// <summary>
-        /// Sudoku solution.
-        /// </summary>
-        public int[,] Solution { get; set; } = new int[9, 9] {
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-        };
+        public int[,] Puzzle { get; private set; }
+
+        public Sudoku(Difficulty difficulty, int[,] solution, int[,] puzzle)
+        {
+            Difficulty = difficulty;
+            Solution = solution;
+            Puzzle = puzzle;
+        }
+
+        public Sudoku()
+        {
+            Difficulty = Difficulty.Beginner;
+            Solution = new int[9, 9];
+            Puzzle = new int[9, 9];
+        }
 
         /// <summary>
         /// Prints this sudoku's solution in the console.
         /// </summary>
-        public void PrintSolution()
+        public string PrintSolution()
         {
-            StringBuilder sol = new StringBuilder("Solution: ");
-            for (int row = 0; row < 9; row++)
-                for (int col = 0; col < 9; col++)
-                    sol.Append($"{Solution[row, col]}");
-
-            UnityEngine.Debug.Log(sol.ToString());
+            StringBuilder solution = new("Solution: ");
+            solution.Append(ConvertArrayToString(Solution));
+            UnityEngine.Debug.Log(solution.ToString());
+            return solution.ToString();
         }
 
         /// <summary>
@@ -60,13 +45,24 @@ namespace MySudoku
         /// </summary>
         public string PrintPuzzle()
         {
-            StringBuilder puz = new StringBuilder();
-            for (int row = 0; row < 9; row++)
-                for (int col = 0; col < 9; col++)
-                    puz.Append($"{Puzzle[row, col]}");
-
+            StringBuilder puzzle = new("Puzzle: ");
+            puzzle.Append(ConvertArrayToString(Puzzle));
             //UnityEngine.Debug.Log(puz.ToString());
-            return puz.ToString();
+            return puzzle.ToString();
+        }
+
+        private string ConvertArrayToString(int[,] array)
+        {
+            StringBuilder stringBuilder = new();
+
+            int rows = array.GetLength(0);
+            int cols = array.GetLength(1);
+
+            for (int row = 0; row < rows; row++)
+                for (int col = 0; col < cols; col++)
+                    stringBuilder.Append(array[row, col]);
+                
+            return stringBuilder.ToString();
         }
     }
 }
