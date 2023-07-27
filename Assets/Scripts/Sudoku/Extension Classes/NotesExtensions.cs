@@ -62,10 +62,8 @@ namespace MySudoku
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     bool isEmpty = puzzle[row, col] == 0;
-
-                    for (int i = 0; i < 9; i++) {
+                    for (int i = 0; i < 9; i++)
                         notes[row * 9 + col, i] = isEmpty && puzzle.CanUseNumber(row, col, i + 1);
-                    }
                 }
         }
 

@@ -25,29 +25,18 @@ namespace MySudoku
         public void ResetUseCount() => TimesUsed = 0;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
+        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
-            //Stopwatch sw = Stopwatch.StartNew();
-            //int runs = 0;
-            //int totalRuns = 0;
             cost = 0;
-
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
-                    //runs++;
-                    // Process empty cells only.
                     if (sudoku[row, col] != 0) continue;
-                    
-                    // Set single candidate flag to false.
                     int candidate = 0;
 
                     // Check each note of the cell.
                     for (int i = 0; i < 9; i++) {
-                        //totalRuns++;
-                        // If note is inactive then continue with the next note.
                         if (!notes[row * 9 + col, i]) continue;
-                        
-                        // If there was a candidate already, then skip this cell.
+                        // If there was a candidate already, then skip this cell and its notes.
                         if (candidate != 0) {
                             candidate = 0;
                             break;
@@ -57,10 +46,7 @@ namespace MySudoku
 
                     // If there was only one candidate then use its value.
                     if (candidate != 0) {
-                        //double elapsedTime = sw.Elapsed.TotalMilliseconds;
-                        //NakedSingleLogger.Instance.WriteData(runs, totalRuns, elapsedTime);
-                        if (LogConsole) Debug.Log($"Naked Single: \n Cell ({row}, {col}) for {candidate}");
-                        //Debug.Log($"Naked Single Technique applied in {sw.Elapsed.TotalMilliseconds} ms, {runs} runs | {totalRuns} total runs");
+                        if (LogConsole) Debug.Log($"NAKED SINGLE: Cell[{row}, {col}] for {candidate}");            
                         sudoku[row, col] = candidate;
                         notes.Update(sudoku, (row, col), 0, candidate);
                         TimesUsed++;

@@ -36,7 +36,7 @@ namespace MySudoku
         {
             StringBuilder solution = new("Solution: ");
             solution.Append(ConvertArrayToString(Solution));
-            UnityEngine.Debug.Log(solution.ToString());
+            //UnityEngine.Debug.Log(solution.ToString());
             return solution.ToString();
         }
 

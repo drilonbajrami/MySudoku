@@ -76,7 +76,7 @@ namespace MySudoku
         public static int ApplyTechniques(this int[,] sudoku, bool[,] notes)
         {
             for (int i = 0; i < Techniques.Count; i++)
-                if (Techniques[i].ApplyTechnique(sudoku, notes, out int cost))
+                if (Techniques[i].Apply(sudoku, notes, out int cost))
                     return cost; 
 
             return 0;
@@ -92,7 +92,7 @@ namespace MySudoku
         }
 
         /// <summary>
-        /// Resets the usage count for all available sudou techniques.
+        /// Resets the usage count for all available sudoku techniques.
         /// </summary>
         public static void ResetTechniqueUsageCount()
         {

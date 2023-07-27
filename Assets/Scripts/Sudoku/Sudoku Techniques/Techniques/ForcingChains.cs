@@ -25,7 +25,7 @@ namespace MySudoku
         public void ResetUseCount() => TimesUsed = 0;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
+        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             cost = 0;
             return false;

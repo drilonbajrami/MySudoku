@@ -126,7 +126,7 @@ namespace MySudoku
                 ISudokuTechnique technique = new HiddenTriples {
                     LogConsole = true
                 };
-                if (technique.ApplyTechnique(_puzzleCopy, _viewNotes, out int cost)) {
+                if (technique.Apply(_puzzleCopy, _viewNotes, out int cost)) {
                     UpdateGridViewNotes();
                 }
             }

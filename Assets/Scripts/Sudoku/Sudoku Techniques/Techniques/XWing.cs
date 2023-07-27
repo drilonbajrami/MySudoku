@@ -26,7 +26,7 @@ namespace MySudoku
         public void ResetUseCount() => TimesUsed = 0;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
+        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             // store information per each candidate - row it is on and column as well
             // for row - if candidate is present on two cells only on two rows on the same cols then remove everything on those cols.

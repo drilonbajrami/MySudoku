@@ -1,6 +1,3 @@
-using System.Collections;
-using UnityEngine;
-
 namespace MySudoku
 {
     /// <summary>
@@ -39,6 +36,6 @@ namespace MySudoku
         /// <param name="sudoku">The sudoku puzzle.</param>
         /// <param name="notes">The notes for sudoku puzzle.</param>
         /// <returns>Whether the technique has been applied or not.</returns>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost);
+        public bool Apply(int[,] sudoku, bool[,] notes, out int cost);
     }
 }

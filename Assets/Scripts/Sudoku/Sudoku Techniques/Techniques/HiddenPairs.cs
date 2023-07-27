@@ -29,7 +29,7 @@ namespace MySudoku
         public void ResetUseCount() => TimesUsed = 0;
 
         /// <inheritdoc/>
-        public bool ApplyTechnique(int[,] sudoku, bool[,] notes, out int cost)
+        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] candidates = new Repetition[9] {
