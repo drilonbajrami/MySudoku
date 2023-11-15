@@ -15,7 +15,7 @@ public class RandomGenerator : MonoBehaviour
     /// <summary>
     /// Random instance.
     /// </summary>
-    private static Random _random = null;
+    private Random _random = null;
 
     /// <summary>
     /// Returns the random instance.

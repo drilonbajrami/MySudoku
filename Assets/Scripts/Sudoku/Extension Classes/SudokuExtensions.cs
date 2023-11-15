@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace MySudoku
@@ -122,7 +120,7 @@ namespace MySudoku
 
         public static string CopyToClipboard(this int[,] puzzle)
         {
-            StringBuilder puz = new StringBuilder();
+            StringBuilder puz = new();
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++)
                     puz.Append($"{puzzle[row, col]}");

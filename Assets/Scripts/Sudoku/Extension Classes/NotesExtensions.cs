@@ -27,8 +27,6 @@ namespace MySudoku
 
             int cellIndexInNotes = cellIndex.row * 9 + cellIndex.col;
 
-            //List<(int row, int col)> indexes = new List<(int row, int col)>();
-
             for (int i = 0; i < 9; i++) {
                 // Disable all notes in this cell if the new value is not zero.
                 if (!isZero) notes[cellIndex.row * 9 + cellIndex.col, i] = false;

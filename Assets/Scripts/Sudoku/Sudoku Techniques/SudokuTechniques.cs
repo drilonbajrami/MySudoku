@@ -42,7 +42,7 @@ namespace MySudoku
     public static class SudokuTechniques
     {
         /// <summary>
-        /// Sudoku difficulties score map, with lower and upper ranges.
+        /// Sudoku difficultiy score map, with lower and upper ranges.
         /// </summary>
         public static Dictionary<Difficulty, (int lower, int upper)> DifficultyMap = new() {
             { Difficulty.Beginner, (3600, 4500)   },

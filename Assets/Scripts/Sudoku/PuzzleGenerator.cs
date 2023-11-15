@@ -1,19 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Stopwatch = System.Diagnostics.Stopwatch;
 using UnityEngine;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace MySudoku
 {
+    [RequireComponent(typeof(RandomGenerator))]
     public class PuzzleGenerator : MonoBehaviour
     {
         /// <summary>
-        /// Seed for the random generator.
+        /// Seed for the random randomGenerator.
         /// </summary>
         [SerializeField] int _seed;
 
         /// <summary>
-        /// Random number generator with seed.
+        /// Random number randomGenerator with seed.
         /// </summary>
         [SerializeField] RandomGenerator _random;
 
@@ -106,6 +107,9 @@ namespace MySudoku
             return puzzle;
         }
 
+        /// <summary>
+        /// Returns a random number divisible by 50, between the lower and upper given ranges.
+        /// </summary>
         private int RandomNumberIn50s(int lower, int upper)
         {
             // Adjust the lower and upper bounds to the nearest multiple of 50
@@ -122,6 +126,18 @@ namespace MySudoku
             int number = lowerAdjusted + index * 50;
 
             return number;
+        }
+
+        public void SetRandomGenerator(RandomGenerator randomGenerator) => _random = randomGenerator;
+
+        /// <summary>
+        /// Sets the seed and uses own random generator for the puzzle generator.
+        /// </summary>
+        public void SetSeed(int seed)
+        {
+            _seed = seed;
+            _random = GetComponent<RandomGenerator>();
+            _random.SetSeed(_seed);
         }
     }
 }

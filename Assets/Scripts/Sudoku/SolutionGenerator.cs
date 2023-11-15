@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace MySudoku
 {
+    [RequireComponent(typeof(RandomGenerator))]
     public class SolutionGenerator : MonoBehaviour
     {
         /// <summary>
@@ -20,9 +21,8 @@ namespace MySudoku
         /// </summary>
         public int[,] Generate()
         {
-            _random.SetSeed(_seed);
-
             int[,] sudoku = new int[9, 9];
+
             // Fill the diagonal boxes first (1,5,9) because these boxes
             // do not affect each other's order of numbers.
             for (int i = 0; i < 9; i += 3)
@@ -87,6 +87,18 @@ namespace MySudoku
                 }
 
             return false;
+        }
+
+        public void SetRandomGenerator(RandomGenerator random) => _random = random;
+
+        /// <summary>
+        /// Sets the seed and uses own random generator for the solution generator.
+        /// </summary>
+        public void SetSeed(int seed)
+        {
+            _seed = seed;
+            _random = GetComponent<RandomGenerator>();
+            _random.SetSeed(_seed);
         }
     }
 }
