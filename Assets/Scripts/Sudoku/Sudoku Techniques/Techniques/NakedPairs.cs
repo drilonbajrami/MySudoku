@@ -11,25 +11,12 @@ namespace MySudoku
     /// that box, row or column.
     /// More info on: https://www.sudokuoftheday.com/techniques/naked-pairs-triples.
     /// </summary>
-    public class NakedPairs : ISudokuTechnique
+    public class NakedPairs : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 750;
+        protected override int SubsequentUseCost => 500;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 750;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 500;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] cells = new Repetition[9] {
@@ -93,8 +80,7 @@ namespace MySudoku
                                             else if (colAvailable) s.AppendLine($"Col ({col}) as well.");
                                             Debug.Log(s.ToString());
                                         }
-                                        TimesUsed++;
-                                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                        cost = GetUsageCost();
                                         return true;
                                     } // => log entries && return true;
                                 }
@@ -114,8 +100,7 @@ namespace MySudoku
                                         }
 
                                         if (applied) {                                  
-                                            TimesUsed++;
-                                            cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                            cost = GetUsageCost();   
                                             if (LogConsole) {
                                                 s.Append($"[{nakedPair.a + 1}, {nakedPair.b + 1}] found on: \n");
                                                 s.AppendLine(i == 0 ? $"Row ({row}) on cells ({row}, {i}) and ({row}, {j})." :

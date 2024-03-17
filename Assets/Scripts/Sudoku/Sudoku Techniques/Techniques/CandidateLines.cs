@@ -9,25 +9,13 @@ namespace MySudoku
     /// This means that the candidate can be removed from other cells on the same row or column, on other boxes.
     /// More info on: https://www.sudokuoftheday.com/techniques/candidate-lines.
     /// </summary>
-    public class CandidateLines : ISudokuTechnique
+    public class CandidateLines : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 350;
+        protected override int SubsequentUseCost => 200;
 
         /// <inheritdoc/>
-        public int FirstUseCost => 350;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 200;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             cost = 0;
             for (int row = 0; row < 9; row++)
@@ -81,8 +69,7 @@ namespace MySudoku
                             }
 
                             if (techniqueIsApplied) {
-                                TimesUsed++;
-                                cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                cost = GetUsageCost();
                                 if (LogConsole) {
                                     StringBuilder s = new("CANDIDATE LINES: \n");
                                     s.AppendLine(rowAvailable ? $"Candidate [{i + 1}] on Row({row}) removed from cells: " :

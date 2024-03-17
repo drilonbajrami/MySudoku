@@ -2158,8 +2158,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1035189704}
   - component: {fileID: 1035189702}
-  - component: {fileID: 1035189703}
   - component: {fileID: 1035189705}
+  - component: {fileID: 1035189703}
   m_Layer: 0
   m_Name: Puzzle Generator
   m_TagString: Untagged
@@ -2390,8 +2390,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _solutionGenerator: {fileID: 860734053}
   _puzzleGenerator: {fileID: 1035189702}
+  _randomGenerator: {fileID: 1076760451}
+  _useOwnRandomGeneartor: 0
   _seed: 0
-  _random: {fileID: 1076760451}
+  _solutionGeneratorSeed: 0
+  _puzzleGeneratorSeed: 0
 --- !u!4 &1076760450
 Transform:
   m_ObjectHideFlags: 0

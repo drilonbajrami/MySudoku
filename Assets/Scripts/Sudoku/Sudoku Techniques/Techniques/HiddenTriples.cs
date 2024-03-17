@@ -10,25 +10,12 @@ namespace MySudoku
     /// <summary>
     /// More info on: https://www.sudokuoftheday.com/techniques/hidden-pairs-triples.
     /// </summary>
-    public class HiddenTriples : ISudokuTechnique
+    public class HiddenTriples : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 2400;
+        protected override int SubsequentUseCost => 1600;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 2400;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 1600;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] candidates = new Repetition[9] {
@@ -76,8 +63,7 @@ namespace MySudoku
                                             }
 
                                             if (applied) {
-                                                TimesUsed++;
-                                                cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                                cost = GetUsageCost();
                                                 if (LogConsole) {
                                                     s.Append($"[{i + 1}, {j + 1}, {k + 1}] found on: \n");
                                                     s.AppendLine($"Box ({boxRow}, {boxCol}) on cells " +
@@ -118,8 +104,7 @@ namespace MySudoku
                                             }
 
                                             if (applied) {
-                                                TimesUsed++;
-                                                cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                                cost = GetUsageCost();
                                                 if (LogConsole) {
                                                     s.Append($"[{i + 1}, {j + 1}, {k + 1}] found on: \n");
                                                     s.AppendLine($"Row ({row}) on cells " +
@@ -157,8 +142,7 @@ namespace MySudoku
                                             }
 
                                             if (applied) {
-                                                TimesUsed++;
-                                                cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                                cost = GetUsageCost();
                                                 if (LogConsole) {
                                                     s.Append($"[{i + 1}, {j + 1}, {k + 1}] found on: \n");
                                                     s.AppendLine($"Col ({col}) on cells ({cellTriplet.a}, {col}), ({cellTriplet.b}, {col}) and ({cellTriplet.c}, {col})");

@@ -56,7 +56,7 @@ namespace MySudoku
         /// <summary>
         /// List of available sudoku techniques to use.
         /// </summary>
-        public static List<ISudokuTechnique> Techniques = new() {
+        public static List<SudokuTechnique> Techniques = new() {
             new NakedSingle(),
             new HiddenSingle(),
             new CandidateLines(),
@@ -97,7 +97,7 @@ namespace MySudoku
         public static void ResetTechniqueUsageCount()
         {
             for (int i = 0; i < Techniques.Count; i++)
-                Techniques[i].ResetUseCount();
+                Techniques[i].ResetUsageCount();
         }
     }
 }

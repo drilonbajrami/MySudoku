@@ -8,25 +8,12 @@ namespace MySudoku
     /// <summary>
     /// More info on: https://www.sudokuoftheday.com/techniques/x-wings.
     /// </summary>
-    public class XWing : ISudokuTechnique
+    public class XWing : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 2800;
+        protected override int SubsequentUseCost => 1600;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 2800;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 1600;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             // store information per each candidate - row it is on and column as well
             // for row - if candidate is present on two cells only on two rows on the same cols then remove everything on those cols.

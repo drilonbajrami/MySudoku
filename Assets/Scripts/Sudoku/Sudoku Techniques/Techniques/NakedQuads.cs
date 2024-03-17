@@ -7,25 +7,12 @@ namespace MySudoku
     /// <summary>
     /// More info on: https://www.sudoku.org.uk/SolvingTechniques/NakedQuads.asp.
     /// </summary>
-    public class NakedQuads : ISudokuTechnique
+    public class NakedQuads : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 5000;
+        protected override int SubsequentUseCost => 4000;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 5000;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 4000;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             cost = 0;
             return false;

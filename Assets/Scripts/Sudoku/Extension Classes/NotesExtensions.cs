@@ -1,8 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using MySudoku;
-using UnityEngine;
-
 namespace MySudoku
 {
     /// <summary>

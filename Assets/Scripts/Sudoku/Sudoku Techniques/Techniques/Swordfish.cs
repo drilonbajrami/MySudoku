@@ -7,25 +7,12 @@ namespace MySudoku
     /// <summary>
     /// More info on: https://www.sudokuoftheday.com/techniques/swordfish.
     /// </summary>
-    public class Swordfish : ISudokuTechnique
+    public class Swordfish : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 8000;
+        protected override int SubsequentUseCost => 6000;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 8000;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 6000;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             cost = 0;
             return false;

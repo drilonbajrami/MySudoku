@@ -7,25 +7,12 @@ namespace MySudoku
     /// <summary>
     /// More info on: https://www.sudoku.org.uk/SolvingTechniques/HiddenTriples.asp.
     /// </summary>
-    public class HiddenQuads : ISudokuTechnique
+    public class HiddenQuads : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 7000;
+        protected override int SubsequentUseCost => 5000;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 7000;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 5000;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             cost = 0;
             return false;

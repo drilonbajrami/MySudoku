@@ -11,25 +11,12 @@ namespace MySudoku
     /// <summary>
     /// More info on: https://www.sudokuoftheday.com/techniques/naked-pairs-triples.
     /// </summary>
-    public class NakedTriples : ISudokuTechnique
+    public class NakedTriples : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 2000;
+        protected override int SubsequentUseCost => 1400;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 2000;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 1400;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] cells = new Repetition[9] {
@@ -96,6 +83,7 @@ namespace MySudoku
                                             }
 
                                             if (applied) {
+                                                cost = GetUsageCost();
                                                 if (!LogConsole) return true;
                                                 log.Append($"[{nakedTriple.a + 1}, {nakedTriple.b + 1}, {nakedTriple.c + 1}] found on: \n");
                                                 log.AppendLine($"Box ({boxRow}, {boxCol}) on cells ({boxRow + p / 3}, {boxCol + p % 3}), " +
@@ -123,6 +111,7 @@ namespace MySudoku
                                             }
 
                                             if (applied) {
+                                                cost = GetUsageCost();
                                                 if (!LogConsole) return true;
                                                 log.Append($"[{nakedTriple.a + 1}, {nakedTriple.b + 1}, {nakedTriple.c + 1}] found on: \n");
                                                 log.AppendLine($"Row ({row}) on cells ({row}, {p}), ({row}, {u}) and ({row}, {v})");
@@ -147,6 +136,7 @@ namespace MySudoku
                                             }
 
                                             if (applied) {
+                                                cost = GetUsageCost();
                                                 if (!LogConsole) return true;
                                                 log.Append($"[{nakedTriple.a + 1}, {nakedTriple.b + 1}, {nakedTriple.c + 1}] found on: \n");
                                                 log.AppendLine($"Col ({col}) on cells ({p}, {col}), ({u}, {col}) and ({v}, {col})");

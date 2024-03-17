@@ -11,25 +11,12 @@ namespace MySudoku
     /// can be removed from those two cells.
     /// More info on: https://www.sudokuoftheday.com/techniques/hidden-pairs-triples.
     /// </summary>
-    public class HiddenPairs : ISudokuTechnique
+    public class HiddenPairs : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 1500;
+        protected override int SubsequentUseCost => 1200;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 1500;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 1200;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] candidates = new Repetition[9] {
@@ -72,8 +59,7 @@ namespace MySudoku
                                     }
 
                                     if (applied) {
-                                        TimesUsed++;
-                                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                        cost = GetUsageCost();
                                         if (LogConsole) {
                                             s.Append($"[{i + 1}, {j + 1}] found on: \n");
                                             s.AppendLine($"Box ({boxRow}, {boxCol}) on cells " +
@@ -102,8 +88,7 @@ namespace MySudoku
                                         }
 
                                         if (applied) {
-                                            TimesUsed++;
-                                            cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                                            cost = GetUsageCost();
                                             if (LogConsole) {
                                                 s.Append($"[{i + 1}, {j + 1}] found on: \n");
                                                 s.AppendLine(rank == 0 ? $"Row ({row}) on cells ({row}, {candidates[i].Repetitions[1][0]}) and ({row}, {candidates[i].Repetitions[1][1]})." :

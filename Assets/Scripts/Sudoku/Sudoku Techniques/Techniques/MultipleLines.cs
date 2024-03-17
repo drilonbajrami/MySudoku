@@ -8,25 +8,12 @@ namespace MySudoku
     /// meaning that that candidate can be removed from those two rows or column from the third box.
     /// More info on: https://www.sudokuoftheday.com/techniques/multiple-lines.
     /// </summary>
-    public class MultipleLines : ISudokuTechnique
+    public class MultipleLines : SudokuTechnique
     {
-        /// <inheritdoc/>
-        public int TimesUsed { get; private set; } = 0;
+        protected override int FirstUseCost => 600;
+        protected override int SubsequentUseCost => 300;
 
-        /// <inheritdoc/>
-        public int FirstUseCost => 600;
-
-        /// <inheritdoc/>
-        public int SubsequentUseCost => 300;
-
-        /// <inheritdoc/>
-        public bool LogConsole { get; set; } = false;
-
-        /// <inheritdoc/>
-        public void ResetUseCount() => TimesUsed = 0;
-
-        /// <inheritdoc/>
-        public bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
         {
             cost = 0;
             StringBuilder s = new();
@@ -64,8 +51,7 @@ namespace MySudoku
                                 }
                         }
                         if (LogConsole) Debug.Log(s.ToString());
-                        TimesUsed++;
-                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                        cost = GetUsageCost();
                         return true;
                     }
 
@@ -80,8 +66,7 @@ namespace MySudoku
                                 }
                         }
                         if (LogConsole) Debug.Log(s.ToString());
-                        TimesUsed++;
-                        cost = TimesUsed == 1 ? FirstUseCost : SubsequentUseCost;
+                        cost = GetUsageCost();
                         return true;
                     }
                 }
@@ -93,19 +78,19 @@ namespace MySudoku
         /// <summary>
         /// Checks if the <see cref="ApplyTechnique(int[,], bool[,])"/> can be applied to the given boxes, on a row or column direction.
         /// </summary>
-        /// <param name="boxs">The boxes/regions to check for.</param>
+        /// <param name="boxes">The boxes/regions to check for.</param>
         /// <param name="selectedBox">The box where there should be removal of a note.</param>
         /// <param name="selectedRowOrCol">The row/column to keep, by removing the notes on the other two remaining rows/columns.</param>
         /// <returns>Whether the technique is applicable, and the box on which to edit the notes and<br/> 
         /// the row or column of the box on which to keep the notes active.</returns>
-        private bool IsMultipleLinesApplicable(bool[,] boxs, out int selectedBox, out int selectedRowOrCol)
+        private bool IsMultipleLinesApplicable(bool[,] boxes, out int selectedBox, out int selectedRowOrCol)
         {
             // 'p' and 'q' are for caching the indexes of the boxes that should not be changed,
             // in other words they are the same in terms of a note occurrence on the same rows/columns of these boxes.
             int p = -1;
             int q = -1;
 
-            // 'toBox' is for caching the index of the box that needs to be changed/edited.
+            // 'selectedBox' is for caching the index of the box that needs to be changed/edited.
             selectedBox = -1;
 
             // It is used to cache the index of the row/column of the seleced box,
@@ -115,7 +100,7 @@ namespace MySudoku
             // Add up the number of note occurrences in rows/columns for each box. 
             int[] boxSums = new int[3];
             for (int i = 0; i < 3; i++)
-                boxSums[i] = (boxs[i, 0] ? 1 : 0) + (boxs[i, 1] ? 1 : 0) + (boxs[i, 2] ? 1 : 0);
+                boxSums[i] = (boxes[i, 0] ? 1 : 0) + (boxes[i, 1] ? 1 : 0) + (boxes[i, 2] ? 1 : 0);
 
             // If at least each box contains the same note in more than one row/column,
             // and the total number of times a note appears on rows/columns in all three boxes should be at between 6 or 7 times.
@@ -127,7 +112,7 @@ namespace MySudoku
                 for (int i = 0; i < 3; i++) {
                     p = i % 3;
                     q = (i + 1) % 3;
-                    if (boxs[p, 0] == boxs[q, 0] && boxs[p, 1] == boxs[q, 1] && boxs[p, 2] == boxs[q, 2])
+                    if (boxes[p, 0] == boxes[q, 0] && boxes[p, 1] == boxes[q, 1] && boxes[p, 2] == boxes[q, 2])
                         selectedBox = (i + 2) % 3;
                 }
 
@@ -136,7 +121,7 @@ namespace MySudoku
 
                 // Once the index of a box to change is assigned, then check which row/column should not be edited in that particular box.
                 for (int i = 0; i < 3; i++)
-                    if (boxs[selectedBox, i] == (!boxs[p, i] || !boxs[q, i]) == true)
+                    if (boxes[selectedBox, i] == (!boxes[p, i] || !boxes[q, i]) == true)
                         selectedRowOrCol = i;
 
                 return selectedRowOrCol != -1;

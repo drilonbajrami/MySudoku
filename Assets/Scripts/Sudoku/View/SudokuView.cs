@@ -123,7 +123,7 @@ namespace MySudoku
                 noteToggle.isOn = !noteToggle.isOn;
 
             if (Input.GetKeyDown(KeyCode.A)) {
-                ISudokuTechnique technique = new HiddenTriples {
+                SudokuTechnique technique = new HiddenTriples {
                     LogConsole = true
                 };
                 if (technique.Apply(_puzzleCopy, _viewNotes, out int cost)) {
