@@ -11,7 +11,7 @@ namespace MySudoku
         protected override int FirstUseCost => 100;
         protected override int SubsequentUseCost => 100;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             cost = 0;
 
@@ -22,7 +22,7 @@ namespace MySudoku
                     //CELL:
                     if (sudoku[row, col] != 0) continue; // Skip filled cells.
 
-                    int candidate = FindSingleCandidate(notes, row * 9 + col);
+                    int candidate = FindSingleCandidate(notes, row, col);
 
                     // If a single candidate was found then apply it (0 - means no candidate found).
                     if (candidate != 0) {
@@ -38,13 +38,13 @@ namespace MySudoku
         }
 
         /// <returns>Returns 0 if there is no single candidate, otherwise returns the candidate itself.</returns>
-        private int FindSingleCandidate(bool[,] notes, int cellIndex)
+        private int FindSingleCandidate(bool[,,] notes, int row, int col)
         {
             int candidate = 0;
 
             // Check each note of the cell.
             for (int noteIndex = 0; noteIndex < 9; noteIndex++) {
-                if (!notes[cellIndex, noteIndex]) continue; // Skips inactive candidates.
+                if (!notes[row, col, noteIndex]) continue; // Skips inactive candidates.
                 if (candidate != 0) return 0; // Returns 0 since there is more than one active candidate.
                 candidate = noteIndex + 1;
             }

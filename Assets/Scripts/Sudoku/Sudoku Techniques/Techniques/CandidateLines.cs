@@ -15,7 +15,7 @@ namespace MySudoku
         protected override int SubsequentUseCost => 200;
 
         /// <inheritdoc/>
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             cost = 0;
             for (int row = 0; row < 9; row++)
@@ -26,7 +26,7 @@ namespace MySudoku
                     // Process each active note of that cell.
                     for (int i = 0; i < 9; i++) {
                         // If note is not active then skip to next one.
-                        if (!notes[row * 9 + col, i]) continue;
+                        if (!notes[row, col, i]) continue;
 
                         bool rowAvailable = false;
                         bool colAvailable = false;
@@ -42,13 +42,13 @@ namespace MySudoku
                             if (!((row != nRow || col != nCol) && sudoku[nRow, nCol] == 0)) continue;
 
                             // Can't be applied if this note (i) appears on a different row and column within this box/region.
-                            if (!isRowNeighbor && !isColNeighbor && notes[nRow * 9 + nCol, i]) {
+                            if (!isRowNeighbor && !isColNeighbor && notes[nRow, nCol, i]) {
                                 rowAvailable = colAvailable = true;
                                 break;
                             }
 
-                            rowAvailable = !rowAvailable && isRowNeighbor ? notes[nRow * 9 + nCol, i] : rowAvailable;
-                            colAvailable = !colAvailable && isColNeighbor ? notes[nRow * 9 + nCol, i] : colAvailable;
+                            rowAvailable = !rowAvailable && isRowNeighbor ? notes[nRow, nCol, i] : rowAvailable;
+                            colAvailable = !colAvailable && isColNeighbor ? notes[nRow, nCol, i] : colAvailable;
                         }
 
                         bool techniqueIsApplied = false;
@@ -61,8 +61,8 @@ namespace MySudoku
                             for (int j = 0; j < 9; j++) {
                                 int r = rowAvailable ? row : j;
                                 int c = rowAvailable ? j : col;
-                                if ((j < currentBox || j > currentBox + 2) && sudoku[r, c] == 0 && notes[r * 9 + c, i]) {
-                                    notes[r * 9 + c, i] = false;
+                                if ((j < currentBox || j > currentBox + 2) && sudoku[r, c] == 0 && notes[r, c, i]) {
+                                    notes[r, c, i] = false;
                                     techniqueIsApplied = true;
                                     cand.Add((r, c));
                                 }

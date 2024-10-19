@@ -44,6 +44,6 @@ namespace MySudoku
         /// <param name="notes">The notes for sudoku puzzle.</param>
         /// <param name="cost">The cost of using the techniques.</param>
         /// <returns>Whether the technique has been applied or not.</returns>
-        public abstract bool Apply(int[,] sudoku, bool[,] notes, out int cost);
+        public abstract bool Apply(int[,] sudoku, bool[,,] notes, out int cost);
     }
 }

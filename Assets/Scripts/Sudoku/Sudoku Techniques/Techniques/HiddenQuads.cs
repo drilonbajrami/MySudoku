@@ -12,7 +12,7 @@ namespace MySudoku
         protected override int FirstUseCost => 7000;
         protected override int SubsequentUseCost => 5000;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             cost = 0;
             return false;

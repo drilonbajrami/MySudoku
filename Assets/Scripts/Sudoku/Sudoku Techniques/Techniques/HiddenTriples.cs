@@ -15,7 +15,7 @@ namespace MySudoku
         protected override int FirstUseCost => 2400;
         protected override int SubsequentUseCost => 1600;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] candidates = new Repetition[9] {
@@ -35,9 +35,9 @@ namespace MySudoku
 
                     for (int n = 0; n < 9; n++) // Candidate's index as [i].
                         for (int k = 0; k < 9; k++) { // Cell's index as [k].
-                            if (notes[(boxRow + k / 3) * 9 + boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) candidates[n].Repetitions[0].Add(k);
-                            if (notes[row * 9 + k, n] && sudoku[row, k] == 0) candidates[n].Repetitions[1].Add(k);
-                            if (notes[k * 9 + col, n] && sudoku[k, col] == 0) candidates[n].Repetitions[2].Add(k);
+                            if (notes[boxRow + k / 3, boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) candidates[n].Repetitions[0].Add(k);
+                            if (notes[row, k, n] && sudoku[row, k] == 0) candidates[n].Repetitions[1].Add(k);
+                            if (notes[k, col, n] && sudoku[k, col] == 0) candidates[n].Repetitions[2].Add(k);
                         }
 
                     (int a, int b, int c) cellTriplet = (-1, -1, -1);
@@ -50,16 +50,19 @@ namespace MySudoku
                                 if (candidates[j].Repetitions[0].Count == 2 || candidates[j].Repetitions[0].Count == 3)
                                     for (int k = j + 1; k < 9; k++)
                                         if (HasTriple(candidates[i].Repetitions[0], candidates[j].Repetitions[0], candidates[k].Repetitions[0], ref cellTriplet)) {
-                                            (int a, int b, int c) triplet = ((boxRow + cellTriplet.a / 3) * 9 + boxCol + cellTriplet.a % 3,
-                                                                             (boxRow + cellTriplet.b / 3) * 9 + boxCol + cellTriplet.b % 3,
-                                                                             (boxRow + cellTriplet.c / 3) * 9 + boxCol + cellTriplet.c % 3);
+                                            //(int a, int b, int c) triplet = ((boxRow + cellTriplet.a / 3) * 9 + boxCol + cellTriplet.a % 3,
+                                            //                                 (boxRow + cellTriplet.b / 3) * 9 + boxCol + cellTriplet.b % 3,
+                                            //                                 (boxRow + cellTriplet.c / 3) * 9 + boxCol + cellTriplet.c % 3);
+                                            (int row, int col) triplet_a = (boxRow + cellTriplet.a / 3, boxCol + cellTriplet.a % 3);
+                                            (int row, int col) triplet_b = (boxRow + cellTriplet.b / 3, boxCol + cellTriplet.b % 3);
+                                            (int row, int col) triplet_c = (boxRow + cellTriplet.c / 3, boxCol + cellTriplet.c % 3);
 
-                                            for(int n = 0; n < 9; n++) {
+                                            for (int n = 0; n < 9; n++) {
                                                 if (n == i || n == j || n == k) continue;
-                                                if (!applied) applied = notes[triplet.a, n] || notes[triplet.b, n] || notes[triplet.c, n];
-                                                notes[triplet.a, n] = false;
-                                                notes[triplet.b, n] = false;
-                                                notes[triplet.c, n] = false;
+                                                if (!applied) applied = notes[triplet_a.row, triplet_a.col, n] || notes[triplet_b.row, triplet_b.col, n] || notes[triplet_c.row, triplet_c.col, n];
+                                                notes[triplet_a.row, triplet_a.col, n] = false;
+                                                notes[triplet_b.row, triplet_b.col, n] = false;
+                                                notes[triplet_c.row, triplet_c.col, n] = false;
                                             }
 
                                             if (applied) {
@@ -91,16 +94,16 @@ namespace MySudoku
                                 if (candidates[j].Repetitions[1].Count == 2 || candidates[j].Repetitions[1].Count == 3)
                                     for (int k = j + 1; k < 9; k++)
                                         if (HasTriple(candidates[i].Repetitions[1], candidates[j].Repetitions[1], candidates[k].Repetitions[1], ref cellTriplet)) {
-                                            (int a, int b, int c) triplet = (row * 9 + cellTriplet.a, 
-                                                                             row * 9 + cellTriplet.b,
-                                                                             row * 9 + cellTriplet.c);
+                                            (int row, int col) triplet_a = (row, cellTriplet.a);
+                                            (int row, int col) triplet_b = (row, cellTriplet.b);
+                                            (int row, int col) triplet_c = (row, cellTriplet.c);
 
                                             for (int n = 0; n < 9; n++) {
                                                 if (n == i || n == j || n == k) continue;
-                                                if (!applied) applied = notes[triplet.a, n] || notes[triplet.b, n] || notes[triplet.c, n];
-                                                notes[triplet.a, n] = false;
-                                                notes[triplet.b, n] = false;
-                                                notes[triplet.c, n] = false;
+                                                if (!applied) applied = notes[triplet_a.row, triplet_a.col, n] || notes[triplet_b.row, triplet_b.col, n] || notes[triplet_c.row, triplet_c.col, n];
+                                                notes[triplet_a.row, triplet_a.col, n] = false;
+                                                notes[triplet_b.row, triplet_b.col, n] = false;
+                                                notes[triplet_c.row, triplet_c.col, n] = false;
                                             }
 
                                             if (applied) {
@@ -129,16 +132,16 @@ namespace MySudoku
                                 if (candidates[j].Repetitions[2].Count == 2 || candidates[j].Repetitions[2].Count == 3)
                                     for (int k = j + 1; k < 9; k++)
                                         if (HasTriple(candidates[i].Repetitions[2], candidates[j].Repetitions[2], candidates[k].Repetitions[2], ref cellTriplet)) {
-                                            (int a, int b, int c) triplet = (cellTriplet.a * 9 + col,
-                                                                             cellTriplet.b * 9 + col,
-                                                                             cellTriplet.c * 9 + col);
+                                            (int row, int col) triplet_a = (cellTriplet.a, col);
+                                            (int row, int col) triplet_b = (cellTriplet.b, col);
+                                            (int row, int col) triplet_c = (cellTriplet.c, col);
 
                                             for (int n = 0; n < 9; n++) {
                                                 if (n == i || n == j || n == k) continue;
-                                                if (!applied) applied = notes[triplet.a, n] || notes[triplet.b, n] || notes[triplet.c, n];
-                                                notes[triplet.a, n] = false;
-                                                notes[triplet.b, n] = false;
-                                                notes[triplet.c, n] = false;
+                                                if (!applied) applied = notes[triplet_a.row, triplet_a.col, n] || notes[triplet_b.row, triplet_b.col, n] || notes[triplet_c.row, triplet_c.col, n];
+                                                notes[triplet_a.row, triplet_a.col, n] = false;
+                                                notes[triplet_b.row, triplet_b.col, n] = false;
+                                                notes[triplet_c.row, triplet_c.col, n] = false;
                                             }
 
                                             if (applied) {

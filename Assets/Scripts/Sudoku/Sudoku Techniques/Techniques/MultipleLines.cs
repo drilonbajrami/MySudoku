@@ -13,7 +13,7 @@ namespace MySudoku
         protected override int FirstUseCost => 600;
         protected override int SubsequentUseCost => 300;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             cost = 0;
             StringBuilder s = new();
@@ -33,8 +33,8 @@ namespace MySudoku
                     // k -> index of a cell in a row or column.
                     for (int d = 0; d < 3; d++) {
                         for (int k = 0; k < 9; k++) {
-                            if (sudoku[d + box, k] == 0) boxPerRow[k / 3, d] = boxPerRow[k / 3, d] || notes[(d + box) * 9 + k, i];
-                            if (sudoku[k, d + box] == 0) boxPerCol[k / 3, d] = boxPerCol[k / 3, d] || notes[k * 9 + d + box, i];
+                            if (sudoku[d + box, k] == 0) boxPerRow[k / 3, d] = boxPerRow[k / 3, d] || notes[d + box, k, i];
+                            if (sudoku[k, d + box] == 0) boxPerCol[k / 3, d] = boxPerCol[k / 3, d] || notes[k, d + box, i];
                         }
                     }
 
@@ -46,7 +46,7 @@ namespace MySudoku
                         for (int r = 0; r < 3; r++) {
                             if (r != selectedRow)
                                 for (int c = 0; c < 3; c++) {
-                                    notes[(box + r) * 9 + selectedBoxR * 3 + c, i] = false;
+                                    notes[box + r, selectedBoxR * 3 + c, i] = false;
                                     if (LogConsole) s.Append($"({box + r}, {selectedBoxR * 3 + c}), ");
                                 }
                         }
@@ -61,7 +61,7 @@ namespace MySudoku
                         for (int c = 0; c < 3; c++) {
                             if (c != selectedCol)
                                 for (int r = 0; r < 3; r++) {
-                                    notes[(selectedBoxC * 3 + r) * 9 + box + c, i] = false;
+                                    notes[selectedBoxC * 3 + r, box + c, i] = false;
                                     if (LogConsole) s.Append($"({selectedBoxC * 3 + r}, {box + c}), ");
                                 }
                         }

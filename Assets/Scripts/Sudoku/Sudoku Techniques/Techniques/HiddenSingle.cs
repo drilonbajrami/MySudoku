@@ -12,7 +12,7 @@ namespace MySudoku
         protected override int FirstUseCost => 100;
         protected override int SubsequentUseCost => 100;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             cost = 0;
 
@@ -27,7 +27,7 @@ namespace MySudoku
 
                     // CELL CANDIDATE:
                     for (int noteIndex = 0; noteIndex < 9; noteIndex++) {
-                        if (!notes[row * 9 + col, noteIndex]) continue; // Skip inactive candidates.
+                        if (!notes[row, col, noteIndex]) continue; // Skip inactive candidates.
 
                         // Track if the current candidate (candidateIndex) is a hidden single within its respective box, row or column.
                         bool isHiddenSingle;
@@ -40,16 +40,16 @@ namespace MySudoku
                             if (hiddenInBox) {
                                 (int row, int col) n = new(boxCoord.row + (neighbourIndex / 3), boxCoord.col + (neighbourIndex % 3));
                                 if ((row != n.row || col != n.col) && sudoku[n.row, n.col] == 0)
-                                    hiddenInBox = !notes[n.row * 9 + n.col, noteIndex];
+                                    hiddenInBox = !notes[n.row, n.col, noteIndex];
                             }
 
                             // Check if hidden in Row:
                             if (hiddenInRow && col != neighbourIndex && sudoku[row, neighbourIndex] == 0)
-                                hiddenInRow = !notes[row * 9 + neighbourIndex, noteIndex];
+                                hiddenInRow = !notes[row, neighbourIndex, noteIndex];
 
                             // Check if hidden in Column:
                             if (hiddenInCol && row != neighbourIndex && sudoku[neighbourIndex, col] == 0)
-                                hiddenInCol = !notes[neighbourIndex * 9 + col, noteIndex];
+                                hiddenInCol = !notes[neighbourIndex, col, noteIndex];
 
                             isHiddenSingle = hiddenInBox || hiddenInRow || hiddenInCol;
 

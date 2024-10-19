@@ -12,7 +12,7 @@ namespace MySudoku
         /// <param name="solution">The sudoku solution.</param>
         /// <param name="notesCopy">The notes for the sudoku puzzle.</param>
         /// <returns>Whether this sudoku puzzle can be solved with currently available techniques.</returns>
-        public bool TechniqueSolve(int[,] puzzleTemplate, int[,] solution, bool[,] notesCopy, bool logResult, out int difficultyCost)
+        public bool TechniqueSolve(int[,] puzzleTemplate, int[,] solution, bool[,,] notesCopy, bool logResult, out int difficultyCost)
         {
             int[,] puzzle = new int[9, 9];
             Array.Copy(puzzleTemplate, puzzle, puzzleTemplate.Length);

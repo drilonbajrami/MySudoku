@@ -2752,7 +2752,7 @@ MonoBehaviour:
   _onText: {fileID: 1711855999}
   _offText: {fileID: 1240249872}
   _currentPuzzle: 
-  enterPuzzle: 
+  enterPuzzle: 000000000600000000840000000492000000568700000731420000286547000317298600954361820
 --- !u!224 &1327889551
 RectTransform:
   m_ObjectHideFlags: 0

@@ -41,8 +41,8 @@ namespace MySudoku
 
             // Create an array for the puzzle, notes and note's copy.
             int[,] puzzle = new int[9, 9];
-            bool[,] notes = new bool[81, 9];
-            bool[,] notesCopy = new bool[81, 9];
+            bool[,,] notes = new bool[9, 9, 9];
+            bool[,,] notesCopy = new bool[9, 9, 9];
 
             // Set the difficulty score threshold/cap for this puzzle, based on the chosen difficulty.
             (int lower, int upper) difficultyRange = SudokuTechniques.DifficultyMap[difficulty];
@@ -62,7 +62,7 @@ namespace MySudoku
                         puzzle[row, col] = solution[row, col];
                         indexes.Add((row, col));
                         for (int i = 0; i < 9; i++)
-                            notes[row * 9 + col, i] = notesCopy[row * 9 + col, i] = false;
+                            notes[row, col, i] = notesCopy[row, col, i] = false;
                     }
 
                 // Shuffle the indexes and add them into a queue.

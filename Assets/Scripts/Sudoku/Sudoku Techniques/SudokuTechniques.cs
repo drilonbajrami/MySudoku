@@ -73,7 +73,7 @@ namespace MySudoku
         /// <param name="sudoku">The sudoku puzzle.</param>
         /// <param name="notes">The notes for the sudoku puzzle.</param>
         /// <returns>The cost of the applied technique if possible, otherwise returns 0.</returns>
-        public static int ApplyTechniques(this int[,] sudoku, bool[,] notes)
+        public static int ApplyTechniques(this int[,] sudoku, bool[,,] notes)
         {
             for (int i = 0; i < Techniques.Count; i++)
                 if (Techniques[i].Apply(sudoku, notes, out int cost))

@@ -16,7 +16,7 @@ namespace MySudoku
         protected override int FirstUseCost => 1500;
         protected override int SubsequentUseCost => 1200;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] candidates = new Repetition[9] {
@@ -36,9 +36,9 @@ namespace MySudoku
 
                     for (int n = 0; n < 9; n++) // Candidate's index as [i].
                         for (int k = 0; k < 9; k++) { // Cell's index as [k].
-                            if (notes[(boxRow + k / 3) * 9 + boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) candidates[n].Repetitions[0].Add(k);
-                            if (notes[row * 9 + k, n] && sudoku[row, k] == 0) candidates[n].Repetitions[1].Add(k);
-                            if (notes[k * 9 + col, n] && sudoku[k, col] == 0) candidates[n].Repetitions[2].Add(k);
+                            if (notes[boxRow + k / 3, boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) candidates[n].Repetitions[0].Add(k);
+                            if (notes[row, k, n] && sudoku[row, k] == 0) candidates[n].Repetitions[1].Add(k);
+                            if (notes[k, col, n] && sudoku[k, col] == 0) candidates[n].Repetitions[2].Add(k);
                         }
 
                     (int a, int b) cellPair = (-1, -1);
@@ -49,13 +49,16 @@ namespace MySudoku
                             for (int j = i + 1; j < 9; j++)
                                 if (HasPair(candidates[i].Repetitions[0], candidates[j].Repetitions[0], ref cellPair)) {
                                     
-                                    (int a, int b) pair = ((boxRow + cellPair.a / 3) * 9 + boxCol + cellPair.a % 3,
-                                                           (boxRow + cellPair.b / 3) * 9 + boxCol + cellPair.b % 3);
+                                    //(int a, int b) pair = ((boxRow + cellPair.a / 3) * 9 + boxCol + cellPair.a % 3,
+                                    //                       (boxRow + cellPair.b / 3) * 9 + boxCol + cellPair.b % 3);
+                                    (int row, int col) pair_a = (boxRow + cellPair.a / 3, boxCol + cellPair.a % 3);
+                                    (int row, int col) pair_b = (boxRow + cellPair.b / 3, boxCol + cellPair.b % 3);
+                                    
                                     for (int n = 0; n < 9; n++) {
                                         if (n == i || n == j) continue;
-                                        if (!applied) applied = notes[pair.a, n] || notes[pair.b, n];
-                                        notes[pair.a, n] = false;
-                                        notes[pair.b, n] = false;
+                                        if (!applied) applied = notes[pair_a.row, pair_a.col, n] || notes[pair_b.row, pair_b.col, n];
+                                        notes[pair_a.row, pair_a.col, n] = false;
+                                        notes[pair_b.row, pair_b.col, n] = false;
                                     }
 
                                     if (applied) {
@@ -78,13 +81,13 @@ namespace MySudoku
                                     if (rank == 0 ? HasPair(candidates[i].Repetitions[1], candidates[j].Repetitions[1], ref cellPair)
                                                   : HasPair(candidates[i].Repetitions[2], candidates[j].Repetitions[2], ref cellPair)) {
                                         // Apply technique.
-                                        int c1 = rank == 0 ? (row * 9 + cellPair.a) : (cellPair.a * 9 + col);
-                                        int c2 = rank == 0 ? (row * 9 + cellPair.b) : (cellPair.b * 9 + col);
+                                        (int row, int col) c1 = rank == 0 ? (row, cellPair.a) : (cellPair.a, col);
+                                        (int row, int col) c2 = rank == 0 ? (row, cellPair.b) : (cellPair.b, col);
                                         for (int n = 0; n < 9; n++) {
                                             if (n == i || n == j) continue;
-                                            if (!applied) applied = notes[c1, n] || notes[c2, n];
-                                            notes[c1, n] = false;
-                                            notes[c2, n] = false;
+                                            if (!applied) applied = notes[c1.row, c1.col, n] || notes[c2.row, c2.col, n];
+                                            notes[c1.row, c1.col, n] = false;
+                                            notes[c2.row, c2.col, n] = false;
                                         }
 
                                         if (applied) {

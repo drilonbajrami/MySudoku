@@ -91,7 +91,7 @@ namespace MySudoku
         [Header("Other settings")]
         [SerializeField] private SudokuGenerator _generator;
 
-        private readonly bool[,] _viewNotes = new bool[81, 9];
+        private readonly bool[,,] _viewNotes = new bool[9, 9, 9];
 
         public Toggle noteToggle;
         public GameObject _onText;
@@ -183,7 +183,7 @@ namespace MySudoku
 
                     for (int n = 0; n < 9; n++) {
                         _grid[row, col].ShowNote(n + 1, false);
-                        _viewNotes[row * 9 + col, n] = false;
+                        _viewNotes[row, col, n] = false;
                     }
 
                     if (_puzzleCopy[row, col] != 0)
@@ -196,7 +196,7 @@ namespace MySudoku
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     for (int n = 0; n < 9; n++)
-                        _grid[row, col].ShowNote(n + 1, _viewNotes[row * 9 + col, n]);
+                        _grid[row, col].ShowNote(n + 1, _viewNotes[row, col, n]);
                 }
         }
 
@@ -211,7 +211,7 @@ namespace MySudoku
             for (int row = 0; row < 9; row++)
                 for (int col = 0; col < 9; col++) {
                     for (int n = 0; n < 9; n++) {
-                        _viewNotes[row * 9 + col, n] = false;
+                        _viewNotes[row, col, n] = false;
                         _grid[row, col].ShowNote(n + 1, false);
                     }
                 }
@@ -386,8 +386,8 @@ namespace MySudoku
                 if (_puzzleCopy[_selectedCellIndex.row, _selectedCellIndex.col] != 0) return;
 
                 // Toggle note.
-                bool currentFlag = _viewNotes[_selectedCellIndex.row * 9 + _selectedCellIndex.col, number - 1];
-                _viewNotes[_selectedCellIndex.row * 9 + _selectedCellIndex.col, number - 1] = !currentFlag;
+                bool currentFlag = _viewNotes[_selectedCellIndex.row, _selectedCellIndex.col, number - 1];
+                _viewNotes[_selectedCellIndex.row, _selectedCellIndex.col, number - 1] = !currentFlag;
                 _grid[_selectedCellIndex.row, _selectedCellIndex.col].ShowNote(number, !currentFlag);
             }
             else/* if (_sudoku.Puzzle[_selectedCell.row, _selectedCell.col] == 0)*/ {

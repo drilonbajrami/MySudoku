@@ -16,7 +16,7 @@ namespace MySudoku
         protected override int FirstUseCost => 750;
         protected override int SubsequentUseCost => 500;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] cells = new Repetition[9] {
@@ -36,9 +36,9 @@ namespace MySudoku
 
                     for (int k = 0; k < 9; k++) // Cell's index as [k].
                         for (int n = 0; n < 9; n++) { // Candidate's index as [i].
-                            if (notes[(boxRow + k / 3) * 9 + boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) cells[k].Repetitions[0].Add(n);
-                            if (notes[row * 9 + k, n] && sudoku[row, k] == 0) cells[k].Repetitions[1].Add(n);
-                            if (notes[k * 9 + col, n] && sudoku[k, col] == 0) cells[k].Repetitions[2].Add(n);
+                            if (notes[boxRow + k / 3, boxCol + k % 3, n] && sudoku[boxRow + k / 3, boxCol + k % 3] == 0) cells[k].Repetitions[0].Add(n);
+                            if (notes[row, k, n] && sudoku[row, k] == 0) cells[k].Repetitions[1].Add(n);
+                            if (notes[k, col, n] && sudoku[k, col] == 0) cells[k].Repetitions[2].Add(n);
                         }
 
                     (int a, int b) nakedPair = (-1, -1);
@@ -55,20 +55,21 @@ namespace MySudoku
                                     // Go through each cell within box.
                                     for (int k = 0; k < 9; k++) {
                                         if (k == i || k == j) continue; // Skip over cells i and j.       
-                                        int kIndex = (boxRow + k / 3) * 9 + boxCol + k % 3;
-                                        if (!applied) applied = notes[kIndex, nakedPair.a] || notes[kIndex, nakedPair.b]; 
-                                        notes[kIndex, nakedPair.a] = false;
-                                        notes[kIndex, nakedPair.b] = false;
+                                        //int kIndex = (boxRow + k / 3) * 9 + boxCol + k % 3;
+                                        (int row, int col) kIndex = (boxRow + k / 3, boxCol + k % 3); 
+                                        if (!applied) applied = notes[kIndex.row, kIndex.col, nakedPair.a] || notes[kIndex.row, kIndex.col, nakedPair.b]; 
+                                        notes[kIndex.row, kIndex.col, nakedPair.a] = false;
+                                        notes[kIndex.row, kIndex.col, nakedPair.b] = false;
 
                                         // Row || Col
                                         if (rowAvailable || colAvailable) {     // Cell[u] Coords       // Cell[v] Coords
                                             bool skipUVcells = rowAvailable ? ((k == boxCol + i % 3) || (k == boxCol + j % 3))
                                                                             : ((k == boxRow + i / 3) || (k == boxRow + j / 3));
                                             if (skipUVcells) continue;
-                                            int rcIndex = rowAvailable ? ((boxRow + i / 3) * 9 + k) : (k * 9 + boxCol + i % 3);
-                                            if (!applied) applied = notes[rcIndex, nakedPair.a] || notes[rcIndex, nakedPair.b];
-                                            notes[rcIndex, nakedPair.a] = false;
-                                            notes[rcIndex, nakedPair.b] = false;
+                                            (int row, int col) rcIndex = rowAvailable ? (boxRow + i / 3, k) : (k, boxCol + i % 3);
+                                            if (!applied) applied = notes[rcIndex.row, rcIndex.col, nakedPair.a] || notes[rcIndex.row, rcIndex.col, nakedPair.b];
+                                            notes[rcIndex.row, rcIndex.col, nakedPair.a] = false;
+                                            notes[rcIndex.row, rcIndex.col, nakedPair.b] = false;
                                         }
                                     }
 
@@ -93,10 +94,10 @@ namespace MySudoku
                                                   : HasPair(cells[i].Repetitions[2], cells[j].Repetitions[2], ref nakedPair)) {
                                         for (int k = 0; k < 9; k++) {
                                             if (k == i || k == j) continue;
-                                            int rcIndex = rank == 0 ? (row * 9 + k) : (k * 9 + col);
-                                            if (!applied) applied = notes[rcIndex, nakedPair.a] || notes[rcIndex, nakedPair.b];
-                                            notes[rcIndex, nakedPair.a] = false;
-                                            notes[rcIndex, nakedPair.b] = false;
+                                            (int row, int col) rcIndex = rank == 0 ? (row, k) : (k, col);
+                                            if (!applied) applied = notes[rcIndex.row, rcIndex.col, nakedPair.a] || notes[rcIndex.row, rcIndex.col, nakedPair.b];
+                                            notes[rcIndex.row, rcIndex.col, nakedPair.a] = false;
+                                            notes[rcIndex.row, rcIndex.col, nakedPair.b] = false;
                                         }
 
                                         if (applied) {                                  

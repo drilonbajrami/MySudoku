@@ -16,7 +16,7 @@ namespace MySudoku
         protected override int FirstUseCost => 2000;
         protected override int SubsequentUseCost => 1400;
 
-        public override bool Apply(int[,] sudoku, bool[,] notes, out int cost)
+        public override bool Apply(int[,] sudoku, bool[,,] notes, out int cost)
         {
             int numberOfSets = 3;
             Repetition[] cells = new Repetition[9] {
@@ -37,11 +37,12 @@ namespace MySudoku
 
                     for (int k = 0; k < 9; k++) {
                         int kRow = boxRow + k / 3;
+
                         int kCol = boxCol + k % 3;
                         for (int i = 0; i < 9; i++) {
-                            if (notes[kRow * 9 + kCol, i]) cells[k].Repetitions[0].Add(i);
-                            if (notes[row * 9 + k, i]) cells[k].Repetitions[1].Add(i);
-                            if (notes[k * 9 + col, i]) cells[k].Repetitions[2].Add(i);
+                            if (notes[kRow, kCol, i]) cells[k].Repetitions[0].Add(i);
+                            if (notes[row, k, i]) cells[k].Repetitions[1].Add(i);
+                            if (notes[k, col, i]) cells[k].Repetitions[2].Add(i);
                         }
                     }
 
@@ -64,21 +65,21 @@ namespace MySudoku
                                             for (int k = 0; k < 9; k++) {
                                                 if (k == p || k == u || k == v) continue;
 
-                                                int c = (boxRow + k / 3) * 9 + boxCol + k % 3;
-                                                if (!applied) applied = notes[c, nakedTriple.a] || notes[c, nakedTriple.b] || notes[c, nakedTriple.c];
-                                                notes[c, nakedTriple.a] = false;
-                                                notes[c, nakedTriple.b] = false;
-                                                notes[c, nakedTriple.c] = false;
+                                                (int row, int col) c = (boxRow + k / 3, boxCol + k % 3);
+                                                if (!applied) applied = notes[c.row, c.col, nakedTriple.a] || notes[c.row, c.col, nakedTriple.b] || notes[c.row, c.col, nakedTriple.c];
+                                                notes[c.row, c.col, nakedTriple.a] = false;
+                                                notes[c.row, c.col, nakedTriple.b] = false;
+                                                notes[c.row, c.col, nakedTriple.c] = false;
 
                                                 if (rowAvailable || colAvailable) {
                                                     bool skipPUVCells = rowAvailable ? (k == boxCol + p % 3 || k == boxCol + u % 3 || k == boxCol + v % 3)
                                                                                      : (k == boxRow + p / 3 || k == boxRow + u / 3 || k == boxRow + v / 3);
                                                     if (skipPUVCells) continue;
-                                                    c = rowAvailable ? ((boxCol + p % 3) * 9 + k) : (k * 9 + boxRow + p / 3);
-                                                    if (!applied) applied = notes[c, nakedTriple.a] || notes[c, nakedTriple.b] || notes[c, nakedTriple.c];
-                                                    notes[c, nakedTriple.a] = false;
-                                                    notes[c, nakedTriple.b] = false;
-                                                    notes[c, nakedTriple.c] = false;
+                                                    c = rowAvailable ? (boxCol + p % 3, k) : (k, boxRow + p / 3);
+                                                    if (!applied) applied = notes[c.row, c.col, nakedTriple.a] || notes[c.row, c.col, nakedTriple.b] || notes[c.row, c.col, nakedTriple.c];
+                                                    notes[c.row, c.col, nakedTriple.a] = false;
+                                                    notes[c.row, c.col, nakedTriple.b] = false;
+                                                    notes[c.row, c.col, nakedTriple.c] = false;
                                                 }
                                             }
 
@@ -103,11 +104,10 @@ namespace MySudoku
                                         if (HasTriple(cells[p].Repetitions[1], cells[u].Repetitions[1], cells[v].Repetitions[1], ref nakedTriple)) {
                                             for (int k = 0; k < 9; k++) {
                                                 if (k == p || k == u || k == v) continue;
-                                                int c = row * 9 + k;
-                                                if (!applied) applied = notes[c, nakedTriple.a] || notes[c, nakedTriple.b] || notes[c, nakedTriple.c];
-                                                notes[c, nakedTriple.a] = false;
-                                                notes[c, nakedTriple.b] = false;
-                                                notes[c, nakedTriple.c] = false;
+                                                if (!applied) applied = notes[row, k, nakedTriple.a] || notes[row, k, nakedTriple.b] || notes[row, k, nakedTriple.c];
+                                                notes[row, k, nakedTriple.a] = false;
+                                                notes[row, k, nakedTriple.b] = false;
+                                                notes[row, k, nakedTriple.c] = false;
                                             }
 
                                             if (applied) {
@@ -128,11 +128,10 @@ namespace MySudoku
                                         if (HasTriple(cells[p].Repetitions[2], cells[u].Repetitions[2], cells[v].Repetitions[2], ref nakedTriple)) {
                                             for (int k = 0; k < 9; k++) {
                                                 if (k == p || k == u || k == v) continue;
-                                                int c = k * 9 + col;
-                                                if (!applied) applied = notes[c, nakedTriple.a] || notes[c, nakedTriple.b] || notes[c, nakedTriple.c];
-                                                notes[c, nakedTriple.a] = false;
-                                                notes[c, nakedTriple.b] = false;
-                                                notes[c, nakedTriple.c] = false;
+                                                if (!applied) applied = notes[k, col, nakedTriple.a] || notes[k, col, nakedTriple.b] || notes[k, col, nakedTriple.c];
+                                                notes[k, col, nakedTriple.a] = false;
+                                                notes[k, col, nakedTriple.b] = false;
+                                                notes[k, col, nakedTriple.c] = false;
                                             }
 
                                             if (applied) {
