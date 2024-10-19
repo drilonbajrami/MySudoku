@@ -103,6 +103,7 @@ namespace MySudoku
                 }
             }
 
+            Debug.Log(stopwatch.Elapsed.TotalMilliseconds);
             //GetPuzzle(puzzle).CopyToClipboard();
             return puzzle;
         }

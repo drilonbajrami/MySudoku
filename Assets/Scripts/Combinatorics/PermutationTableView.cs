@@ -53,8 +53,8 @@ namespace SudokuTesting
                         permutation.RectTransform.anchoredPosition = new Vector3(z * l + (x / 4) * (7.25f * l),
                                                                                 (x % 4 * 8.5f + y) * -h, 0);
                         permutation.SetNumbers(new int[] { SudokuData.Permutations[x, y, z, 0],
-                                                      SudokuData.Permutations[x, y, z, 1],
-                                                      SudokuData.Permutations[x, y, z, 2] });
+                                                           SudokuData.Permutations[x, y, z, 1],
+                                                           SudokuData.Permutations[x, y, z, 2] });
 
                         _permutations[x, y, z] = permutation;
                     }
